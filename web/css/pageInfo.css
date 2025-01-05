@@ -1,0 +1,35 @@
+.page-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    height: 3%;
+    max-height: 3%;
+}
+
+.page-info h1 {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.page-info .button {
+    margin: 0;
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+    background-color: #007bff;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.page-info .button:hover {
+    background-color: #0056b3;
+}

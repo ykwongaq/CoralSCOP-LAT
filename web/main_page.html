@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Main Page</title>
+        <!-- <link rel="stylesheet" href="css/mainPage/mainPage.css" /> -->
+        <link rel="stylesheet" href="./icon/style.css" />
+        <link rel="stylesheet" href="./css/styles.css" />
+    </head>
+    <body>
+        <div class="home">
+            <img class="bg" src="./images/CoralSCOP_Homepage.jpg" alt="" />
+            <div class="home__content">
+                <div>
+                    <img class="title" src="./images/home-title.svg" alt="" />
+                    <p>Segment any coral in the images.</p>
+                    <div class="button-row">
+                        <button
+                            onclick="navigateTo('preprocess.html')"
+                            class="button"
+                        >
+                            Create New Project
+                        </button>
+                        <button
+                            onclick="navigateTo('label.html?askLoadProject=true')"
+                            class="button button--border"
+                        >
+                            Load Existing Project
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="/eel.js"></script>
+        <script src="js/navigate.js"></script>
+    </body>
+</html>

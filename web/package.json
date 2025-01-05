@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "gulp": "^5.0.0",
+    "gulp-sass": "^5.1.0",
+    "sass": "^1.80.6"
+  },
+  "scripts": {
+    "build": "sass scss/styles.scss css/styles.css",
+    "watch": "sass --quiet-deps --watch scss/styles.scss:css/styles.css"
+  }
+}

@@ -1,0 +1,116 @@
+/* Reset default browser styles */
+.statistic-page {
+    overflow: auto;
+}
+
+.statistic-page * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.statistic-content-container {
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    width: 80%;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    padding: 20px;
+    margin: 0 auto; /* Center container in the page */
+    max-width: 1400px;
+}
+
+.stats-container {
+    max-width: 1400px; /* Increased to accommodate larger charts */
+    margin: 0 auto;
+}
+
+.chart-group {
+    margin-bottom: 50px; /* Increased spacing between groups */
+    width: 100%;
+}
+
+.group-title {
+    font-size: 2.5em; /* Increased font size for better visibility */
+    margin-bottom: 25px;
+    color: #2c3e50;
+    border-bottom: 3px solid #ecf0f1;
+    padding-bottom: 10px;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(350px, 1fr)
+    ); /* Adjusted for 3 columns */
+    gap: 25px; /* Increased gap between charts */
+}
+
+.chart-item {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px; /* Slightly more rounded */
+    padding: 15px; /* Reduced padding to allow more space for the chart */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Enhanced shadow for depth */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%; /* Set a fixed height for consistent sizing */
+    max-width: 466px;
+}
+
+.chart {
+    flex: 1; /* Allow the chart div to grow and fill available space */
+    width: 100%;
+    height: 100%; /* Make the chart div fill its container */
+}
+
+.download-btn {
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    padding: 12px 20px; /* Slightly larger button */
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 1em;
+    margin-top: 15px; /* Space between chart and button */
+}
+
+.download-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px); /* Subtle lift on hover */
+}
+
+@media (max-width: 1200px) {
+    .charts-grid {
+        grid-template-columns: repeat(
+            auto-fit,
+            minmax(300px, 1fr)
+        ); /* Adjust for smaller screens */
+    }
+
+    .chart-item {
+        height: 300px; /* Reduced height for smaller screens */
+    }
+}
+
+@media (max-width: 800px) {
+    .charts-grid {
+        grid-template-columns: repeat(
+            auto-fit,
+            minmax(100%, 1fr)
+        ); /* Single column on very small screens */
+    }
+
+    .chart-item {
+        height: 250px; /* Further reduced height for mobile */
+    }
+}
+
+/* Optional: Adjust the legend container */
+#chart_div .google-visualization-legend {
+    max-width: 150px; /* Set max width for legend */
+    word-wrap: break-word; /* Allow word wrapping if needed */
+}

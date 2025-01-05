@@ -1,0 +1,148 @@
+.labelView {
+    border: 1px solid #f8f8f8;
+    display: flex;
+    flex-direction: column;
+    min-width: 280px;
+    overflow: auto;
+}
+
+.labelView .inputForm {
+    height: 5%;
+    max-height: 5%;
+    min-height: 5%;
+    display: flex;
+    flex-direction: row;
+    margin: 2px;
+}
+
+.labelView .inputForm input[type="text"] {
+    font-size: 15px;
+    border: 1px solid grey;
+    width: 80%;
+    background: #f1f1f1;
+    border-right: none;
+}
+
+.labelView .inputForm button {
+    width: 20%;
+    background-color: #def6fe;
+    color: black;
+    cursor: pointer;
+    border: 1px solid grey;
+    border-left: none;
+}
+
+.labelView .inputForm button:hover {
+    background: #00a9ff;
+}
+
+.labelView .inputForm::after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+.labelView .bar {
+    width: 100%;
+    height: 0.5em;
+    background-color: #a0e9ff;
+}
+
+.labelView .statusContainer {
+    height: 7%;
+    max-height: 7%;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+.labelView .statusContainer div {
+    width: 33.3%;
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+    font-family: DejaVu Sans Mono, monospace;
+    background-color: white;
+}
+
+.labelView .statusContainer .radio-item {
+    cursor: pointer;
+}
+
+.labelView .statusContainer .radio-item [type="radio"] {
+    display: none;
+}
+
+.labelView .statusContainer .radio-item label {
+    height: 100%;
+    width: 100%;
+    transition: background-color 0.3s, color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.labelView .statusContainer .radio-item label:hover {
+    background-color: #def6fe;
+}
+
+.labelView .statusContainer .radio-item input[type="radio"]:checked + label {
+    background-color: #a0e9ff;
+    border-color: #a0e9ff;
+}
+
+.labelView .labelContainer {
+    height: 85%;
+    max-height: 85%;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #f1ffff;
+}
+
+.labelView .labelContainer .labelButton {
+    height: 5%;
+    max-height: 5%;
+    min-height: 5%;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+.labelView .labelContainer .labelButton:hover {
+    background-color: #def6fe;
+    border-top: 1px solid #00a9ff;
+    border-bottom: 1px solid #00a9ff;
+}
+
+.labelView .labelContainer .labelButton .colorBox {
+    width: 10%;
+    background-color: black;
+    height: 100%;
+    border: 4px solid green;
+    box-sizing: border-box;
+}
+
+.labelView .labelContainer .labelButton .labelText {
+    font-size: 20px;
+    font-weight: bold;
+    font-family: DejaVu Sans Mono, monospace;
+    width: 90%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.selected {
+    background-color: #00a9ff;
+}

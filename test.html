@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Select Folder</title>
+    </head>
+    <body>
+        <h1>Select a Folder</h1>
+
+        <!-- Button to select folder -->
+        <input type="file" id="folderInput" webkitdirectory multiple />
+
+        <!-- Display the selected folder path -->
+        <p id="folderPath"></p>
+
+        <script>
+            const folderInput = document.getElementById("folderInput");
+            const folderPath = document.getElementById("folderPath");
+
+            // Event listener to handle folder selection
+            folderInput.addEventListener("change", (event) => {
+                // Get the first file in the selected folder to extract the folder path
+                const files = event.target.files;
+                if (files.length > 0) {
+                    const absolutePath = files[0].webkitRelativePath
+                        .split("/")
+                        .slice(0, -1)
+                        .join("/");
+                    folderPath.textContent = `Selected Folder Path: ${absolutePath}`;
+                    console.log(`Selected Folder Path: ${absolutePath}`);
+                } else {
+                    folderPath.textContent = "No folder selected.";
+                }
+            });
+        </script>
+    </body>
+</html>

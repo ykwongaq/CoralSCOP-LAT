@@ -1,0 +1,9 @@
+.page {
+    display: none;
+    height: 90%;
+    max-height: 90%;
+}
+
+.active-page {
+    display: block;
+}

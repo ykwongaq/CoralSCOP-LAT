@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Statistics Dashboard</title>
+        <link rel="stylesheet" href="styles.css" />
+        <script
+            type="text/javascript"
+            src="https://www.gstatic.com/charts/loader.js"
+        ></script>
+    </head>
+    <body>
+        <div class="stats-container">
+            <!-- Group 1 -->
+            <section class="chart-group">
+                <h2 class="group-title">Group 1</h2>
+                <div class="charts-grid">
+                    <div class="chart-item">
+                        <div id="chart1" class="chart"></div>
+                        <button
+                            class="download-btn"
+                            onclick="downloadChart('chart1')"
+                        >
+                            Download PNG
+                        </button>
+                    </div>
+                    <div class="chart-item">
+                        <div id="chart2" class="chart"></div>
+                        <button
+                            class="download-btn"
+                            onclick="downloadChart('chart2')"
+                        >
+                            Download PNG
+                        </button>
+                    </div>
+                    <div class="chart-item">
+                        <div id="chart3" class="chart"></div>
+                        <button
+                            class="download-btn"
+                            onclick="downloadChart('chart3')"
+                        >
+                            Download PNG
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Group 2 -->
+            <section class="chart-group">
+                <h2 class="group-title">Group 2</h2>
+                <div class="charts-grid">
+                    <div class="chart-item">
+                        <div id="chart4" class="chart"></div>
+                        <button
+                            class="download-btn"
+                            onclick="downloadChart('chart4')"
+                        >
+                            Download PNG
+                        </button>
+                    </div>
+                    <div class="chart-item">
+                        <div id="chart5" class="chart"></div>
+                        <button
+                            class="download-btn"
+                            onclick="downloadChart('chart5')"
+                        >
+                            Download PNG
+                        </button>
+                    </div>
+                    <div class="chart-item">
+                        <div id="chart6" class="chart"></div>
+                        <button
+                            class="download-btn"
+                            onclick="downloadChart('chart6')"
+                        >
+                            Download PNG
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add more groups as needed -->
+        </div>
+
+        <script src="script.js"></script>
+    </body>
+</html>

@@ -1,0 +1,148 @@
+.topnav {
+    max-height: 5%;
+    height: 5%;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+    background-color: #a0e9ff;
+    display: flex;
+    justify-content: flex-start;
+    min-height: 50px;
+}
+
+.topnav .icon-container {
+    height: 100%;
+    /* width: 5%; */
+    max-height: 100%;
+    min-width: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.topnav .icon-text {
+    width: 10%;
+    height: 100%;
+    max-height: 100%;
+    background-color: #00a9ff;
+    font-size: 20px;
+    display: flex; /* Use flexbox on the button */
+    justify-content: center; /* Center text horizontally */
+    align-items: center; /* Center text vertically */
+    color: white;
+    max-width: 150px;
+    min-width: 150px;
+}
+
+.topnav .icon-container img {
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+}
+
+.topnav button {
+    float: left;
+    display: block;
+    background-color: transparent;
+    color: black;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 20px;
+    height: 100%;
+    max-width: 100%;
+    border: none;
+    display: flex; /* Use flexbox on the button */
+    justify-content: center; /* Center text horizontally */
+    align-items: center; /* Center text vertically */
+}
+
+.topnav button:hover {
+    background-color: #89cff3;
+    color: black;
+}
+
+.topnav button.active {
+    background-color: #00a9ff;
+    color: white;
+}
+
+.topnav .icon {
+    display: none;
+}
+
+@media screen and (max-width: 600px) {
+    .topnav button:not(:first-child) {
+        display: none;
+    }
+    .topnav button.icon {
+        float: right;
+        display: block;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .topnav.responsive {
+        position: relative;
+    }
+    .topnav.responsive .icon {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+    .topnav.responsive button {
+        float: none;
+        display: block;
+        text-align: left;
+    }
+}
+
+.topnav .dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.topnav .dropdown .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.topnav .dropdown .dropdown-content button {
+    background-color: #f9f9f9;
+    color: black;
+    border: none;
+    cursor: pointer;
+    padding: 12px 16px;
+    text-align: left;
+    width: 100%;
+    font-size: 16px;
+}
+
+.topnav .dropdown .dropdown-content button:hover {
+    background-color: #f1f1f1;
+}
+.topnav .dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.loading-animation {
+    width: 30px; /* Adjust size as needed */
+    height: 30px;
+    border: 8px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #00a9ff; /* Color of the spinner */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}

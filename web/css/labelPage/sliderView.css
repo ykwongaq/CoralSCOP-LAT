@@ -1,0 +1,34 @@
+.sliderView {
+    border: 1px solid #f8f8f8;
+    display: flex;
+    flex-direction: column;
+    min-width: 40px;
+}
+
+.sliderView .text {
+    height: 5%;
+    max-height: 5%;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    font-weight: bold;
+    font-family: DejaVu Sans Mono, monospace;
+}
+
+.sliderView .slider {
+    width: 100%;
+    max-width: 100%;
+    height: 85%;
+    max-height: 85%;
+}
+
+.sliderView .slider input[type="range"] {
+    vertical-align: baseline;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+}
