@@ -394,7 +394,7 @@ input[type="range"]:active::-moz-range-thumb {
 }
 
 .color-plate-list {
-    --size: 20px;
+    --size: 23px;
     --bg-color: #000;
     --color: #fff;
     --def-bg-color--1: #f6c3cb;
@@ -537,7 +537,7 @@ input[type="range"]:active::-moz-range-thumb {
     margin-right: 10px;
 }
 .color-plate-list__color-plate::before {
-    content: counter(item);
+    /* content: counter(item); */
 }
 
 .label-blk {
@@ -915,7 +915,7 @@ input[type="range"]:active::-moz-range-thumb {
 }
 
 .label-sm-blk__text {
-    display: none;
+    /* display: none; */
 }
 
 :where(*) {

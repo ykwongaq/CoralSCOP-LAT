@@ -15,16 +15,21 @@ class ConfigPage {
         this.minArea = ConfigPage.DEFAULT_MIN_AREA;
         this.minAreaText = pageDom.querySelector("#min-area-text");
         this.minAreaSlider = pageDom.querySelector("#min-area-slider");
+        this.minAreaInput = pageDom.querySelector("#min-area-input");
 
         this.minConfidence = ConfigPage.DEFAULT_MIN_CONFIDENCE;
         this.minConfidenceText = pageDom.querySelector("#min-confidence-text");
         this.minConfidenceSlider = pageDom.querySelector(
             "#min-confidence-slider"
         );
+        this.minConfidenceInput = pageDom.querySelector(
+            "#min-confidence-input"
+        );
 
         this.maxIOU = ConfigPage.DEFAULT_MAX_IOU;
         this.maxOverlapText = pageDom.querySelector("#max-overlap-text");
         this.maxOverlapSlider = pageDom.querySelector("#max-overlap-slider");
+        this.maxOverlapInput = pageDom.querySelector("#max-overlap-input");
 
         this.saveButton = pageDom.querySelector("#save-setting-button");
         this.cancelButton = pageDom.querySelector("#cancel-setting-button");
@@ -37,6 +42,7 @@ class ConfigPage {
         this.displayConfig();
         this.initSliders();
         this.initSaveButton();
+        HT;
     }
 
     initSliders() {
@@ -45,27 +51,6 @@ class ConfigPage {
         );
         sliderBlocks.forEach((item) => {
             item.Slider = new Slider(item);
-        });
-    }
-
-    initMinArea() {
-        this.minAreaSlider.addEventListener("input", () => {
-            const minArea = this.minAreaSlider.value / 100;
-            this.config.setMinArea(minArea);
-        });
-    }
-
-    initMinConfidenceSlider() {
-        this.minConfidenceSlider.addEventListener("input", () => {
-            const minConfidence = this.minConfidenceSlider.value / 100;
-            this.config.setMinConfidence(minConfidence);
-        });
-    }
-
-    initMaxOverlap() {
-        this.maxOverlapSlider.addEventListener("input", () => {
-            const maxOverlap = this.maxOverlapSlider.value / 100;
-            this.config.setMaxIOU(maxOverlap);
         });
     }
 

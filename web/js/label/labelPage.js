@@ -23,7 +23,7 @@ class LabelPage {
         // Action Panel
         const actionPanelDom = document.getElementById("action-panel");
         const actionPanel = new ActionPanel(actionPanelDom);
-        // actionPanel.init();
+        actionPanel.init();
 
         const viewPanelDom = document.getElementById("view-panel");
         const viewPanel = new ViewPanel(viewPanelDom);

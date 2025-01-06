@@ -5,6 +5,7 @@ class Core {
         }
         Core.instance = this;
         this.data = null;
+
         return this;
     }
 
@@ -27,6 +28,12 @@ class Core {
                 const data = Data.parseResponse(response);
                 this.setData(data);
                 this.showData();
+
+                const labelPanel = new LabelPanel();
+                labelPanel.updateButtons();
+
+                const actionPanel = new ActionPanel();
+                actionPanel.updateButtons();
             });
         });
     }

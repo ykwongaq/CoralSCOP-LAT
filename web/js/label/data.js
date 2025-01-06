@@ -88,9 +88,9 @@ class CategoryManager {
         const categoryManager = new CategoryManager();
         const superCategoryId =
             categoryManager.getSuperCategoryIdByCategoryId(categoryId);
-        return CategoryManager.getColorBySuperCategoryId(
+        return CategoryManager.COLOR_LIST[
             superCategoryId % CategoryManager.COLOR_LIST.length
-        );
+        ];
     }
 
     static getBorderColorByCategoryId(categoryId) {
@@ -188,6 +188,176 @@ class CategoryManager {
         }
         return category;
     }
+
+    /**
+     * Get the list of categories based on the given status
+     * @param {number} status
+     * @returns List of categories with the given status
+     */
+    getCategoryListByStatus(status) {
+        const categoryList = [];
+        for (const category of Object.values(this.categoryDict)) {
+            if (category["status"] == status) {
+                categoryList.push(new Category(category["id"]));
+            }
+        }
+
+        // Sort the category list by the super category id
+        categoryList.sort((a, b) => {
+            return a.getSuperCategoryId() - b.getSuperCategoryId();
+        });
+        return categoryList;
+    }
+
+    isCoralCategoryId(categoryId) {
+        return this.categoryDict[categoryId]["is_coral"];
+    }
+
+    getStatusByCategoryId(categoryId) {
+        return this.categoryDict[categoryId]["status"];
+    }
+
+    /**
+     * Add new coral category. <br>
+     * Coral category will include a healthy, and bleached version.
+     * @param {string} categoryName
+     * @returns {boolean} True if the category is successfully added
+     */
+    addCoralCategory(categoryName) {
+        if (this.containsCategoryName(categoryName)) {
+            return false;
+        }
+
+        const newSuperCategoryId = this.findAvariableSuperCategoryId();
+        const newSuperCategoryName = categoryName;
+
+        // Add healthy category)
+        this.addCategory(
+            categoryName,
+            null,
+            newSuperCategoryName,
+            newSuperCategoryId,
+            true,
+            CategoryManager.STATUS_HEALTHY
+        );
+
+        // Add bleached category
+        const newCategoryName = CategoryManager.BLEACHED_PREFIX + categoryName;
+        this.addCategory(
+            newCategoryName,
+            null,
+            newSuperCategoryName,
+            newSuperCategoryId,
+            true,
+            CategoryManager.STATUS_BLEACHED
+        );
+
+        return true;
+    }
+
+    /**
+     * Add new category. <br>
+     * The manager will automatically find the
+     * unused category id and super category id.
+     *
+     * @param {string} categoryName
+     * @param {number} categoryId - If null, the manager will find the available category id
+     * @param {string} superCategoryName - If null, the category name will be used as the super category name
+     * @param {number} superCategoryId - If null, the manager will find the available super category id
+     * @param {boolean} isCoral
+     * @param {number} status
+     * @returns {boolean} True if the category is successfully added
+     */
+    addCategory(
+        categoryName,
+        categoryId = null,
+        superCategoryName = null,
+        superCategoryId = null,
+        isCoral = true,
+        status = CategoryManager.STATUS_UNDEFINED
+    ) {
+        if (this.containsCategoryName(categoryName)) {
+            return false;
+        }
+
+        let newCategoryId = categoryId;
+        if (newCategoryId === null) {
+            newCategoryId = this.findAvailableCategoryId();
+        }
+
+        let newSuperCategoryId = superCategoryId;
+        if (newSuperCategoryId === null) {
+            newSuperCategoryId = this.findAvariableSuperCategoryId();
+        }
+
+        // If the super category name is not provided,
+        // use the category name as the super category name
+        let newSuperCategoryName = superCategoryName;
+        if (newSuperCategoryName === null) {
+            newSuperCategoryName = categoryName;
+        }
+
+        const categoryInfo = {};
+        categoryInfo["id"] = newCategoryId;
+        categoryInfo["name"] = categoryName;
+        categoryInfo["supercategory"] = newSuperCategoryName;
+        categoryInfo["is_coral"] = isCoral;
+        categoryInfo["status"] = status;
+        categoryInfo["supercategory_id"] = newSuperCategoryId;
+
+        this.categoryDict[newCategoryId] = categoryInfo;
+        if (!(newSuperCategoryId in this.superCategoryDict)) {
+            this.superCategoryDict[newSuperCategoryId] = [];
+        }
+        this.superCategoryDict[newSuperCategoryId].push(categoryInfo);
+
+        console.log("Add category: ", categoryInfo);
+        return true;
+    }
+
+    /**
+     * Find the available category id
+     * @returns {number} Available category id
+     */
+    findAvailableCategoryId() {
+        let categoryId = 0;
+        for (let i = 0; i <= Object.keys(this.categoryDict).length; i++) {
+            if (!(categoryId in this.categoryDict)) {
+                break;
+            }
+            categoryId++;
+        }
+        return categoryId;
+    }
+
+    /**
+     * Find the available super category id
+     * @returns {number} Available super category id
+     */
+    findAvariableSuperCategoryId() {
+        let superCategoryId = 0;
+        for (let i = 0; i <= Object.keys(this.superCategoryDict).length; i++) {
+            if (!(superCategoryId in this.superCategoryDict)) {
+                break;
+            }
+            superCategoryId++;
+        }
+        return superCategoryId;
+    }
+
+    /**
+     * Check if the category name is already in the category list
+     * @param {string} categoryName
+     * @returns {boolean} True if the category name is already in the category list
+     */
+    containsCategoryName(categoryName) {
+        for (const category of Object.values(this.categoryDict)) {
+            if (category["name"] === categoryName) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 class Category {
@@ -195,14 +365,30 @@ class Category {
         this.categoryId = categoryId;
     }
 
+    /**
+     * Get category id of the category.
+     *
+     * If the coral category is a bleached category,
+     * there will be a "Bleaced " prefix in the category name.
+     * @returns {number} Category id
+     */
     getCategoryId() {
         return this.categoryId;
     }
 
+    /**
+     * Get the category name
+     * @returns {string} Category name
+     */
     getCategoryName() {
-        return this.categoryName;
+        const categoryManager = new CategoryManager();
+        return categoryManager.getCategoryNameByCategoryId(this.categoryId);
     }
 
+    /**
+     * Get the super category name, which identifies the coral name
+     * @returns {string} Category super name
+     */
     getCategorySuperName() {
         const categoryManager = new CategoryManager();
         return categoryManager.getSupercategoryNameByCategoryId(
@@ -210,41 +396,74 @@ class Category {
         );
     }
 
+    /**
+     * Get the super category id, which identifies the coral type or other non-coral type
+     * @returns {number} Super category id
+     */
     getSuperCategoryId() {
         const categoryManager = new CategoryManager();
         return categoryManager.getSuperCategoryIdByCategoryId(this.categoryId);
     }
 
+    /**
+     * Icon name show the category id (e.g. 1).
+     *
+     * If the category is a bleached category,
+     * the icon name will be "1B" with a 'B' at the back.
+     * @returns {string} Icon name
+     */
+    getIconName() {
+        let superCategoryId = this.getSuperCategoryId();
+        if (this.isBleached()) {
+            return `${superCategoryId}B`;
+        }
+        return `${superCategoryId}`;
+    }
+
     isCoral() {
-        return this.isCoral;
+        const categoryManager = new CategoryManager();
+        return categoryManager.getIsCoralByCategoryId(this.categoryId);
     }
 
     getStatus() {
-        return this.status;
+        const categoryManager = new CategoryManager();
+        return categoryManager.getStatusByCategoryId(this.categoryId);
     }
 
+    /**
+     * Get the mask color (e.g. "#F6C3CB")
+     * @returns {string} Mask color
+     */
     getMaskColor() {
         return CategoryManager.getColorByCategoryId(this.getCategoryId());
     }
 
+    /**
+     * Get the text color (e.g. "#fff")
+     * @returns {string} Text color
+     */
     getTextColor() {
         return CategoryManager.getTextColorByCategoryId(this.getCategoryId());
     }
 
-    getBoraderColor() {
+    /**
+     * Get the border color (e.g. "#D3D3D3")
+     * @returns {string} Border color
+     */
+    getBorderColor() {
         return CategoryManager.getBorderColorByCategoryId(this.getCategoryId());
     }
 
     isBleached() {
-        return this.getStatus() === CategoryManager.STATUS_BLEACHED;
+        return this.getStatus() == CategoryManager.STATUS_BLEACHED;
     }
 
     isHealthy() {
-        return this.getStatus() === CategoryManager.STATUS_HEALTHY;
+        return this.getStatus() == CategoryManager.STATUS_HEALTHY;
     }
 
     isDead() {
-        return this.getStatus() === CategoryManager.STATUS_DEAD;
+        return this.getStatus() == CategoryManager.STATUS_DEAD;
     }
 }
 
@@ -270,6 +489,10 @@ class Mask {
 
     getCategory() {
         return this.category;
+    }
+
+    setCategory(category) {
+        this.category = category;
     }
 
     getArea() {
