@@ -157,7 +157,6 @@ class CategoryManager {
      * @param {Object} categoryInfoList List of category dictionary
      */
     updateCategoryList(categoryInfoList) {
-        console.log(categoryInfoList);
         this.categoryDict = {};
         for (const categoryInfo of categoryInfoList) {
             const categoryId = categoryInfo["id"];

@@ -113,7 +113,6 @@ class Canvas {
     showData(data) {
         this.data = data;
         const imagePath = this.data.getImagePath();
-        console.log("Image Path: ", imagePath);
         if (!imagePath) {
             console.error("Image path is not valid: ", imagePath);
             return;
