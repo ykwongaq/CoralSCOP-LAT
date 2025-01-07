@@ -9,7 +9,22 @@ from .util.general import get_resource_path
 from .project import ProjectCreator, ProjectCreateRequest, ProjectLoader
 from .dataset import Dataset, Data
 
-from typing import Dict
+from typing import Dict, List
+
+from functools import wraps
+
+
+def time_it(func):
+    @wraps(func)
+    def wrapper(self: "Server", *args, **kwargs):
+        start_time = time.time()
+        result = func(self, *args, **kwargs)
+        self.logger.info(
+            f"{func.__name__} executed in {time.time() - start_time} seconds"
+        )
+        return result
+
+    return wrapper
 
 
 class Server:
@@ -108,13 +123,12 @@ class Server:
         project_create_request = ProjectCreateRequest(project_create_request)
         self.project_creator.create(project_create_request)
 
+    @time_it
     def load_project(self, project_path: str):
         self.logger.info(f"Loading project from {project_path} ...")
         project_loader = ProjectLoader()
 
-        start_time = time.time()
         dataset, last_image_idx = project_loader.load(project_path)
-        self.logger.info(f"Project loaded in {time.time() - start_time} seconds")
         self.logger.info(f"Project loaded with last image idx: {last_image_idx}")
 
         self.set_dataset(dataset)
@@ -123,6 +137,15 @@ class Server:
     def get_current_data(self) -> Dict:
         return self.get_data(self.get_current_image_idx())
 
+    @time_it
+    def get_gallery_data_list(self) -> List[Dict]:
+        """
+        Get the list of data for the gallery view
+        """
+        data_list = self.dataset.get_data_list()
+        return [data.to_image_json() for data in data_list]
+
+    @time_it
     def get_data(self, image_idx: int) -> Dict:
         """
         Get data information for the image idx.
@@ -196,3 +219,6 @@ class Server:
 
     def get_current_image_idx(self):
         return self.current_image_idx
+
+    def save_data(self, data: Dict):
+        self.logger.info(f"TODO: Saving data ...")

@@ -812,6 +812,7 @@ input[type="range"]:active::-moz-range-thumb {
 .gallery-item__img-w {
     aspect-ratio: 1;
     background-color: var(--surface-surface-primary3);
+    pointer-events: none;
 }
 .gallery-item__img {
     width: 100%;
@@ -831,6 +832,7 @@ input[type="range"]:active::-moz-range-thumb {
     justify-content: space-between;
     min-height: 50px;
     word-break: break-all;
+    pointer-events: none;
 }
 [type="checkbox"]:checked ~ .gallery-item__name::after {
     background: var(--surface-surface-primary1);
@@ -914,8 +916,10 @@ input[type="range"]:active::-moz-range-thumb {
     pointer-events: none;
 }
 
+
 .label-sm-blk__text {
     /* display: none; */
+    pointer-events: none;
 }
 
 :where(*) {
@@ -1454,11 +1458,12 @@ html:has(#confirm-button:not(.hidden)) #default-bar .float-bar__inner {
 }
 
 #progress-info-name {
-    max-width: 440px;
+    /* max-width: 440px; */
     display: inline-block;
     white-space: nowrap;
     text-overflow: ellipsis;
     margin-right: 10px;
+    margin-left: 10px;
     overflow: hidden;
 }
 

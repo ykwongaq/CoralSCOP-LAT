@@ -15,11 +15,33 @@ class ActionPanel {
         this.labelSmallButtonTemplate = this.dom.querySelector(
             "#label-small-btn-template"
         );
+        this.labelToggleButton = this.dom.querySelector(
+            "#assign-label-toggle-button"
+        );
 
         return this;
     }
 
-    init() {}
+    init() {
+        this.initLabelToggleButton();
+    }
+
+    initLabelToggleButton() {
+        // Shortcut: "c"
+        document.addEventListener("keydown", (event) => {
+            // Make sure the input is not in the search input or add category input
+            const labelPanel = new LabelPanel();
+            if (
+                labelPanel.searchInput !== document.activeElement &&
+                labelPanel.addCategoryInput !== document.activeElement
+            ) {
+                const inputKey = event.key.toLowerCase();
+                if (inputKey === "c") {
+                    this.labelToggleButton.click();
+                }
+            }
+        });
+    }
 
     updateButtons() {
         this.clearButtons();
@@ -79,13 +101,14 @@ class ActionPanel {
         labelTextSmallButton.innerHTML = category.getIconName();
         labelTextSmallButton.style.color = textColor;
 
-        labelSmallButton.addEventListener("click", () => {
+        colorBoxSmallButton.addEventListener("click", () => {
             // Assign category to the selected masks
             const maskSelector = new MaskSelector();
             const selectedMasks = maskSelector.getSelectedMasks();
             for (const mask of selectedMasks) {
                 mask.setCategory(category);
             }
+            maskSelector.clearSelection();
 
             // Update canvas visualization
             const canvas = new Canvas();

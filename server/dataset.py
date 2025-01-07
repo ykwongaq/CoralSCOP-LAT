@@ -5,10 +5,6 @@ from typing import Dict, List
 from .util.coco import coco_mask_to_rle
 
 
-class Category:
-    pass
-
-
 class Data:
 
     def __init__(self):

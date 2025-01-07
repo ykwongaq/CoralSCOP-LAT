@@ -13,7 +13,7 @@ class LabelPage {
         // Top Panel
         const topPanelDom = document.getElementById("top-panel");
         const topPanel = new TopPanel(topPanelDom);
-        // topPanel.init();
+        topPanel.init();
 
         // Canvas
         const canvasDom = document.getElementById("canvas");
@@ -25,9 +25,32 @@ class LabelPage {
         const actionPanel = new ActionPanel(actionPanelDom);
         actionPanel.init();
 
+        // View Control Panel
         const viewPanelDom = document.getElementById("view-panel");
         const viewPanel = new ViewPanel(viewPanelDom);
         viewPanel.init();
+
+        // Navigation Bar
+        const navigationBarDom = document.getElementById("navigation-bar");
+        const navigationBar = new NavigationBar(navigationBarDom);
+        navigationBar.init();
+
+        // Gallery Page
+        const galleryPageDom = document.getElementById(
+            NavigationBar.GALLERY_PAGE
+        );
+        const galleryPage = new GalleryPage(galleryPageDom);
+        galleryPage.init();
+
+        // Statistic Page
+        const statisticPageDom = document.getElementById(
+            NavigationBar.STATISTIC_PAGE
+        );
+        const statisticPage = new StatisticPage(statisticPageDom);
+        statisticPage.init();
+
+        // Action Manager
+        const actionManager = new ActionManager();
     }
 }
 

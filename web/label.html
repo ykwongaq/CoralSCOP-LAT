@@ -19,7 +19,7 @@
                     <span class="logo-blk__text">CoralSCOP-LAT</span>
                 </div>
                 <div id="top-panel" class="header__main">
-                    <div class="header__main-side hidden">
+                    <!-- <div class="header__main-side hidden">
                         <button
                             class="arrow-link arrow-link--prev"
                             disabled
@@ -28,7 +28,7 @@
                             <span class="ico-line-arrow-left"></span
                             ><span class="text"></span>
                         </button>
-                    </div>
+                    </div> -->
                     <div class="header__main-side">
                         <button
                             id="back-to-gallery"
@@ -65,7 +65,7 @@
                 </div>
             </div>
             <div class="main">
-                <nav class="side-bar">
+                <nav id="navigation-bar" class="side-bar">
                     <div class="side-bar__main">
                         <ul class="nav-list top">
                             <li class="nav-list__item">
@@ -107,7 +107,7 @@
                                     >
                                 </button>
                             </li>
-                            <li class="nav-list__item">
+                            <!-- <li class="nav-list__item">
                                 <button
                                     id="load-project-button"
                                     class="nav-list__button"
@@ -117,7 +117,7 @@
                                         >Load Project</span
                                     >
                                 </button>
-                            </li>
+                            </li> -->
                             <li class="nav-list__item">
                                 <button
                                     id="file-button"
@@ -157,7 +157,7 @@
                                 </div>
                             </li>
 
-                            <li class="nav-list__item">
+                            <!-- <li class="nav-list__item">
                                 <button
                                     id="setting-button"
                                     class="nav-list__button"
@@ -165,7 +165,7 @@
                                     <span class="ico-gear"></span
                                     ><span class="arrow-tooltip">Setting</span>
                                 </button>
-                            </li>
+                            </li> -->
                         </ul>
 
                         <!-- <ul class="nav-list bottom">
@@ -349,7 +349,7 @@
                         ></div>
                     </div>
                 </div>
-                <div id="annotationPage" class="main-section page active-page">
+                <div id="annotationPage" class="main-section page">
                     <div class="canvas-container">
                         <canvas id="canvas" class="canvas"></canvas>
                     </div>
@@ -372,6 +372,7 @@
                                         ></div>
                                     </div>
                                     <button
+                                        id="assign-label-toggle-button"
                                         class="toggle-fn__btn toggle-color-plate-popup__button float-bar__button"
                                     >
                                         <span
@@ -695,6 +696,8 @@
         <script src="js/label/maskSelector.js"></script>
         <script src="js/label/labelPanel.js"></script>
         <script src="js/label/canvas.js"></script>
+        <script src="js/label/navigationBar.js"></script>
+        <script src="js/label/actionManager.js"></script>
         <script src="js/label/core.js"></script>
         <script src="js/label/viewPanel.js"></script>
         <script src="js/label/topPanel.js"></script>

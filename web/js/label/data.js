@@ -310,8 +310,6 @@ class CategoryManager {
             this.superCategoryDict[newSuperCategoryId] = [];
         }
         this.superCategoryDict[newSuperCategoryId].push(categoryInfo);
-
-        console.log("Add category: ", categoryInfo);
         return true;
     }
 
@@ -561,6 +559,29 @@ class Mask {
         const middle_y = Math.floor(y_sum / count);
         return [middle_x, middle_y];
     }
+
+    getMaskColor() {
+        if (this.isSelected()) {
+            return CategoryManager.FOCUS_COLOR;
+        }
+        return this.category.getMaskColor();
+    }
+
+    isSelected() {
+        const maskSelector = new MaskSelector();
+        return maskSelector.isSelected(this);
+    }
+
+    /**
+     * Check if the mask contains the pixel
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean} True if the mask contains the pixel
+     */
+    containPixel(x, y) {
+        const mask = this.getDecodedMask();
+        return mask[y * this.width + x] === 1;
+    }
 }
 
 class Data {
@@ -641,5 +662,9 @@ class Data {
 
     getMasks() {
         return this.masks;
+    }
+
+    exportJson() {
+        return {};
     }
 }

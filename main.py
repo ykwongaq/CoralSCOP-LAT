@@ -2,7 +2,7 @@ import logging
 import eel
 
 from server.server import Server
-from typing import Dict
+from typing import List, Dict
 
 
 # Initialize logging
@@ -43,14 +43,39 @@ def create_project(project_create_request: Dict):
 
 
 @eel.expose
-def load_project(project_path: str) -> Dict:
+def load_project(project_path: str) -> List[Dict]:
     server.load_project(project_path)
-    return server.get_current_data()
+    return server.get_gallery_data_list()
 
 
 @eel.expose
 def terminate_create_project_process():
     server.terminate_create_project_process()
+
+
+@eel.expose
+def get_current_data() -> Dict:
+    return server.get_current_data()
+
+
+@eel.expose
+def get_next_data() -> Dict:
+    return server.get_next_data()
+
+
+@eel.expose
+def get_prev_data() -> Dict:
+    return server.get_previous_data()
+
+
+@eel.expose
+def get_data_by_idx(idx: int) -> Dict:
+    return server.get_data(idx)
+
+
+@eel.expose
+def save_data(data: Dict):
+    server.save_data(data)
 
 
 if __name__ == "__main__":

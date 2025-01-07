@@ -12,12 +12,26 @@ class MaskSelector {
      * Select the given mask
      * @param {Mask} mask
      */
-    selectedMask(mask) {
+    selectMask(mask) {
         this.selectedMasks.add(mask);
+    }
+
+    /**
+     * Remove the given mask from the selected masks
+     * @param {Mask} mask
+     */
+    unselectMask(mask) {
+        if (this.selectedMasks.has(mask)) {
+            this.selectedMasks.delete(mask);
+        }
     }
 
     getSelectedMasks() {
         return this.selectedMasks;
+    }
+
+    isSelected(mask) {
+        return this.selectedMasks.has(mask);
     }
 
     clearSelection() {

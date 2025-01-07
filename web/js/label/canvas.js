@@ -47,6 +47,7 @@ class Canvas {
         this.enableDrag();
         this.enableEditting();
         this.enableWindowResize();
+        this.enableMaskSelection();
     }
 
     enableZoom() {
@@ -107,6 +108,40 @@ class Canvas {
     enableWindowResize() {
         window.addEventListener("resize", () => {
             this.resetViewpoint();
+        });
+    }
+
+    enableMaskSelection() {
+        this.canvas.addEventListener("click", (event) => {
+            event.preventDefault();
+
+            let [canvasX, canvasY] = this.getMousePos(event);
+            canvasX = Math.floor(canvasX);
+            canvasY = Math.floor(canvasY);
+
+            let [imageX, imageY] = this.canvasPixelToImagePixel(
+                canvasX,
+                canvasY
+            );
+
+            const actionManager = new ActionManager();
+            actionManager.leftClickPixel(imageX, imageY);
+        });
+
+        this.canvas.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+
+            let [canvasX, canvasY] = this.getMousePos(event);
+            canvasX = Math.floor(canvasX);
+            canvasY = Math.floor(canvasY);
+
+            let [imageX, imageY] = this.canvasPixelToImagePixel(
+                canvasX,
+                canvasY
+            );
+
+            const actionManager = new ActionManager();
+            actionManager.rightClickPixel(imageX, imageY);
         });
     }
 
@@ -187,7 +222,6 @@ class Canvas {
         maskCanvas.height = this.imageHeight;
 
         const masks = this.data.getMasks();
-
         const imageData = maskCtx.getImageData(
             0,
             0,
@@ -200,9 +234,9 @@ class Canvas {
             if (!mask.shouldDisplay()) {
                 continue;
             }
-            const color = mask.getCategory().getMaskColor();
-            const maskData = mask.getDecodedMask();
+            const color = mask.getMaskColor();
             const [r, g, b] = this.hexToRGB(color);
+            const maskData = mask.getDecodedMask();
 
             for (let i = 0; i < maskData.length; i++) {
                 if (maskData[i] === 1) {
@@ -293,10 +327,7 @@ class Canvas {
                     40
                 );
 
-                let display_id = category.getSuperCategoryId();
-                if (category.isBleached()) {
-                    display_id = `${display_id}B`;
-                }
+                const display_id = category.getIconName();
                 const fontBgRadius = fontSize * 0.7;
 
                 textCtx.beginPath();
@@ -406,5 +437,18 @@ class Canvas {
 
     setOpacity(opacity) {
         this.maskOpacity = opacity;
+    }
+
+    canvasPixelToImagePixel(canvasX, canvasY) {
+        const width = this.image_bottom_right.x - this.image_top_left.x;
+        const height = this.image_bottom_right.y - this.image_top_left.y;
+
+        const imageX = Math.floor(
+            ((canvasX - this.image_top_left.x) / width) * this.imageWidth
+        );
+        const imageY = Math.floor(
+            ((canvasY - this.image_top_left.y) / height) * this.imageHeight
+        );
+        return [imageX, imageY];
     }
 }
