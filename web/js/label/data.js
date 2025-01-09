@@ -667,4 +667,8 @@ class Data {
     exportJson() {
         return {};
     }
+
+    removeMask(mask) {
+        this.masks = this.masks.filter((m) => m !== mask);
+    }
 }

@@ -19,17 +19,19 @@ class ActionPanel {
             "#assign-label-toggle-button"
         );
 
+        this.removeButton = this.dom.querySelector("#remove-button");
+
         return this;
     }
 
     init() {
         this.initLabelToggleButton();
+        this.initRemoveButton();
     }
 
     initLabelToggleButton() {
-        // Shortcut: "c"
         document.addEventListener("keydown", (event) => {
-            // Make sure the input is not in the search input or add category input
+            // Add shotcut to show the category selection panel
             const labelPanel = new LabelPanel();
             if (
                 labelPanel.searchInput !== document.activeElement &&
@@ -43,8 +45,44 @@ class ActionPanel {
         });
     }
 
-    updateButtons() {
-        this.clearButtons();
+    initRemoveButton() {
+        this.removeButton.addEventListener("click", () => {
+            // Get the selected masks
+            const maskSelector = new MaskSelector();
+            const selectedMasks = maskSelector.getSelectedMasks();
+
+            // Remove the selected masks
+            const core = new Core();
+            const data = core.getData();
+            for (const mask of selectedMasks) {
+                data.removeMask(mask);
+            }
+
+            // Clear the selection
+            maskSelector.clearSelection();
+
+            // Visualize the updated results
+            const canvas = new Canvas();
+            canvas.updateMasks();
+        });
+
+        // Add shortcut the remove button
+        document.addEventListener("keydown", (event) => {
+            const labelPanel = new LabelPanel();
+            if (
+                labelPanel.searchInput !== document.activeElement &&
+                labelPanel.addCategoryInput !== document.activeElement
+            ) {
+                const inputKey = event.key.toLowerCase();
+                if (inputKey === "r") {
+                    this.removeButton.click();
+                }
+            }
+        });
+    }
+
+    updateCategoryButtons() {
+        this.clearCategoryButtons();
         const categoryManager = new CategoryManager();
 
         const labelPanel = new LabelPanel();
@@ -75,7 +113,7 @@ class ActionPanel {
         }
     }
 
-    clearButtons() {
+    clearCategoryButtons() {
         this.colorSelectionContainer.innerHTML = "";
     }
 

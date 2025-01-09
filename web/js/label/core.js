@@ -107,10 +107,10 @@ class Core {
         canvas.showData(this.data);
 
         const labelPanel = new LabelPanel();
-        labelPanel.updateButtons();
+        labelPanel.updateCategoryButtons();
 
         const actionPanel = new ActionPanel();
-        actionPanel.updateButtons();
+        actionPanel.updateCategoryButtons();
 
         const topPanel = new TopPanel();
         topPanel.update();

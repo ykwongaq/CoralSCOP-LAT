@@ -93,7 +93,7 @@ class LabelPanel {
             radio.addEventListener("change", () => {
                 const value = parseInt(radio.value);
                 this.currentType = value;
-                this.updateButtons();
+                this.updateCategoryButtons();
 
                 const actionPanel = new ActionPanel();
                 actionPanel.updateButtons();
@@ -124,11 +124,11 @@ class LabelPanel {
                 // TODO: Pop up a warning message
             }
 
-            this.updateButtons();
+            this.updateCategoryButtons();
             this.addCategoryInput.value = "";
 
             const actionPanel = new ActionPanel();
-            actionPanel.updateButtons();
+            actionPanel.updateCategoryButtons();
         });
 
         this.addCategoryInput.addEventListener("keydown", (event) => {
@@ -154,7 +154,7 @@ class LabelPanel {
         });
     }
 
-    updateButtons() {
+    updateCategoryButtons() {
         this.clearButtons();
         const categoryManager = new CategoryManager();
 
