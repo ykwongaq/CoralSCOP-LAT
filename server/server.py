@@ -4,10 +4,13 @@ import time
 from tkinter import Tk, filedialog
 from .embedding import EmbeddingGenerator
 from .segmentation import CoralSegmentation
-from .maskEiditor import MaskEidtor
+
+# from .maskEiditor import MaskEidtor
+from .maskCreator import MaskCreator, Prompt
 from .util.general import get_resource_path
 from .project import ProjectCreator, ProjectCreateRequest, ProjectLoader
 from .dataset import Dataset, Data
+from .util.coco import to_coco_annotation, coco_mask_to_rle
 
 from typing import Dict, List
 
@@ -66,9 +69,9 @@ class Server:
         self.logger.info("Mask Editor initialized ...")
         start_time = time.time()
         model_path = get_resource_path(Server.SAM_DECODER_PATH)
-        self.mask_editor = MaskEidtor(model_path)
+        self.mask_creator = MaskCreator(model_path)
         self.logger.info(
-            f"Mask Editor initialized in {time.time() - start_time} seconds"
+            f"Mask Creator initialized in {time.time() - start_time} seconds"
         )
 
         # Project creation
@@ -134,8 +137,8 @@ class Server:
         self.set_dataset(dataset)
         self.set_current_image_idx(last_image_idx)
 
-    def get_current_data(self) -> Dict:
-        return self.get_data(self.get_current_image_idx())
+    def get_current_data_dict(self) -> Dict:
+        return self.get_data_dict(self.get_current_image_idx())
 
     @time_it
     def get_gallery_data_list(self) -> List[Dict]:
@@ -146,7 +149,25 @@ class Server:
         return [data.to_image_json() for data in data_list]
 
     @time_it
-    def get_data(self, image_idx: int) -> Dict:
+    def get_data_dict(self, image_idx: int) -> Dict:
+        """
+        Get data information for the image idx.
+        The data information include the category information.
+        """
+
+        data = self.get_data(image_idx)
+
+        category_info = self.dataset.get_category_info()
+        if category_info is None:
+            self.logger.error(f"Category info not found")
+            return None
+
+        response = data.to_json()
+        response["category_info"] = category_info
+
+        return response
+
+    def get_data(self, image_idx: int) -> Data:
         """
         Get data information for the image idx.
         The data information include the category information.
@@ -162,47 +183,37 @@ class Server:
             self.logger.error(f"Data not found for image idx: {image_idx}")
             return None
 
-        category_info = self.dataset.get_category_info()
-        if category_info is None:
-            self.logger.error(f"Category info not found")
-            return None
+        return data
 
-        response = data.to_json()
-        response["category_info"] = category_info
-
-        return response
-
-    def get_next_data(self) -> Dict:
+    def to_next_data(self) -> None:
         """
-        Get the next data. If there are not
-        next data, return the current one
+        Move to the next data. If there are no next data,
+        stay at the current data
         """
         current_image_idx = self.get_current_image_idx()
         next_image_idx = current_image_idx + 1
 
-        self.logger.info(f"Getting next data for image idx: {next_image_idx}")
+        self.logger.info(f"Moving to next data index: {next_image_idx}")
         if next_image_idx >= self.dataset.get_size():
             self.logger.info(f"No next data found. Returning current data ...")
-            return self.get_current_data()
+            return
 
         self.set_current_image_idx(next_image_idx)
-        return self.get_current_data()
 
-    def get_previous_data(self) -> Dict:
+    def to_prev_data(self) -> None:
         """
-        Get the previous data. If there are not
-        previous data, return the current one
+        Move to the previous data. If there are no previous data,
+        stay at the current data
         """
         current_image_idx = self.get_current_image_idx()
         previous_image_idx = current_image_idx - 1
 
-        self.logger.info(f"Getting previous data for image idx: {previous_image_idx}")
+        self.logger.info(f"Moving to previous data index: {previous_image_idx}")
         if previous_image_idx < 0:
             self.logger.info(f"No previous data found. Returning current data ...")
-            return self.get_current_data()
+            return
 
         self.set_current_image_idx(previous_image_idx)
-        return self.get_current_data()
 
     def terminate_create_project_process(self):
         self.logger.info(f"Terminating project creation ...")
@@ -217,8 +228,48 @@ class Server:
     def set_current_image_idx(self, image_idx):
         self.current_image_idx = image_idx
 
+        data = self.get_data(image_idx)
+        self.mask_creator.set_image(
+            data.get_embedding(),
+            [
+                data.get_image_width(),
+                data.get_image_height(),
+            ],
+        )
+
     def get_current_image_idx(self):
         return self.current_image_idx
 
     def save_data(self, data: Dict):
         self.logger.info(f"TODO: Saving data ...")
+
+    def create_mask(self, prompts: List[Dict]) -> Dict:
+        """
+        Create a mask based on the prompts
+
+        Args:
+            prompts: List of prompts
+
+        Returns:
+            A dictionary containing the mask annotation,
+            which mainly follow the coco format
+            {
+                "id": int,
+                "image_id": int,
+                "category_id": int,
+                "segmentation": List[List[float]],
+                "area": int,
+                "bbox": List[int],
+                "iscrowd": int,
+                "rle": rle-encoded mask, added for frontend visualization
+            }
+        """
+        self.logger.info(f"Creating mask ...")
+
+        prompts = [Prompt(prompt) for prompt in prompts]
+        mask = self.mask_creator.create_mask(prompts)
+        annotation = to_coco_annotation(mask)
+        annotation["category_id"] = -2  # Category id for prompted mask
+        annotation["rle"] = coco_mask_to_rle(annotation["segmentation"])
+
+        return annotation

@@ -15,7 +15,7 @@ class Canvas {
         this.imageCache = new Image();
         this.maskCache = new Image();
         this.textCache = new Image();
-        this.edittingMaskCache = new Image();
+        this.promptingMaskCache = new Image();
 
         // View control
         this.scale = 1.0;
@@ -35,11 +35,11 @@ class Canvas {
         this.imageWidth = 0;
         this.imageHeight = 0;
 
-        this.edittingMask = null;
-        this.edittingMaskColor = `rgba (${30 / 255}, ${144 / 255}, ${
+        // Prompting mask
+        this.promtedMaskColor = `rgba (${30 / 255}, ${144 / 255}, ${
             255 / 255
         }, 0.6)`;
-        this.edittingLabel = null;
+        this.promptedMask = null;
     }
 
     init() {
@@ -205,6 +205,12 @@ class Canvas {
             this.ctx.drawImage(this.maskCache, 0, 0);
             this.ctx.globalAlpha = 1.0;
             this.ctx.drawImage(this.textCache, 0, 0);
+        }
+
+        if (this.promptedMask !== null) {
+            this.ctx.globalAlpha = 0.7;
+            this.ctx.drawImage(this.promptingMaskCache, 0, 0);
+            this.ctx.globalAlpha = 1.0;
         }
 
         window.requestAnimationFrame(this.draw);
@@ -450,5 +456,66 @@ class Canvas {
             ((canvasY - this.image_top_left.y) / height) * this.imageHeight
         );
         return [imageX, imageY];
+    }
+
+    /**
+     * Show the given promted mask.
+     * If the given mask is null, then do not show anything.
+     * @param {Mask} mask
+     * @param {Prompt[]} prompts
+     */
+    showPromptedMask(mask, prompts) {
+        this.promptedMask = mask;
+        if (mask === null) {
+            return;
+        }
+
+        // Draw masks
+        const maskCanvas = document.createElement("canvas");
+        const maskCtx = maskCanvas.getContext("2d");
+        maskCanvas.width = this.imageWidth;
+        maskCanvas.height = this.imageHeight;
+
+        const imageData = maskCtx.getImageData(
+            0,
+            0,
+            this.imageWidth,
+            this.imageHeight
+        );
+        const data = imageData.data;
+
+        const maskData = mask.getDecodedMask();
+        const [r, g, b] = this.hexToRGB(mask.getMaskColor());
+
+        for (let i = 0; i < maskData.length; i++) {
+            if (maskData[i] === 1) {
+                const x = i % this.imageWidth;
+                const y = Math.floor(i / this.imageWidth);
+                const index = (y * this.imageWidth + x) * 4;
+
+                // Set pixel color with alpha transparency
+                data[index] = r; // Red
+                data[index + 1] = g; // Green
+                data[index + 2] = b; // Blue
+                data[index + 3] = 255; // Alpha
+            }
+        }
+        maskCtx.putImageData(imageData, 0, 0);
+
+        // Draw prompted points
+        const pointRadius = Math.min(this.imageWidth, this.imageHeight) * 0.01;
+        for (const prompt of prompts) {
+            const imageX = prompt.getImageX();
+            const imageY = prompt.getImageY();
+            const color = prompt.getPointColor();
+
+            maskCtx.beginPath();
+            maskCtx.arc(imageX, imageY, pointRadius, 0, 2 * Math.PI);
+            maskCtx.fillStyle = color;
+            maskCtx.fill();
+        }
+
+        this.promptingMaskCache = new Image();
+        this.promptingMaskCache.src = maskCanvas.toDataURL();
     }
 }

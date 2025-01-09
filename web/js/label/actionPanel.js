@@ -1,25 +1,38 @@
 class ActionPanel {
-    constructor(dom) {
+    constructor(actionPanel, actionContainerDom) {
         if (ActionPanel.instance) {
             return ActionPanel.instance;
         }
         ActionPanel.instance = this;
 
-        this.dom = dom;
-        this.colorSelectionContainer = this.dom.querySelector(
+        this.actionPanelDom = actionPanel;
+        this.actionContainerDom = actionContainerDom;
+        this.colorSelectionContainer = this.actionPanelDom.querySelector(
             "#color-selection-container"
         );
-        this.selectedLabelColor = this.dom.querySelector(
+        this.selectedLabelColor = this.actionPanelDom.querySelector(
             "#selected-label-color"
         );
-        this.labelSmallButtonTemplate = this.dom.querySelector(
+        this.labelSmallButtonTemplate = this.actionPanelDom.querySelector(
             "#label-small-btn-template"
         );
-        this.labelToggleButton = this.dom.querySelector(
+        this.labelToggleButton = this.actionPanelDom.querySelector(
             "#assign-label-toggle-button"
         );
 
-        this.removeButton = this.dom.querySelector("#remove-button");
+        this.removeButton = this.actionPanelDom.querySelector("#remove-button");
+
+        this.addMaskButton =
+            this.actionPanelDom.querySelector("#add-mask-button");
+        this.confirmPromptButton =
+            this.actionContainerDom.querySelector("#confirm-button");
+        this.undoPromptButton =
+            this.actionContainerDom.querySelector("#undo-button");
+        this.resetPromptButton =
+            this.actionContainerDom.querySelector("#reset-button");
+        this.backButton = this.actionContainerDom.querySelector(
+            "#back-to-edit-mode-btn"
+        );
 
         return this;
     }
@@ -27,20 +40,32 @@ class ActionPanel {
     init() {
         this.initLabelToggleButton();
         this.initRemoveButton();
+        this.initAddMask();
+        this.initBackButton();
     }
 
     initLabelToggleButton() {
-        document.addEventListener("keydown", (event) => {
-            // Add shotcut to show the category selection panel
-            const labelPanel = new LabelPanel();
-            if (
-                labelPanel.searchInput !== document.activeElement &&
-                labelPanel.addCategoryInput !== document.activeElement
-            ) {
-                const inputKey = event.key.toLowerCase();
-                if (inputKey === "c") {
+        // Register the shortcut for the label toggle button.
+        // We need ActionManager to handle the shortcut because
+        // different state will have different short cut operation.
+        const actionManager = new ActionManager();
+        actionManager.registerShortCut(
+            ActionManager.DEFAULT_STATE,
+            "c",
+            (event) => {
+                const labelPanel = new LabelPanel();
+                if (
+                    labelPanel.searchInput !== document.activeElement &&
+                    labelPanel.addCategoryInput !== document.activeElement
+                ) {
                     this.labelToggleButton.click();
                 }
+            }
+        );
+        document.addEventListener("keydown", (event) => {
+            const key = event.key.toLowerCase();
+            if (key === "c") {
+                actionManager.handleShortCut(key, event);
             }
         });
     }
@@ -67,18 +92,131 @@ class ActionPanel {
         });
 
         // Add shortcut the remove button
-        document.addEventListener("keydown", (event) => {
-            const labelPanel = new LabelPanel();
-            if (
-                labelPanel.searchInput !== document.activeElement &&
-                labelPanel.addCategoryInput !== document.activeElement
-            ) {
-                const inputKey = event.key.toLowerCase();
-                if (inputKey === "r") {
+        // Register the shortcut for the label toggle button.
+        // We need ActionManager to handle the shortcut because
+        // different state will have different short cut operation.
+        const actionManager = new ActionManager();
+        actionManager.registerShortCut(
+            ActionManager.DEFAULT_STATE,
+            "r",
+            (event) => {
+                const labelPanel = new LabelPanel();
+                if (
+                    labelPanel.searchInput !== document.activeElement &&
+                    labelPanel.addCategoryInput !== document.activeElement
+                ) {
                     this.removeButton.click();
                 }
             }
+        );
+        document.addEventListener("keydown", (event) => {
+            const key = event.key.toLowerCase();
+            if (key === "r") {
+                actionManager.handleShortCut(key, event);
+            }
         });
+    }
+
+    initAddMask() {
+        this.addMaskButton.addEventListener("click", () => {
+            this.showAddMaskActionButtons();
+
+            const actionManager = new ActionManager();
+            actionManager.setState(ActionManager.STATE_CREATE_MASK);
+
+            const maskSelector = new MaskSelector();
+            maskSelector.clearSelection();
+
+            this.hide();
+        });
+
+        this.undoPromptButton.addEventListener("click", () => {
+            const maskCreator = new MaskCreator();
+            maskCreator.undoPrompt();
+        });
+
+        this.resetPromptButton.addEventListener("click", () => {
+            const maskCreator = new MaskCreator();
+            maskCreator.clearPrompts();
+        });
+
+        // Register the shortcut for the label toggle button.
+        // We need ActionManager to handle the shortcut because
+        // different state will have different short cut operation.
+        const actionManager = new ActionManager();
+        actionManager.registerShortCut(
+            ActionManager.STATE_CREATE_MASK,
+            "Control+z",
+            (event) => {
+                const labelPanel = new LabelPanel();
+                if (
+                    labelPanel.searchInput !== document.activeElement &&
+                    labelPanel.addCategoryInput !== document.activeElement
+                ) {
+                    this.undoPromptButton.click();
+                }
+            }
+        );
+        actionManager.registerShortCut(
+            ActionManager.STATE_CREATE_MASK,
+            "r",
+            (event) => {
+                const labelPanel = new LabelPanel();
+                if (
+                    labelPanel.searchInput !== document.activeElement &&
+                    labelPanel.addCategoryInput !== document.activeElement
+                ) {
+                    this.resetPromptButton.click();
+                }
+            }
+        );
+
+        document.addEventListener("keydown", (event) => {
+            const key = event.key.toLowerCase();
+            if (key === "z" && event.ctrlKey) {
+                actionManager.handleShortCut("Control+Z", event);
+            }
+        });
+
+        document.addEventListener("keydown", (event) => {
+            const key = event.key.toLowerCase();
+            if (key === "r") {
+                actionManager.handleShortCut("r", event);
+            }
+        });
+    }
+
+    initBackButton() {
+        this.backButton.addEventListener("click", () => {
+            this.hideAddMaskActionButtons();
+            this.show();
+
+            const actionManager = new ActionManager();
+            actionManager.setState(ActionManager.STATE_SELECT_MASK);
+
+            const maskSelector = new MaskSelector();
+            maskSelector.clearSelection();
+        });
+    }
+
+    hide() {
+        this.actionPanelDom.classList.add("hidden");
+    }
+
+    show() {
+        this.actionPanelDom.classList.remove("hidden");
+    }
+
+    showAddMaskActionButtons() {
+        this.undoPromptButton.classList.remove("hidden");
+        this.resetPromptButton.classList.remove("hidden");
+        this.confirmPromptButton.classList.remove("hidden");
+    }
+
+    hideAddMaskActionButtons() {
+        this.undoPromptButton.classList.add("hidden");
+        this.resetPromptButton.classList.add("hidden");
+        this.confirmPromptButton.classList.add("hidden");
     }
 
     updateCategoryButtons() {

@@ -2,6 +2,7 @@ class CategoryManager {
     static FOCUS_COLOR = "#0000FF"; // blue
     static REMOVE_COLOR = "#00FF00"; // green
     static DEFAULT_COLOR = "#FF0000"; // red
+    static PROMPT_COLOR = "#1491ff";
     static DEFAULT_TEXT_COLOR = "#fff"; // white
 
     static BLEACHED_PREFIX = "Bleached ";
@@ -81,8 +82,10 @@ class CategoryManager {
     }
 
     static getColorByCategoryId(categoryId) {
-        if (categoryId == -1) {
+        if (categoryId == Category.PREDICTED_CORAL_ID) {
             return CategoryManager.DEFAULT_COLOR;
+        } else if (categoryId == Category.PROMPT_COLOR_ID) {
+            return CategoryManager.PROMPT_COLOR;
         }
 
         const categoryManager = new CategoryManager();
@@ -94,8 +97,10 @@ class CategoryManager {
     }
 
     static getBorderColorByCategoryId(categoryId) {
-        if (categoryId == -1) {
+        if (categoryId == Category.PREDICTED_CORAL_ID) {
             return CategoryManager.DEFAULT_COLOR;
+        } else if (categoryId == Category.PROMPT_COLOR_ID) {
+            return CategoryManager.PROMPT_COLOR;
         }
 
         const category = new Category(categoryId);
@@ -112,7 +117,7 @@ class CategoryManager {
     }
 
     static getTextColorByCategoryId(categoryId) {
-        if (categoryId == -1) {
+        if (categoryId == Category.PREDICTED_CORAL_ID) {
             return CategoryManager.DEFAULT_TEXT_COLOR;
         }
 
@@ -359,6 +364,10 @@ class CategoryManager {
 }
 
 class Category {
+    static DEAD_CORAL_ID = 0;
+    static PREDICTED_CORAL_ID = -1;
+    static PROMPT_COLOR_ID = -2;
+
     constructor(categoryId) {
         this.categoryId = categoryId;
     }

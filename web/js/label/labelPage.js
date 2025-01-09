@@ -5,6 +5,11 @@ class LabelPage {
     }
 
     init() {
+        // Canvas
+        const canvasDom = document.getElementById("canvas");
+        const canvas = new Canvas(canvasDom);
+        canvas.init();
+
         // Label Panel
         const labelPanelDom = document.getElementById("label-panel");
         const labelPanel = new LabelPanel(labelPanelDom);
@@ -15,14 +20,12 @@ class LabelPage {
         const topPanel = new TopPanel(topPanelDom);
         topPanel.init();
 
-        // Canvas
-        const canvasDom = document.getElementById("canvas");
-        const canvas = new Canvas(canvasDom);
-        canvas.init();
-
         // Action Panel
         const actionPanelDom = document.getElementById("action-panel");
-        const actionPanel = new ActionPanel(actionPanelDom);
+        const actionContainerDom = document.getElementById(
+            "actionContainer-bar"
+        );
+        const actionPanel = new ActionPanel(actionPanelDom, actionContainerDom);
         actionPanel.init();
 
         // View Control Panel

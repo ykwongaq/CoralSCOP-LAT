@@ -23,7 +23,14 @@ class TopPanel {
 
     initNextImageButton() {
         this.nextImageButton.addEventListener("click", () => {
-            console.log("1  ");
+            // Clear all selected masks
+            const maskSelector = new MaskSelector();
+            maskSelector.clearSelection();
+
+            // Clear all prompting masks
+            const maskCreator = new MaskCreator();
+            maskCreator.clearPrompts();
+
             this.disableButtons();
             const core = new Core();
             core.nextData(() => {
@@ -31,23 +38,42 @@ class TopPanel {
             });
         });
 
-        document.addEventListener("keydown", (event) => {
-            const labelPanel = new LabelPanel();
-            // Check if the input is not in the search input or add category input
-            if (
-                labelPanel.searchInput !== document.activeElement &&
-                labelPanel.addCategoryInput !== document.activeElement
-            ) {
-                const inputKey = event.key.toLowerCase();
-                if (inputKey === "d") {
+        // Register the shortcut for the label toggle button.
+        // We need ActionManager to handle the shortcut because
+        // different state will have different short cut operation.
+        const actionManager = new ActionManager();
+        actionManager.registerShortCut(
+            ActionManager.DEFAULT_STATE,
+            "d",
+            (event) => {
+                const labelPanel = new LabelPanel();
+                // Check if the input is not in the search input or add category input
+                if (
+                    labelPanel.searchInput !== document.activeElement &&
+                    labelPanel.addCategoryInput !== document.activeElement
+                ) {
                     this.nextImageButton.click();
                 }
+            }
+        );
+        document.addEventListener("keydown", (event) => {
+            const key = event.key.toLowerCase();
+            if (key === "d") {
+                actionManager.handleShortCut(key, event);
             }
         });
     }
 
     initPrevImageButton() {
         this.prevImageButton.addEventListener("click", () => {
+            // Clear all selected masks
+            const maskSelector = new MaskSelector();
+            maskSelector.clearSelection();
+
+            // Clear all prompting masks
+            const maskCreator = new MaskCreator();
+            maskCreator.clearPrompts();
+
             this.disableButtons();
             const core = new Core();
             core.prevData(() => {
@@ -55,17 +81,28 @@ class TopPanel {
             });
         });
 
-        document.addEventListener("keydown", (event) => {
-            const labelPanel = new LabelPanel();
-            // Check if the input is not in the search input or add category input
-            if (
-                labelPanel.searchInput !== document.activeElement &&
-                labelPanel.addCategoryInput !== document.activeElement
-            ) {
-                const inputKey = event.key.toLowerCase();
-                if (inputKey === "a") {
+        // Register the shortcut for the label toggle button.
+        // We need ActionManager to handle the shortcut because
+        // different state will have different short cut operation.
+        const actionManager = new ActionManager();
+        actionManager.registerShortCut(
+            ActionManager.DEFAULT_STATE,
+            "a",
+            (event) => {
+                const labelPanel = new LabelPanel();
+                // Check if the input is not in the search input or add category input
+                if (
+                    labelPanel.searchInput !== document.activeElement &&
+                    labelPanel.addCategoryInput !== document.activeElement
+                ) {
                     this.prevImageButton.click();
                 }
+            }
+        );
+        document.addEventListener("keydown", (event) => {
+            const key = event.key.toLowerCase();
+            if (key === "a") {
+                actionManager.handleShortCut(key, event);
             }
         });
     }

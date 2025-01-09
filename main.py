@@ -55,27 +55,34 @@ def terminate_create_project_process():
 
 @eel.expose
 def get_current_data() -> Dict:
-    return server.get_current_data()
+    return server.get_current_data_dict()
 
 
 @eel.expose
 def get_next_data() -> Dict:
-    return server.get_next_data()
+    server.to_next_data()
+    return server.get_current_data_dict()
 
 
 @eel.expose
 def get_prev_data() -> Dict:
-    return server.get_previous_data()
+    server.to_prev_data()
+    return server.get_current_data_dict()
 
 
 @eel.expose
 def get_data_by_idx(idx: int) -> Dict:
-    return server.get_data(idx)
+    return server.get_data_dict(idx)
 
 
 @eel.expose
 def save_data(data: Dict):
     server.save_data(data)
+
+
+@eel.expose
+def create_mask(prompts: List[Dict]) -> Dict:
+    return server.create_mask(prompts)
 
 
 if __name__ == "__main__":

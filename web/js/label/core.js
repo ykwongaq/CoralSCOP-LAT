@@ -115,4 +115,8 @@ class Core {
         const topPanel = new TopPanel();
         topPanel.update();
     }
+
+    createPromptedMask(prompts) {
+        return eel.create_mask(prompts)();
+    }
 }

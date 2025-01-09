@@ -1,14 +1,26 @@
 class ActionState {
     constructor(context) {
         this.context = context;
+
+        this.shortCutsDict = {};
     }
 
     rightClickPixel(imageX, imageY) {
-        throw new Error("Method not implemented.");
+        // Do nothing by default
     }
 
     leftClickPixel(imageX, imageY) {
-        throw new Error("Method not implemented.");
+        // Do nothing by default
+    }
+
+    registerShortCut(key, callback) {
+        this.shortCutsDict[key] = callback;
+    }
+
+    handleShortCut(key, event) {
+        if (key in this.shortCutsDict) {
+            this.shortCutsDict[key](event);
+        }
     }
 }
 
@@ -53,18 +65,24 @@ class MaskSelectionState extends ActionState {
 class MaskCreationState extends ActionState {
     constructor(context) {
         super(context);
+
+        this.maskCreator = new MaskCreator();
     }
 
-    rightClickPixel(imageX, imageY) {}
+    leftClickPixel(imageX, imageY) {
+        this.maskCreator.addPrompt(imageX, imageY, Prompt.POSITIVE);
+    }
 
-    leftClickPixel(imageX, imageY) {}
+    rightClickPixel(imageX, imageY) {
+        this.maskCreator.addPrompt(imageX, imageY, Prompt.NEGATIVE);
+    }
 }
 
 /**
- * ActionManager is used to manage the user
- * canvas actions.
- *
- * ActionManage is a finte state machine
+ * ActionManager is used to manage the user actions.
+ * Some of the actions will depends on the current state,
+ * such as canvas click, short cut, etc.
+ * ActionManage is a finte state machine.
  */
 class ActionManager {
     static STATE_SELECT_MASK = 0;
@@ -99,11 +117,48 @@ class ActionManager {
             case ActionManager.STATE_SELECT_MASK:
                 this.state = this.maskSelectionState;
                 break;
-            case ActionManager.ACTION_CREATE_MASK:
-                this.state = this.STATE_CREATE_MASK;
+            case ActionManager.STATE_CREATE_MASK:
+                this.state = this.maskCreationState;
                 break;
             default:
                 throw new Error("Invalid state");
         }
+    }
+
+    registerShortCut(state, key, callback) {
+        const keyCombo = this.normalizeKeyCombo(key);
+        console.log(keyCombo);
+        switch (state) {
+            case ActionManager.STATE_SELECT_MASK:
+                this.maskSelectionState.registerShortCut(keyCombo, callback);
+                break;
+            case ActionManager.STATE_CREATE_MASK:
+                this.maskCreationState.registerShortCut(keyCombo, callback);
+                break;
+            default:
+                throw new Error("Invalid state");
+        }
+    }
+
+    handleShortCut(key, event) {
+        const keyCombo = this.eventToKeyCombo(event);
+        console.log(keyCombo);
+        this.state.handleShortCut(keyCombo, event);
+    }
+
+    // Normalize a key combination string to ensure consistent matching
+    normalizeKeyCombo(keyCombo) {
+        return keyCombo.toLowerCase().split("+").sort().join("+"); // Sort and join keys to ensure order doesn't matter
+    }
+
+    // Convert a key event to a normalized key combination string
+    eventToKeyCombo(event) {
+        const keys = [];
+        if (event.ctrlKey) keys.push("control");
+        if (event.metaKey) keys.push("meta");
+        if (event.shiftKey) keys.push("shift");
+        if (event.altKey) keys.push("alt");
+        keys.push(event.key.toLowerCase()); // Add the actual key
+        return keys.sort().join("+"); // Sort keys to ensure combinations match any order
     }
 }

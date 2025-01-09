@@ -44,6 +44,12 @@ class Data:
     def get_segmentation(self) -> Dict:
         return self.segmentation
 
+    def get_image_width(self) -> int:
+        return self.segmentation["images"]["height"]
+
+    def get_image_height(self) -> int:
+        return self.segmentation["images"]["width"]
+
     def to_json(self) -> Dict:
 
         # Convert the segmentation mask encoding to RLE for front end visualization
