@@ -140,6 +140,11 @@ class ActionPanel {
             maskCreator.clearPrompts();
         });
 
+        this.confirmPromptButton.addEventListener("click", () => {
+            const maskCreator = new MaskCreator();
+            maskCreator.confirmPrompt();
+        });
+
         // Register the shortcut for the label toggle button.
         // We need ActionManager to handle the shortcut because
         // different state will have different short cut operation.
@@ -170,6 +175,13 @@ class ActionPanel {
                 }
             }
         );
+        actionManager.registerShortCut(
+            ActionManager.STATE_CREATE_MASK,
+            " ",
+            (event) => {
+                this.confirmPromptButton.click();
+            }
+        );
 
         document.addEventListener("keydown", (event) => {
             const key = event.key.toLowerCase();
@@ -184,10 +196,21 @@ class ActionPanel {
                 actionManager.handleShortCut("r", event);
             }
         });
+
+        document.addEventListener("keydown", (event) => {
+            const key = event.key.toLowerCase();
+            if (key === " ") {
+                actionManager.handleShortCut(" ", event);
+            }
+        });
     }
 
     initBackButton() {
         this.backButton.addEventListener("click", () => {
+            // Clear the mask creation prompts
+            const maskCreator = new MaskCreator();
+            maskCreator.clearPrompts();
+
             this.hideAddMaskActionButtons();
             this.show();
 

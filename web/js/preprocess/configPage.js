@@ -42,7 +42,6 @@ class ConfigPage {
         this.displayConfig();
         this.initSliders();
         this.initSaveButton();
-        HT;
     }
 
     initSliders() {

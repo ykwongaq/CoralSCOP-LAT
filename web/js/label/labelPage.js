@@ -57,6 +57,12 @@ class LabelPage {
     }
 }
 
+async function saveProject() {
+    const core = new Core();
+    await core.save()();
+    await eel.on_close()();
+}
+
 function main() {
     const labelPage = new LabelPage();
     labelPage.init();
@@ -76,6 +82,10 @@ function main() {
         });
         popUpWindow.show();
     }
+
+    window.onbeforeunload = function (event) {
+        saveProject();
+    };
 }
 
 main();

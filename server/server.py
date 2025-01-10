@@ -82,6 +82,7 @@ class Server:
         # Dataset
         self.dataset: Dataset = None
         self.current_image_idx: int = 0
+        self.project_path: str = None
 
     def select_folder(self):
         """
@@ -137,6 +138,9 @@ class Server:
         self.set_dataset(dataset)
         self.set_current_image_idx(last_image_idx)
 
+        self.set_project_path(project_path)
+        self.logger.info(f"Project path set to {self.project_path}")
+
     def get_current_data_dict(self) -> Dict:
         return self.get_data_dict(self.get_current_image_idx())
 
@@ -151,8 +155,14 @@ class Server:
     @time_it
     def get_data_dict(self, image_idx: int) -> Dict:
         """
-        Get data information for the image idx.
-        The data information include the category information.
+        Get data information:
+        {
+            "image_name": str,
+            "image_path": str,
+            "idx": int,
+            "segmentation": List[Dict] - Annotation in coco format,
+            "category_info": List[Dict] - Category information
+        }
         """
 
         data = self.get_data(image_idx)
@@ -225,7 +235,10 @@ class Server:
     def get_dataset(self):
         return self.dataset
 
-    def set_current_image_idx(self, image_idx):
+    def set_current_image_idx(self, image_idx: int):
+        assert image_idx >= 0, "Image index must be greater than or equal to 0"
+        assert image_idx < self.dataset.get_size(), "Image index out of range"
+
         self.current_image_idx = image_idx
 
         data = self.get_data(image_idx)
@@ -241,7 +254,37 @@ class Server:
         return self.current_image_idx
 
     def save_data(self, data: Dict):
-        self.logger.info(f"TODO: Saving data ...")
+        """
+        Save the data to the dataset
+        {
+            "images": List[Dict],
+            "annotations": List[Dict]
+            "category_info": List[Dict]
+        }
+        """
+        self.logger.info(f"Saving data ...")
+        segmentation = {}
+        segmentation["images"] = data["images"]
+        segmentation["annotations"] = data["annotations"]
+
+        data_idx = data["images"][0]["id"]
+        self.dataset.update_data(data_idx, segmentation)
+        self.dataset.set_category_info(data["category_info"])
+
+    @time_it
+    def save_dataset(self):
+        self.logger.info(f"Saving the dataset to {self.get_project_path()} ...")
+
+        project_creator = ProjectCreator(
+            self.embeddings_generator, self.coral_segmentation
+        )
+        project_creator.save_dataset(self.dataset, self.get_project_path())
+
+    def get_project_path(self) -> str:
+        return self.project_path
+
+    def set_project_path(self, project_path: str):
+        self.project_path = project_path
 
     def create_mask(self, prompts: List[Dict]) -> Dict:
         """

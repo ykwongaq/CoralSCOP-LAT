@@ -72,7 +72,8 @@ def get_prev_data() -> Dict:
 
 @eel.expose
 def get_data_by_idx(idx: int) -> Dict:
-    return server.get_data_dict(idx)
+    server.set_current_image_idx(idx)
+    return server.get_current_data_dict()
 
 
 @eel.expose
@@ -83,6 +84,11 @@ def save_data(data: Dict):
 @eel.expose
 def create_mask(prompts: List[Dict]) -> Dict:
     return server.create_mask(prompts)
+
+
+@eel.expose
+def on_close():
+    server.save_dataset()
 
 
 if __name__ == "__main__":

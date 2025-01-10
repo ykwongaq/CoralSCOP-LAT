@@ -127,7 +127,6 @@ class ActionManager {
 
     registerShortCut(state, key, callback) {
         const keyCombo = this.normalizeKeyCombo(key);
-        console.log(keyCombo);
         switch (state) {
             case ActionManager.STATE_SELECT_MASK:
                 this.maskSelectionState.registerShortCut(keyCombo, callback);
@@ -142,7 +141,6 @@ class ActionManager {
 
     handleShortCut(key, event) {
         const keyCombo = this.eventToKeyCombo(event);
-        console.log(keyCombo);
         this.state.handleShortCut(keyCombo, event);
     }
 

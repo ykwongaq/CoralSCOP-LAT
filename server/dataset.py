@@ -45,12 +45,21 @@ class Data:
         return self.segmentation
 
     def get_image_width(self) -> int:
-        return self.segmentation["images"]["height"]
+        return self.segmentation["images"][0]["width"]
 
     def get_image_height(self) -> int:
-        return self.segmentation["images"]["width"]
+        return self.segmentation["images"][0]["height"]
 
     def to_json(self) -> Dict:
+        """
+        Convert the data to json format:
+        {
+            "image_name": "image_name",
+            "image_path": "image_path",
+            "idx": 0,
+            "segmentation": Coral segmentation following the coco format.
+        }
+        """
 
         # Convert the segmentation mask encoding to RLE for front end visualization
         segmentation = copy.deepcopy(self.segmentation)
@@ -77,8 +86,9 @@ class Dataset:
     def __init__(self):
 
         # Key is the image idx, and the value is the Data object
-        self.data = {}
-        self.category_info = None
+        self.data: Dict[int, Data] = {}
+        self.category_info: List[Dict] = None
+        self.last_saved_id = 0
 
     def add_data(self, data: Data):
         """
@@ -94,8 +104,23 @@ class Dataset:
             data.get_segmentation() is not None
         ), f"Data {data.get_image_name()} has no segmentation"
         assert data.get_idx() != -1, f"Data {data.get_image_name()} has no index"
+        assert (
+            data.get_idx() not in self.data
+        ), f"Data {data.get_image_name()} already exists"
 
         self.data[data.get_idx()] = data
+
+    def update_data(self, data_idx: int, segmentation: Dict):
+        """
+        Update the segmentation for the data at the given index
+        """
+        assert data_idx in self.data, f"Data at index {data_idx} not found"
+        data = self.data[data_idx]
+        data.set_segmentation(segmentation)
+        self.last_saved_id = data_idx
+
+    def get_last_saved_id(self) -> int:
+        return self.last_saved_id
 
     def get_data(self, idx: int) -> Data:
         """
@@ -115,8 +140,23 @@ class Dataset:
         """
         return [self.data[idx] for idx in sorted(self.data.keys())]
 
-    def get_category_info(self) -> Dict:
+    def get_category_info(self) -> List[Dict]:
+        """
+        Get the category information.
+
+        The information is a list of dictionaries:
+        [
+            {
+                "id": -1,
+                "name": "Detected Coral",
+                "supercategory": "Detected Coral",
+                "supercategory_id": -1,
+                "is_coral": True,
+                "status": -1,
+            },
+        ]
+        """
         return self.category_info
 
-    def set_category_info(self, category_info: Dict):
+    def set_category_info(self, category_info: List[Dict]):
         self.category_info = category_info

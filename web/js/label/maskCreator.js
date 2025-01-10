@@ -50,21 +50,26 @@ class MaskCreator {
 
     addPrompt(imageX, imageY, label) {
         this.prompts.push(new Prompt(imageX, imageY, label));
-        this.showPromptingMask();
+        this.updateMask();
     }
 
     clearPrompts() {
         this.prompts = [];
         this.mask = null;
-        this.showPromptingMask();
+        this.updateMask();
     }
 
     undoPrompt() {
         this.prompts.pop();
-        this.showPromptingMask();
+        this.updateMask();
     }
 
-    showPromptingMask() {
+    /**
+     * Update the mask based on the prompts.
+     * Meanwhile, visualize the mask on the canvas.
+     * @returns {Mask} Updated mask
+     */
+    updateMask() {
         const canvas = new Canvas();
 
         if (this.prompts.length === 0) {
@@ -80,5 +85,20 @@ class MaskCreator {
         });
     }
 
-    confirmPrompt() {}
+    /**
+     * Confirm the current mask and add it into the data.
+     * After that, clear the prompts.
+     */
+    confirmPrompt() {
+        // Add the mask into the
+        const core = new Core();
+        const data = core.getData();
+        data.addMask(this.mask);
+
+        // Update the visualization of canvas
+        const canvas = new Canvas();
+        canvas.updateMasks();
+
+        this.clearPrompts();
+    }
 }

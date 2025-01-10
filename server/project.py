@@ -21,6 +21,185 @@ TEMP_CREATE_NAME = "__coralscop_lat_temp"
 TEMP_LOAD_NAME = "__coralscop_lat_temp_load"
 
 
+class ImageJson:
+    """
+    It is the class help to ensure that all the required data
+    is set before converting to json.
+    """
+
+    def __init__(self):
+        self.id = None
+        self.filename = None
+        self.width = None
+        self.height = None
+
+    def set_id(self, id: int):
+        self.id = id
+
+    def set_filename(self, filename: str):
+        self.filename = filename
+
+    def set_width(self, width: int):
+        self.width = width
+
+    def set_height(self, height: int):
+        self.height = height
+
+    def to_json(self):
+        assert self.id is not None, "id is not set"
+        assert self.filename is not None, "filename is not set"
+        assert self.width is not None, "width is not set"
+        assert self.height is not None, "height is not set"
+        return {
+            "id": self.id,
+            "filename": self.filename,
+            "width": self.width,
+            "height": self.height,
+        }
+
+
+class AnnotationJson:
+    """
+    It is the class help to ensure that all the required data
+    is set before converting to json.
+    """
+
+    def __init__(self):
+        self.segmentation = None
+        self.bbox = None
+        self.area = None
+        self.category_id = None
+        self.id = None
+        self.image_id = None
+        self.iscrowd = None
+        self.predicted_iou = None
+
+    def set_segmentation(self, segmentation: Dict):
+        self.segmentation = segmentation
+
+    def set_bbox(self, bbox: List[int]):
+        self.bbox = bbox
+
+    def set_area(self, area: int):
+        self.area = area
+
+    def set_category_id(self, category_id: int):
+        self.category_id = category_id
+
+    def set_id(self, id: int):
+        self.id = id
+
+    def set_image_id(self, image_id: int):
+        self.image_id = image_id
+
+    def set_iscrowd(self, iscrowd: int):
+        self.iscrowd = iscrowd
+
+    def set_predicted_iou(self, predicted_iou: float):
+        self.predicted_iou = predicted_iou
+
+    def to_json(self):
+        assert self.segmentation is not None, "segmentation is not set"
+        assert self.bbox is not None, "bbox is not set"
+        assert self.area is not None, "area is not set"
+        assert self.category_id is not None, "category_id is not set"
+        assert self.id is not None, "id is not set"
+        assert self.image_id is not None, "image_id is not set"
+        assert self.iscrowd is not None, "iscrowd is not set"
+        assert self.predicted_iou is not None, "predicted_iou is not set"
+        return {
+            "segmentation": self.segmentation,
+            "bbox": self.bbox,
+            "area": self.area,
+            "category_id": self.category_id,
+            "id": self.id,
+            "image_id": self.image_id,
+            "iscrowd": self.iscrowd,
+            "predicted_iou": self.predicted_iou,
+        }
+
+
+class AnnotationFileJson:
+    def __init__(self):
+        self.images: List[ImageJson] = []
+        self.annotations: List[AnnotationJson] = []
+
+    def add_image(self, image: ImageJson):
+        self.images.append(image)
+
+    def add_annotation(self, annotation: AnnotationJson):
+        self.annotations.append(annotation)
+
+    def to_json(self):
+        return {
+            "images": [image.to_json() for image in self.images],
+            "annotations": [annotation.to_json() for annotation in self.annotations],
+        }
+
+
+class CategoryJson:
+    def __init__(self):
+        self.id = None
+        self.name = None
+        self.super_category = None
+        self.super_category_id = None
+        self.is_coral = None
+        self.status = None
+
+    def set_id(self, id: int):
+        self.id = id
+
+    def set_name(self, name: str):
+        self.name = name
+
+    def set_super_category(self, super_category: str):
+        self.super_category = super_category
+
+    def set_super_category_id(self, super_category_id: int):
+        self.super_category_id = super_category_id
+
+    def set_is_coral(self, is_coral: bool):
+        self.is_coral = is_coral
+
+    def set_status(self, status: int):
+        self.status = status
+
+    def to_json(self):
+        assert self.id is not None, "id is not set"
+        assert self.name is not None, "name is not set"
+        assert self.super_category is not None, "super_category is not set"
+        assert self.super_category_id is not None, "super_category_id is not set"
+        assert self.is_coral is not None, "is_coral is not set"
+        assert self.status is not None, "status is not set"
+        return {
+            "id": self.id,
+            "name": self.name,
+            "supercategory": self.super_category,
+            "supercategory_id": self.super_category_id,
+            "is_coral": self.is_coral,
+            "status": self.status,
+        }
+
+
+class ProjectInfoJson:
+    def __init__(self):
+        self.last_image_idx = None
+        self.category_info: List[CategoryJson] = []
+
+    def set_last_image_idx(self, last_image_idx: int):
+        self.last_image_idx = last_image_idx
+
+    def add_category_info(self, category_info: CategoryJson):
+        self.category_info.append(category_info)
+
+    def to_json(self):
+        assert self.last_image_idx is not None, "last_image_idx is not set"
+        return {
+            "last_image_idx": self.last_image_idx,
+            "category_info": [category.to_json() for category in self.category_info],
+        }
+
+
 class ProjectCreateRequest:
     def __init__(self, request: Dict):
         """
@@ -92,6 +271,8 @@ class ProjectCreator:
         Create a proejct from the request. The project data will be stored in a zip file with .coral extension.
         """
         inputs = request.get_inputs()
+        inputs = sorted(inputs, key=lambda x: x["image_file_name"])
+
         output_dir = request.get_output_dir()
 
         min_area = request.get_min_area()
@@ -124,12 +305,59 @@ class ProjectCreator:
             self.logger.info(f"Processing input {idx + 1} of {len(inputs)}")
             self.logger.info(f"Processing image: {image_filename}")
 
-            image, embedding, annotations = self.process_one_input(
-                image_url, image_filename, min_area, min_confidence, max_iou
-            )
+            # image, embedding, annotations = self.process_one_input(
+            #     image_url, image_filename, min_area, min_confidence, max_iou
+            # )
+
+            start_time = time.time()
+            self.logger.info(f"Processing image {image_filename} ...")
+
+            # Create image
+            image = decode_image_url(image_url)
+            if self.stop_event.is_set():
+                self.logger.info("Project creation stopped.")
+                terminated = True
+                break
+
+            # Generate embedding
+            embedding = self.embeddings_generator.generate_embedding(image)
+            if self.stop_event.is_set():
+                self.logger.info("Project creation stopped.")
+                terminated = True
+                break
+
+            # Detect coral
+            masks = self.segmentation.generate_masks_json(image)
+            masks = self.segmentation.filter(masks, min_area, min_confidence, max_iou)
+            for mask in masks:
+                mask["image_id"] = idx
+
+            annotation_file_json = AnnotationFileJson()
+
+            image_json = ImageJson()
+            image_json.set_id(idx)
+            image_json.set_filename(image_filename)
+            image_json.set_width(image.shape[1])
+            image_json.set_height(image.shape[0])
+            annotation_file_json.add_image(image_json)
+
+            for mask in masks:
+                annotation_json = AnnotationJson()
+                annotation_json.set_segmentation(mask["segmentation"])
+                annotation_json.set_bbox(mask["bbox"])
+                annotation_json.set_area(mask["area"])
+                annotation_json.set_category_id(mask["category_id"])
+                annotation_json.set_id(mask["id"])
+                annotation_json.set_image_id(idx)
+                annotation_json.set_iscrowd(mask["iscrowd"])
+                annotation_json.set_predicted_iou(mask["predicted_iou"])
+                annotation_file_json.add_annotation(annotation_json)
+
+            end_time = time.time()
+            self.logger.info(f"Processed image in {end_time - start_time:.2f} seconds")
 
             # Check if the stop event is set
-            if image is None or embedding is None or annotations is None:
+            if image is None or embedding is None or masks is None:
                 terminated = True
                 break
 
@@ -138,7 +366,7 @@ class ProjectCreator:
             annotation_path = os.path.join(annotation_folder, f"{filename}.json")
 
             np.save(embedding_path, embedding)
-            save_json(annotations, annotation_path)
+            save_json(annotation_file_json.to_json(), annotation_path)
             Image.fromarray(image).save(image_path)
 
             process_percentage = (idx + 1) / len(inputs) * 100
@@ -153,27 +381,28 @@ class ProjectCreator:
             eel.afterProjectCreation(status)
             return
 
-        project_info = {}
-        project_info["last_image_idx"] = 0
-        project_info["category_info"] = [
-            {
-                "id": -1,
-                "name": "Detected Coral",
-                "supercategory": "Detected Coral",
-                "supercategory_id": -1,
-                "is_coral": True,
-                "status": -1,
-            },
-            {
-                "id": 0,
-                "name": "Dead Coral",
-                "supercategory": "Dead Coral",
-                "supercategory_id": 0,
-                "is_coral": True,
-                "status": 2,
-            },
-        ]
-        save_json(project_info, project_info_path)
+        project_info_json = ProjectInfoJson()
+        project_info_json.set_last_image_idx(0)
+
+        detected_coral_category = CategoryJson()
+        detected_coral_category.set_id(-1)
+        detected_coral_category.set_name("Detected Coral")
+        detected_coral_category.set_super_category("Detected Coral")
+        detected_coral_category.set_super_category_id(-1)
+        detected_coral_category.set_is_coral(True)
+        detected_coral_category.set_status(-1)
+        project_info_json.add_category_info(detected_coral_category)
+
+        dead_coral_category = CategoryJson()
+        dead_coral_category.set_id(0)
+        dead_coral_category.set_name("Dead Coral")
+        dead_coral_category.set_super_category("Dead Coral")
+        dead_coral_category.set_super_category_id(0)
+        dead_coral_category.set_is_coral(True)
+        dead_coral_category.set_status(2)
+        project_info_json.add_category_info(dead_coral_category)
+
+        save_json(project_info_json.to_json(), project_info_path)
 
         self.save(output_dir)
 
@@ -201,61 +430,6 @@ class ProjectCreator:
             self.logger.info("No task running.")
             return
         self.stop_event.set()
-
-    def process_one_input(
-        self,
-        image_url: str,
-        image_name: str,
-        min_area: float,
-        min_confidence: float,
-        max_iou: float,
-    ) -> Tuple[np.ndarray, np.ndarray, Dict]:
-        """
-        Process one input item
-        1. Decode image_url to image
-        2. Generate embedding
-        3. Generate coral segmentation
-
-        Returns:
-        image: np.ndarray
-        embedding: np.ndarray
-        output_json: Dict
-        """
-        # Convert image_url to image
-        start_time = time.time()
-        image = decode_image_url(image_url)
-        self.logger.info(f"Decoded image in {time.time() - start_time:.2f} seconds")
-
-        # Periodically check if the stop event is set
-        if self.stop_event.is_set():
-            self.logger.info("Project creation stopped.")
-            return None, None, None
-
-        # Generate embedding
-        embedding = self.embeddings_generator.generate_embedding(image)
-
-        # Periodically check if the stop event is set
-        if self.stop_event.is_set():
-            self.logger.info("Project creation stopped.")
-            return None, None, None
-
-        # Generate coral segmentation
-        annotations = self.segmentation.generate_masks_json(image)
-        annotations = self.segmentation.filter(
-            annotations, min_area, min_confidence, max_iou
-        )
-        image_json = gen_image_json(image, image_name)
-
-        image_id = 0
-        image_json["image_id"] = image_id
-        for annotation in annotations:
-            annotation["image_id"] = image_id
-
-        output_json = {}
-        output_json["images"] = image_json
-        output_json["annotations"] = annotations
-
-        return image, embedding, output_json
 
     def save(self, output_dir: str):
         """
@@ -294,6 +468,78 @@ class ProjectCreator:
         temp_folder = os.path.join(output_dir, TEMP_CREATE_NAME)
         if os.path.exists(temp_folder):
             shutil.rmtree(temp_folder)
+
+    def save_dataset(self, dataset: Dataset, output_path: str):
+        assert output_path.endswith(".coral"), "Output path must have .coral extension"
+        output_dir = os.path.dirname(output_path)
+
+        # Unzip the original project_path
+        output_temp_dir = os.path.join(output_dir, TEMP_CREATE_NAME)
+        with zipfile.ZipFile(output_path, "r") as archive:
+            archive.extractall(output_temp_dir)
+
+        # Remove the original project_path
+        os.remove(output_path)
+
+        # Remove all the outdated annotation files
+        annotation_folder = os.path.join(output_temp_dir, "annotations")
+        for filename in os.listdir(annotation_folder):
+            file_path = os.path.join(annotation_folder, filename)
+            os.remove(file_path)
+
+        # Save the new annotations
+        for data in dataset.get_data_list():
+            filename = os.path.splitext(data.get_image_name())[0]
+            annotation_path = os.path.join(annotation_folder, f"{filename}.json")
+
+            annotation_file_json = AnnotationFileJson()
+
+            image_json = ImageJson()
+            image_json.set_id(data.get_idx())
+            image_json.set_filename(data.get_image_name())
+            image_json.set_width(data.get_image_width())
+            image_json.set_height(data.get_image_height())
+            annotation_file_json.add_image(image_json)
+
+            for mask in data.get_segmentation()["annotations"]:
+                annotation_json = AnnotationJson()
+                annotation_json.set_segmentation(mask["segmentation"])
+                annotation_json.set_bbox(mask["bbox"])
+                annotation_json.set_area(mask["area"])
+                annotation_json.set_category_id(mask["category_id"])
+                annotation_json.set_id(mask["id"])
+                annotation_json.set_image_id(data.get_idx())
+                annotation_json.set_iscrowd(mask["iscrowd"])
+                annotation_json.set_predicted_iou(mask["predicted_iou"])
+                annotation_file_json.add_annotation(annotation_json)
+
+            save_json(annotation_file_json.to_json(), annotation_path)
+
+        project_info_path = os.path.join(output_temp_dir, "project_info.json")
+        project_info_json = ProjectInfoJson()
+        project_info_json.set_last_image_idx(dataset.get_last_saved_id())
+        for category in dataset.get_category_info():
+            category_json = CategoryJson()
+            category_json.set_id(category["id"])
+            category_json.set_name(category["name"])
+            category_json.set_super_category(category["supercategory"])
+            category_json.set_super_category_id(category["supercategory_id"])
+            category_json.set_is_coral(category["is_coral"])
+            category_json.set_status(category["status"])
+            project_info_json.add_category_info(category_json)
+        save_json(project_info_json.to_json(), project_info_path)
+
+        # Compress the files back to the project_path
+        with zipfile.ZipFile(output_path, "w") as archive:
+            for root, _, files in os.walk(output_temp_dir):
+                for file in files:
+                    archive.write(
+                        os.path.join(root, file),
+                        os.path.relpath(os.path.join(root, file), output_temp_dir),
+                    )
+
+        # Remove the temporary folder
+        shutil.rmtree(output_temp_dir)
 
 
 class ProjectLoader:
@@ -349,13 +595,16 @@ class ProjectLoader:
             data = Data()
             data.set_image_name(image_filenames[idx])
             data.set_image_path(asset_image_paths[idx])
-            data.set_idx(idx)
 
             embedding = np.load(embedding_path)
             data.set_embedding(embedding)
 
             annotations = load_json(annotation_path)
             data.set_segmentation(annotations)
+
+            # Data index is the image idx
+            image_id = annotations["images"][0]["id"]
+            data.set_idx(image_id)
 
             dataset.add_data(data)
 

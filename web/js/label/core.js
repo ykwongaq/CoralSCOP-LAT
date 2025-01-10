@@ -48,8 +48,32 @@ class Core {
         return this.data;
     }
 
+    /**
+     * Save the current data
+     * {
+     *   "images": List[Dict]
+     *   "annotations": List[Dict]
+     *   "category_info": List[Dict]
+     * }
+     * @param {function} callBack
+     */
+    save(callBack = null) {
+        const data = this.data.toJson();
+
+        const categoryManager = new CategoryManager();
+        const categoryInfo = categoryManager.toJson();
+
+        data["category_info"] = categoryInfo;
+
+        eel.save_data(data)(() => {
+            if (callBack != null) {
+                callBack();
+            }
+        });
+    }
+
     nextData(callBack = null) {
-        eel.save_data(this.data.exportJson())(() => {
+        this.save(() => {
             eel.get_next_data()((response) => {
                 if (response === null) {
                     alert("Failed to load next data");
@@ -67,7 +91,7 @@ class Core {
     }
 
     prevData(callBack = null) {
-        eel.save_data(this.data.exportJson())(() => {
+        this.save(() => {
             eel.get_prev_data()((response) => {
                 if (response === null) {
                     alert("Failed to load previous data");
@@ -85,7 +109,7 @@ class Core {
     }
 
     jumpData(idx, callBack = null) {
-        eel.save_data(this.data.exportJson())(() => {
+        this.save(() => {
             eel.get_data_by_idx(idx)((response) => {
                 if (response === null) {
                     alert("Failed to load data");

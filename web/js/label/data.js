@@ -178,6 +178,14 @@ class CategoryManager {
         }
     }
 
+    toJson() {
+        const categoryInfo = [];
+        for (const category of Object.values(this.categoryDict)) {
+            categoryInfo.push(category);
+        }
+        return categoryInfo;
+    }
+
     /**
      * Get the corresponding category of the given category based on the target status
      * @param {Category} category
@@ -494,6 +502,10 @@ class Mask {
         return this.maskId;
     }
 
+    setId(maskId) {
+        this.maskId = maskId;
+    }
+
     getCategory() {
         return this.category;
     }
@@ -591,6 +603,23 @@ class Mask {
         const mask = this.getDecodedMask();
         return mask[y * this.width + x] === 1;
     }
+
+    getImageId() {
+        return this.annotation["image_id"];
+    }
+
+    toJson() {
+        return {
+            id: this.getId(),
+            image_id: this.getImageId(),
+            category_id: this.category.getCategoryId(),
+            segmentation: this.annotation["segmentation"],
+            area: this.getArea(),
+            bbox: this.annotation["bbox"],
+            iscrowd: this.annotation["iscrowd"],
+            predicted_iou: this.annotation["predicted_iou"],
+        };
+    }
 }
 
 class Data {
@@ -613,8 +642,8 @@ class Data {
         data.setImageName(response["image_name"]);
         data.setImagePath(response["image_path"]);
         data.setIdx(response["idx"]);
-        data.setImageWidth(response["segmentation"]["images"]["width"]);
-        data.setImageHeight(response["segmentation"]["images"]["height"]);
+        data.setImageWidth(response["segmentation"]["images"][0]["width"]);
+        data.setImageHeight(response["segmentation"]["images"][0]["height"]);
 
         const masks = [];
         for (const annotation of response["segmentation"]["annotations"]) {
@@ -673,11 +702,78 @@ class Data {
         return this.masks;
     }
 
-    exportJson() {
-        return {};
+    toJson() {
+        const masks = [];
+        for (const mask of this.masks) {
+            masks.push(mask.toJson());
+        }
+
+        const images = [];
+        const image = {
+            id: this.idx,
+            file_name: this.imageName,
+            width: this.imageWidth,
+            height: this.imageHeight,
+        };
+        images.push(image);
+
+        return {
+            images: images,
+            annotations: masks,
+        };
     }
 
     removeMask(mask) {
         this.masks = this.masks.filter((m) => m !== mask);
+    }
+
+    /**
+     * Add the given mask into this data.
+     *
+     * The mask id will be automatically assigned.
+     *
+     * The category of the mask will be updated if the
+     * category is -2 (prompting mask)
+     *
+     * @param {Mask} mask
+     */
+    addMask(mask) {
+        // Update mask id
+        const maskId = this.findAvailableMaskId();
+        mask.setId(maskId);
+
+        // Update mask category
+        if (mask.getCategory().getCategoryId() === Category.PROMPT_COLOR_ID) {
+            const newCategory = new Category(Category.PREDICTED_CORAL_ID);
+            mask.setCategory(newCategory);
+        }
+
+        this.masks.push(mask);
+
+        // Verify that all mask ids are unique
+        const maskIds = new Set();
+        for (const mask of this.masks) {
+            maskIds.add(mask.getId());
+        }
+        if (maskIds.size !== this.masks.length) {
+            console.error("Mask ids are not unique");
+        }
+    }
+
+    findAvailableMaskId() {
+        const existingMaskIds = new Set();
+        for (const mask of this.masks) {
+            existingMaskIds.add(mask.getId());
+        }
+
+        let maskId = 0;
+        for (let i = 0; i <= existingMaskIds.size; i++) {
+            if (!existingMaskIds.has(maskId)) {
+                break;
+            }
+            maskId++;
+        }
+
+        return maskId;
     }
 }
