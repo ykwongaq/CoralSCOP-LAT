@@ -246,8 +246,8 @@ class Server:
         self.mask_creator.set_image(
             data.get_embedding(),
             [
-                data.get_image_width(),
                 data.get_image_height(),
+                data.get_image_width(),
             ],
         )
 
@@ -289,6 +289,10 @@ class Server:
 
     def set_project_path(self, project_path: str):
         self.project_path = project_path
+
+    def get_data_ids_by_category_id(self, category_id: int) -> List[int]:
+        data_list = self.dataset.get_data_list_by_category_id(category_id)
+        return [data.get_idx() for data in data_list]
 
     def create_mask(self, prompts: List[Dict]) -> Dict:
         """

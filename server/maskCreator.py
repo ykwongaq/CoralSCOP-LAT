@@ -47,7 +47,6 @@ class MaskCreator:
 
     def create_mask(self, prompts: List[Prompt]) -> np.ndarray:
         self.logger.info(f"Creating mask with {len(prompts)} prompts ...")
-
         if len(prompts) == 0:
             return np.zeros(self.image_size, dtype=np.uint8)
 
