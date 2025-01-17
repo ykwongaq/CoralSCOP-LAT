@@ -1,17 +1,18 @@
 @font-face {
-  font-family: 'wico';
-  src:
-    url('fonts/wico.ttf?fkhdvt') format('truetype'),
-    url('fonts/wico.woff?fkhdvt') format('woff'),
-    url('fonts/wico.svg?fkhdvt#wico') format('svg');
+  font-family: 'icomoon';
+  src:  url('fonts/icomoon.eot?92d4hq');
+  src:  url('fonts/icomoon.eot?92d4hq#iefix') format('embedded-opentype'),
+    url('fonts/icomoon.ttf?92d4hq') format('truetype'),
+    url('fonts/icomoon.woff?92d4hq') format('woff'),
+    url('fonts/icomoon.svg?92d4hq#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
 }
 
-[class^="ico-"], [class*=" ico-"] {
+[class^=ico-], [class*=" ico-"] {
   /* use !important to prevent issues with browser extensions that change fonts */
-  font-family: 'wico' !important;
+  font-family: 'icomoon' !important;
   speak: never;
   font-style: normal;
   font-weight: normal;
@@ -24,90 +25,93 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.ico-rotate:before {
-  content: "\e91c";
-}
-.ico-reload-alt:before {
-  content: "\e91b";
-}
-.ico-dots-horizontal-triple:before {
-  content: "\e91a";
-}
-.ico-line-arrow-left:before {
-  content: "\e919";
-}
 .ico-gear:before {
-  content: "\e900";
-}
-.ico-exit:before {
   content: "\e901";
 }
-.ico-home:before {
+.ico-exit:before {
   content: "\e902";
 }
-.ico-add:before {
+.ico-home:before {
   content: "\e903";
 }
-.ico-eye:before {
+.ico-add:before {
   content: "\e904";
 }
-.ico-stack:before {
+.ico-eye:before {
   content: "\e905";
 }
-.ico-grid:before {
+.ico-stack:before {
   content: "\e906";
 }
-.ico-info:before {
+.ico-grid:before {
   content: "\e907";
 }
-.ico-wave:before {
+.ico-info:before {
   content: "\e908";
 }
-.ico-line:before {
+.ico-wave:before {
   content: "\e909";
 }
-.ico-book:before {
+.ico-line:before {
   content: "\e90a";
 }
-.ico-hide:before {
+.ico-book:before {
   content: "\e90b";
 }
-.ico-border-plus:before {
+.ico-hide:before {
   content: "\e90c";
 }
-.ico-cross:before {
+.ico-border-plus:before {
   content: "\e90d";
 }
-.ico-circle-arrow-right:before {
+.ico-cross:before {
   content: "\e90e";
 }
-.ico-shape:before {
+.ico-circle-arrow-right:before {
   content: "\e90f";
 }
-.ico-redo:before {
+.ico-shape:before {
   content: "\e910";
 }
-.ico-undo:before {
+.ico-redo:before {
   content: "\e911";
 }
-.ico-plus:before {
+.ico-undo:before {
   content: "\e912";
 }
-.ico-circle-arrow-left:before {
+.ico-plus:before {
   content: "\e913";
 }
-.ico-drag:before {
+.ico-circle-arrow-left:before {
   content: "\e914";
 }
-.ico-search:before {
+.ico-drag:before {
   content: "\e915";
 }
-.ico-bin:before {
+.ico-search:before {
   content: "\e916";
 }
-.ico-border-cross:before {
+.ico-bin:before {
   content: "\e917";
 }
-.ico-tick:before {
+.ico-border-cross:before {
   content: "\e918";
+}
+.ico-tick:before {
+  content: "\e919";
+}
+.ico-line-arrow-left:before {
+  content: "\e91a";
+}
+.ico-dots-horizontal-triple:before {
+  content: "\e91b";
+}
+.ico-reload-alt:before {
+  content: "\e91c";
+}
+.ico-rotate:before {
+  content: "\e91d";
+}
+.ico-save:before {
+  content: "\e900";
 }
