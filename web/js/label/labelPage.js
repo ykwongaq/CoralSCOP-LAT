@@ -84,7 +84,9 @@ function main() {
     }
 
     window.onbeforeunload = function (event) {
-        saveProject();
+        const message = "Are you sure you want to leave?";
+        event.returnValue = message;
+        return message;
     };
 }
 
