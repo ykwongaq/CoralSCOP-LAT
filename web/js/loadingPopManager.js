@@ -47,36 +47,4 @@ class LoadingPopManager {
     hide() {
         this.loadingWindow.classList.remove("active");
     }
-
-    // showLoadingIcon(__cont) {
-    //     if (this.loadingIcon) {
-    //         this.launchCount++;
-    //         this.loadingIcon.classList.add("active");
-    //     }
-
-    //     if (__cont == true) {
-    //         this.loadingIcon.classList.add("is-count");
-    //     } else {
-    //         this.loadingIcon.classList.remove("is-count");
-    //     }
-    // }
-
-    // hideLoadingIcon(__force) {
-    //     if (this.loadingIcon) {
-    //         this.launchCount--;
-
-    //         if (__force) {
-    //             this.launchCount = 0;
-    //             console.log(this.launchCount, `this.launchCount`);
-    //         }
-    //         if (this.launchCount <= 0) {
-    //             this.launchCount = 0;
-    //             console.log(
-    //                 this.loadingIcon.classList,
-    //                 `this.loadingIcon.classList`
-    //             );
-    //             this.loadingIcon.classList.remove("active");
-    //         }
-    //     }
-    // }
 }

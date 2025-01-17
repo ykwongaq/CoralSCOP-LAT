@@ -1,5 +1,6 @@
 import logging
 import time
+import os
 
 from tkinter import Tk, filedialog
 from .embedding import EmbeddingGenerator
@@ -272,13 +273,16 @@ class Server:
         self.dataset.set_category_info(data["category_info"])
 
     @time_it
-    def save_dataset(self):
+    def save_dataset(self, output_dir: str):
         self.logger.info(f"Saving the dataset to {self.get_project_path()} ...")
 
         project_creator = ProjectCreator(
             self.embeddings_generator, self.coral_segmentation
         )
-        project_creator.save_dataset(self.dataset, self.get_project_path())
+
+        if output_dir is None:
+            output_dir = os.path.dirname(self.get_project_path())
+        project_creator.save_dataset(self.dataset, self.get_project_path(), output_dir)
 
     def get_project_path(self) -> str:
         return self.project_path

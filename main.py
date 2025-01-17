@@ -82,13 +82,13 @@ def save_data(data: Dict):
 
 
 @eel.expose
-def create_mask(prompts: List[Dict]) -> Dict:
-    return server.create_mask(prompts)
+def save_dataset(output_dir: str):
+    server.save_dataset(output_dir)
 
 
 @eel.expose
-def on_close():
-    server.save_dataset()
+def create_mask(prompts: List[Dict]) -> Dict:
+    return server.create_mask(prompts)
 
 
 if __name__ == "__main__":

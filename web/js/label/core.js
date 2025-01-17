@@ -9,11 +9,31 @@ class Core {
         Core.instance = this;
         this.data = null;
 
+        this.dataModified = false;
+
         return this;
     }
 
-    loadProject() {
+    selectFile(callBack = null) {
         eel.select_file()((filePath) => {
+            if (filePath === null) {
+                return;
+            }
+            callBack(filePath);
+        });
+    }
+
+    selectFolder(callBack = null) {
+        eel.select_folder()((folderPath) => {
+            if (folderPath === null) {
+                return;
+            }
+            callBack(folderPath);
+        });
+    }
+
+    loadProject() {
+        this.selectFile((filePath) => {
             if (filePath === null) {
                 return;
             }
@@ -66,6 +86,7 @@ class Core {
         data["category_info"] = categoryInfo;
 
         eel.save_data(data)(() => {
+            this.setDataModified(false);
             if (callBack != null) {
                 callBack();
             }
@@ -140,7 +161,23 @@ class Core {
         topPanel.update();
     }
 
+    saveDataset(output_dir, callBack = null) {
+        eel.save_dataset(output_dir)(() => {
+            if (callBack != null) {
+                callBack();
+            }
+        });
+    }
+
     createPromptedMask(prompts) {
         return eel.create_mask(prompts)();
+    }
+
+    setDataModified(modified) {
+        this.dataModified = modified;
+    }
+
+    isDataModified() {
+        return this.dataModified;
     }
 }

@@ -84,9 +84,12 @@ function main() {
     }
 
     window.onbeforeunload = function (event) {
-        const message = "Are you sure you want to leave?";
-        event.returnValue = message;
-        return message;
+        // const message = "Are you sure you want to leave?";
+        // event.returnValue = message;
+        // return message;
+
+        const core = new Core();
+        return core.isDataModified();
     };
 }
 

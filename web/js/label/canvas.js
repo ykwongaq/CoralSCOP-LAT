@@ -292,9 +292,7 @@ class Canvas {
                     if (isBorder) {
                         maskCtx.beginPath();
                         maskCtx.arc(x, y, radius, 0, 2 * Math.PI); // 2.5 radius for 5px diameter
-                        maskCtx.fillStyle = mask
-                            .getCategory()
-                            .getBoraderColor();
+                        maskCtx.fillStyle = mask.getCategory().getBorderColor();
                         maskCtx.fill();
                     }
                 }

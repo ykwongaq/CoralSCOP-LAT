@@ -9,24 +9,9 @@ class GeneralPopManager {
         this.text = this.popup.querySelector("#general-pop-text");
         this.buttonContainer = this.popup.querySelector("#button-container");
 
-        // this.button = this.popup.querySelector("#general-pop-button");
-        // this.largeText = document.getElementById("general-pop-large-text");
-        // this.text = document.getElementById("general-pop-text");
-        // this.button = document.getElementById("general-pop-button");
-        // this.fn = null;
-
-        // this.enableButton();
-
         return this;
     }
 
-    // setButtonFn(__fn) {
-    //     this.fn = __fn;
-    // }
-
-    // updateButtonText(__text) {
-    //     this.button.textContent = __text;
-    // }
     addButton(buttonId, buttonText, buttonFunction) {
         const button = document.createElement("button");
         button.id = buttonId;
@@ -68,5 +53,11 @@ class GeneralPopManager {
 
     hide() {
         this.popup.classList.remove("active");
+    }
+
+    clear() {
+        this.updateText("");
+        this.updateLargeText("");
+        this.clearButtons();
     }
 }

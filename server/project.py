@@ -404,7 +404,18 @@ class ProjectCreator:
 
         save_json(project_info_json.to_json(), project_info_path)
 
-        self.save(output_dir)
+        project_name = self.find_available_project_name(output_dir)
+        project_path = os.path.join(output_dir, project_name)
+        with zipfile.ZipFile(project_path, "w") as archive:
+            for root, _, files in os.walk(output_temp_dir):
+                for file in files:
+                    archive.write(
+                        os.path.join(root, file),
+                        os.path.relpath(os.path.join(root, file), output_temp_dir),
+                    )
+
+        if os.path.exists(output_temp_dir):
+            shutil.rmtree(output_temp_dir)
 
         status = {}
         status["finished"] = True
@@ -431,66 +442,92 @@ class ProjectCreator:
             return
         self.stop_event.set()
 
-    def save(self, output_dir: str):
-        """
-        Save the project data to a zip file with .coral extension.
-        """
-        output_temp_dir = os.path.join(output_dir, TEMP_CREATE_NAME)
+    # def save(self, output_dir: str):
+    #     """
+    #     Save the project data to a zip file with .coral extension.
+    #     """
+    #     output_temp_dir = os.path.join(output_dir, TEMP_CREATE_NAME)
 
-        output_file = os.path.join(output_dir, "project.coral")
+    #     output_file = os.path.join(output_dir, "project.coral")
 
-        # Detect is there is a project.coral file in the output_dir
-        # If yes, change the output_file to project_1.coral and so on
+    #     # Detect is there is a project.coral file in the output_dir
+    #     # If yes, change the output_file to project_1.coral and so on
+    #     i = 1
+    #     while os.path.exists(output_file):
+    #         output_file = os.path.join(output_dir, f"project_{i}.coral")
+    #         i += 1
+
+    #         # Add exit case to prevent infinite loop
+    #         if i > 1000:
+    #             raise Exception("Too many project files in the output directory")
+
+    #     with zipfile.ZipFile(output_file, "w") as archive:
+    #         for root, _, files in os.walk(output_temp_dir):
+    #             for file in files:
+    #                 archive.write(
+    #                     os.path.join(root, file),
+    #                     os.path.relpath(os.path.join(root, file), output_temp_dir),
+    #                 )
+
+    #     # Delete the temporary folder
+    #     self.clear_temp_folder(output_dir)
+
+    # def clear_temp_folder(self, output_dir: str) -> None:
+    #     """
+    #     Clear the temporary folder in the output directory.
+    #     """
+    #     temp_folder = os.path.join(output_dir, TEMP_CREATE_NAME)
+    #     if os.path.exists(temp_folder):
+    #         shutil.rmtree(temp_folder)
+
+    def find_available_project_name(self, output_dir: str) -> str:
+        project_name = "project.coral"
         i = 1
-        while os.path.exists(output_file):
-            output_file = os.path.join(output_dir, f"project_{i}.coral")
+        while os.path.exists(os.path.join(output_dir, project_name)):
+            project_name = f"project_{i}.coral"
             i += 1
 
-            # Add exit case to prevent infinite loop
             if i > 1000:
                 raise Exception("Too many project files in the output directory")
+        return project_name
 
-        with zipfile.ZipFile(output_file, "w") as archive:
-            for root, _, files in os.walk(output_temp_dir):
-                for file in files:
-                    archive.write(
-                        os.path.join(root, file),
-                        os.path.relpath(os.path.join(root, file), output_temp_dir),
-                    )
+    def save_dataset(
+        self, dataset: Dataset, original_project_path: str, new_project_dir: str
+    ):
+        os.makedirs(new_project_dir, exist_ok=True)
 
-        # Delete the temporary folder
-        self.clear_temp_folder(output_dir)
+        # Unzip the original project
+        temp_dir = os.path.join(
+            os.path.dirname(original_project_path), TEMP_CREATE_NAME
+        )
+        with zipfile.ZipFile(original_project_path, "r") as archive:
+            archive.extractall(temp_dir)
 
-    def clear_temp_folder(self, output_dir: str) -> None:
-        """
-        Clear the temporary folder in the output directory.
-        """
-        temp_folder = os.path.join(output_dir, TEMP_CREATE_NAME)
-        if os.path.exists(temp_folder):
-            shutil.rmtree(temp_folder)
+        # Create the new project folder
+        new_temp_dir = os.path.join(new_project_dir, TEMP_CREATE_NAME)
+        os.makedirs(new_temp_dir, exist_ok=True)
 
-    def save_dataset(self, dataset: Dataset, output_path: str):
-        assert output_path.endswith(".coral"), "Output path must have .coral extension"
-        output_dir = os.path.dirname(output_path)
+        original_image_dir = os.path.join(temp_dir, "images")
+        new_image_dir = os.path.join(new_temp_dir, "images")
+        os.makedirs(new_image_dir, exist_ok=True)
 
-        # Unzip the original project_path
-        output_temp_dir = os.path.join(output_dir, TEMP_CREATE_NAME)
-        with zipfile.ZipFile(output_path, "r") as archive:
-            archive.extractall(output_temp_dir)
+        original_embedding_dir = os.path.join(temp_dir, "embeddings")
+        new_embedding_dir = os.path.join(new_temp_dir, "embeddings")
+        os.makedirs(new_embedding_dir, exist_ok=True)
 
-        # Remove the original project_path
-        os.remove(output_path)
+        original_annotation_dir = os.path.join(temp_dir, "annotations")
+        new_annotation_dir = os.path.join(new_temp_dir, "annotations")
+        os.makedirs(new_annotation_dir, exist_ok=True)
 
-        # Remove all the outdated annotation files
-        annotation_folder = os.path.join(output_temp_dir, "annotations")
-        for filename in os.listdir(annotation_folder):
-            file_path = os.path.join(annotation_folder, filename)
+        # Remove all the outdated annotation files if exists in the new project
+        for filename in os.listdir(new_annotation_dir):
+            file_path = os.path.join(new_annotation_dir, filename)
             os.remove(file_path)
 
         # Save the new annotations
         for data in dataset.get_data_list():
             filename = os.path.splitext(data.get_image_name())[0]
-            annotation_path = os.path.join(annotation_folder, f"{filename}.json")
+            annotation_path = os.path.join(new_annotation_dir, f"{filename}.json")
 
             annotation_file_json = AnnotationFileJson()
 
@@ -515,7 +552,24 @@ class ProjectCreator:
 
             save_json(annotation_file_json.to_json(), annotation_path)
 
-        project_info_path = os.path.join(output_temp_dir, "project_info.json")
+        # Save the images if the new image folder is not
+        # the same as the original image folder
+        if original_image_dir != new_image_dir:
+            for image_name in os.listdir(original_image_dir):
+                image_path = os.path.join(original_image_dir, image_name)
+                new_image_path = os.path.join(new_image_dir, image_name)
+                shutil.copy(image_path, new_image_path)
+
+        # Save the embeddings if the new embedding folder is not
+        # the same as the original embedding folder
+        if original_embedding_dir != new_embedding_dir:
+            for embedding_name in os.listdir(original_embedding_dir):
+                embedding_path = os.path.join(original_embedding_dir, embedding_name)
+                new_embedding_path = os.path.join(new_embedding_dir, embedding_name)
+                shutil.copy(embedding_path, new_embedding_path)
+
+        # Save the project info
+        new_project_info_path = os.path.join(new_temp_dir, "project_info.json")
         project_info_json = ProjectInfoJson()
         project_info_json.set_last_image_idx(dataset.get_last_saved_id())
         for category in dataset.get_category_info():
@@ -527,19 +581,105 @@ class ProjectCreator:
             category_json.set_is_coral(category["is_coral"])
             category_json.set_status(category["status"])
             project_info_json.add_category_info(category_json)
-        save_json(project_info_json.to_json(), project_info_path)
+        save_json(project_info_json.to_json(), new_project_info_path)
 
-        # Compress the files back to the project_path
-        with zipfile.ZipFile(output_path, "w") as archive:
-            for root, _, files in os.walk(output_temp_dir):
+        # Zip the original project files back
+        with zipfile.ZipFile(original_project_path, "w") as archive:
+            for root, _, files in os.walk(temp_dir):
                 for file in files:
                     archive.write(
                         os.path.join(root, file),
-                        os.path.relpath(os.path.join(root, file), output_temp_dir),
+                        os.path.relpath(os.path.join(root, file), temp_dir),
                     )
+        shutil.rmtree(temp_dir)
 
-        # Remove the temporary folder
-        shutil.rmtree(output_temp_dir)
+        # Zip the new project files if the new project path is different
+        if os.path.dirname(original_project_path) != new_project_dir:
+            new_project_name = self.find_available_project_name(new_project_dir)
+            new_project_path = os.path.join(new_project_dir, new_project_name)
+            with zipfile.ZipFile(new_project_path, "w") as archive:
+                for root, _, files in os.walk(new_temp_dir):
+                    for file in files:
+                        archive.write(
+                            os.path.join(root, file),
+                            os.path.relpath(os.path.join(root, file), new_temp_dir),
+                        )
+            self.logger.info(f"Saving project to {new_project_path}")
+            shutil.rmtree(new_temp_dir)
+
+    # def save_dataset(
+    #     self, dataset: Dataset, original_project_path: str, output_path: str
+    # ):
+    #     assert output_path.endswith(".coral"), "Output path must have .coral extension"
+    #     output_dir = os.path.dirname(output_path)
+
+    #     # Unzip the original project_path
+    #     output_temp_dir = os.path.join(output_dir, TEMP_CREATE_NAME)
+    #     with zipfile.ZipFile(output_path, "r") as archive:
+    #         archive.extractall(output_temp_dir)
+
+    #     # Remove the original project_path
+    #     os.remove(output_path)
+
+    #     # Remove all the outdated annotation files
+    #     annotation_folder = os.path.join(output_temp_dir, "annotations")
+    #     for filename in os.listdir(annotation_folder):
+    #         file_path = os.path.join(annotation_folder, filename)
+    #         os.remove(file_path)
+
+    #     # Save the new annotations
+    #     for data in dataset.get_data_list():
+    #         filename = os.path.splitext(data.get_image_name())[0]
+    #         annotation_path = os.path.join(annotation_folder, f"{filename}.json")
+
+    #         annotation_file_json = AnnotationFileJson()
+
+    #         image_json = ImageJson()
+    #         image_json.set_id(data.get_idx())
+    #         image_json.set_filename(data.get_image_name())
+    #         image_json.set_width(data.get_image_width())
+    #         image_json.set_height(data.get_image_height())
+    #         annotation_file_json.add_image(image_json)
+
+    #         for mask in data.get_segmentation()["annotations"]:
+    #             annotation_json = AnnotationJson()
+    #             annotation_json.set_segmentation(mask["segmentation"])
+    #             annotation_json.set_bbox(mask["bbox"])
+    #             annotation_json.set_area(mask["area"])
+    #             annotation_json.set_category_id(mask["category_id"])
+    #             annotation_json.set_id(mask["id"])
+    #             annotation_json.set_image_id(data.get_idx())
+    #             annotation_json.set_iscrowd(mask["iscrowd"])
+    #             annotation_json.set_predicted_iou(mask["predicted_iou"])
+    #             annotation_file_json.add_annotation(annotation_json)
+
+    #         save_json(annotation_file_json.to_json(), annotation_path)
+
+    #     project_info_path = os.path.join(output_temp_dir, "project_info.json")
+    #     project_info_json = ProjectInfoJson()
+    #     project_info_json.set_last_image_idx(dataset.get_last_saved_id())
+    #     for category in dataset.get_category_info():
+    #         category_json = CategoryJson()
+    #         category_json.set_id(category["id"])
+    #         category_json.set_name(category["name"])
+    #         category_json.set_super_category(category["supercategory"])
+    #         category_json.set_super_category_id(category["supercategory_id"])
+    #         category_json.set_is_coral(category["is_coral"])
+    #         category_json.set_status(category["status"])
+    #         project_info_json.add_category_info(category_json)
+    #     save_json(project_info_json.to_json(), project_info_path)
+
+    #     # Compress the files back to the project_path
+    #     with zipfile.ZipFile(output_path, "w") as archive:
+    #         for root, _, files in os.walk(output_temp_dir):
+    #             for file in files:
+    #                 archive.write(
+    #                     os.path.join(root, file),
+    #                     os.path.relpath(os.path.join(root, file), output_temp_dir),
+    #                 )
+
+    #     # Remove the temporary folder
+    #     shutil.rmtree(output_temp_dir)
 
 
 class ProjectLoader:

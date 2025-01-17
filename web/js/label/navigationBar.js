@@ -15,6 +15,15 @@ class NavigationBar {
         this.statisticButton = this.dom.querySelector("#statistic-button");
         this.exportButton = this.dom.querySelector("#file-button");
 
+        this.saveDropdownButton = this.dom.querySelector(
+            "#save-drop-down-button"
+        );
+        this.saveButton = this.dom.querySelector("#save-button");
+        this.saveToButton = this.dom.querySelector("#save-to-button");
+        this.saveDropDownMenu = this.dom.querySelector(
+            "#file-dropdown-menu-save"
+        );
+
         this.pages = document.querySelectorAll(".page");
         this.currentPageId = null;
     }
@@ -24,6 +33,7 @@ class NavigationBar {
         this.initLabelButton();
         this.initStatisticButton();
         this.initExportButton();
+        this.initSave();
     }
 
     initGalleryButton() {
@@ -47,6 +57,63 @@ class NavigationBar {
     initExportButton() {
         this.exportButton.addEventListener("click", () => {
             // TODO: Implement export functionality
+        });
+    }
+
+    initSave() {
+        this.saveDropdownButton.addEventListener("click", () => {
+            // When the save button is clicked, show the save dropdown menu
+            this.saveDropDownMenu.style.display =
+                this.saveDropDownMenu.style.display === "block"
+                    ? "none"
+                    : "block";
+        });
+
+        this.saveButton.addEventListener("click", () => {
+            const generalPopManager = new GeneralPopManager();
+            generalPopManager.clear();
+            generalPopManager.updateLargeText("Save");
+            generalPopManager.updateText(
+                "Saving the current project. Please wait."
+            );
+            generalPopManager.show();
+
+            const core = new Core();
+            // Save the current data first and then save the dataset
+            core.save(() => {
+                core.saveDataset(null, () => {
+                    generalPopManager.hide();
+                });
+            });
+        });
+
+        this.saveToButton.addEventListener("click", () => {
+            const core = new Core();
+            core.save(() => {
+                core.selectFolder((fileFolder) => {
+                    if (fileFolder === null) {
+                        return;
+                    }
+
+                    const generalPopManager = new GeneralPopManager();
+                    generalPopManager.clear();
+                    generalPopManager.updateLargeText("Save");
+                    generalPopManager.updateText(
+                        "Saving the current project. Please wait."
+                    );
+                    generalPopManager.show();
+
+                    core.saveDataset(fileFolder, () => {
+                        generalPopManager.hide();
+                    });
+                });
+            });
+        });
+
+        window.addEventListener("click", (event) => {
+            if (!event.target.matches("#save-drop-down-button")) {
+                this.saveDropDownMenu.style.display = "none";
+            }
         });
     }
 

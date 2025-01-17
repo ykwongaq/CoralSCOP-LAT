@@ -237,7 +237,7 @@ class PreprocessPage {
         loadingPopManager.hide();
 
         const generalPopup = new GeneralPopManager();
-        generalPopup.clearButtons();
+        generalPopup.clear();
         generalPopup.updateLargeText("Terminated.");
         generalPopup.updateText("Project creation is terminated.");
 
