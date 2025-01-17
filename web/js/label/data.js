@@ -70,6 +70,11 @@ class CategoryManager {
 
         CategoryManager.instance = this;
 
+        /**
+         * Category data is used to store the category information
+         * Key: category id
+         * Value: Dictionary containing category information
+         */
         this.categoryDict = {};
 
         /**
@@ -194,12 +199,37 @@ class CategoryManager {
      */
     getCorrespondingCategoryByStatus(category, status) {
         const superCategoryId = category.getSuperCategoryId();
-        for (const category of this.superCategoryDict[superCategoryId]) {
-            if (category.getStatus() == status) {
-                return category;
+        for (const categoryInfo of this.superCategoryDict[superCategoryId]) {
+            if (categoryInfo["status"] == status) {
+                const correspondingCategory = new Category(categoryInfo["id"]);
+                return correspondingCategory;
             }
         }
         return category;
+    }
+
+    /**
+     * Get the list of categories with the same super
+     * category id but different status. <br>
+     *
+     * The result excludes the input category
+     * @param {Category} category
+     * @returns {Array} List of categories with the same super category id
+     */
+    getOtherStatusofCategory(category) {
+        const otherCategories = [];
+
+        const status = category.getStatus();
+        const superCategoryId = category.getSuperCategoryId();
+        const categoryInfoList = this.superCategoryDict[superCategoryId];
+        for (const categoryInfo of categoryInfoList) {
+            if (categoryInfo["status"] !== status) {
+                const categoryId = categoryInfo["id"];
+                const otherCategory = new Category(categoryId);
+                otherCategories.push(otherCategory);
+            }
+        }
+        return otherCategories;
     }
 
     /**
@@ -333,7 +363,7 @@ class CategoryManager {
     findAvailableCategoryId() {
         let categoryId = 0;
         for (let i = 0; i <= Object.keys(this.categoryDict).length; i++) {
-            if (!(categoryId in this.categoryDict)) {
+            if (!(categoryId.toString() in this.categoryDict)) {
                 break;
             }
             categoryId++;
@@ -347,12 +377,14 @@ class CategoryManager {
      */
     findAvariableSuperCategoryId() {
         let superCategoryId = 0;
+        console.log(Object.keys(this.superCategoryDict));
         for (let i = 0; i <= Object.keys(this.superCategoryDict).length; i++) {
-            if (!(superCategoryId in this.superCategoryDict)) {
+            if (!(superCategoryId.toString() in this.superCategoryDict)) {
                 break;
             }
             superCategoryId++;
         }
+        console.log("super category id: ", superCategoryId);
         return superCategoryId;
     }
 
@@ -368,6 +400,29 @@ class CategoryManager {
             }
         }
         return false;
+    }
+
+    removeCategory(category) {
+        const categoryId = category.getCategoryId();
+        const superCategoryId = category.getSuperCategoryId();
+
+        // Remove the category from the category list
+        delete this.categoryDict[categoryId];
+
+        // Remove the category from the super category list
+        const superCategoryList = this.superCategoryDict[superCategoryId];
+        const newSuperCategoryList = superCategoryList.filter(
+            (category) => category["id"] !== categoryId
+        );
+        this.superCategoryDict[superCategoryId] = newSuperCategoryList;
+
+        if (newSuperCategoryList.length === 0) {
+            delete this.superCategoryDict[superCategoryId];
+        }
+
+        console.log("Category removed: ", category.getCategoryId());
+        console.log("Category dict: ", this.categoryDict);
+        console.log("Super category dict: ", this.superCategoryDict);
     }
 }
 
@@ -479,6 +534,12 @@ class Category {
 
     isDead() {
         return this.getStatus() == CategoryManager.STATUS_DEAD;
+    }
+
+    getCategoriesOfOtherStatus() {
+        const categoryManager = new CategoryManager();
+        const categoryList = categoryManager.getOtherStatusofCategory(this);
+        return categoryList;
     }
 }
 

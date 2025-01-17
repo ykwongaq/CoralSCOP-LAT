@@ -27,6 +27,12 @@ class LabelPanel {
             "input[name='status']"
         );
         this.currentType = LabelPanel.TYPE_HEALTHY;
+        this.categoryDropDownMenu = this.dom.querySelector(
+            "#label-dropdown-menu"
+        );
+        this.categoryMenuButtonTemplate = this.dom.querySelector(
+            "#category-menu-button-template"
+        );
 
         // Add Category
         this.addCategoryInput = this.dom.querySelector("#add-category-input");
@@ -50,6 +56,8 @@ class LabelPanel {
         this.initStatusButtons();
         this.initAddCategory();
         this.initSearchCategory();
+
+        this.initCategoryDropDownMenu();
     }
 
     initOpacitySlider() {
@@ -154,6 +162,18 @@ class LabelPanel {
         });
     }
 
+    initCategoryDropDownMenu() {
+        document.addEventListener("click", (event) => {
+            if (
+                event.target !== this.deleteButton &&
+                event.target !== this.categoryDropDownMenu &&
+                !event.target.matches(".label-menu-fn")
+            ) {
+                this.categoryDropDownMenu.style.display = "none";
+            }
+        });
+    }
+
     updateCategoryButtons() {
         this.clearButtons();
         const categoryManager = new CategoryManager();
@@ -214,6 +234,15 @@ class LabelPanel {
 
         // Buttons
         const maskHideButton = item.querySelector(".label-hide-fn");
+        this.initHideCategoryButton(maskHideButton, category);
+
+        const menuButton = item.querySelector(".label-menu-fn");
+        this.initCategoryMenuButton(menuButton, category);
+
+        return item;
+    }
+
+    initHideCategoryButton(maskHideButton, category) {
         maskHideButton.addEventListener("click", (event) => {
             maskHideButton.classList.toggle("active");
 
@@ -250,13 +279,121 @@ class LabelPanel {
                 break;
             }
         }
+    }
 
-        const menuButton = item.querySelector(".label-menu-fn");
+    initCategoryMenuButton(menuButton, category) {
         menuButton.addEventListener("click", (event) => {
-            console.log("Show menu");
-        });
+            event.preventDefault();
 
-        return item;
+            // Clear the original menu
+            this.categoryDropDownMenu.innerHTML = "";
+
+            this.categoryDropDownMenu.style.display = "block";
+            this.categoryDropDownMenu.style.left = `${event.clientX}px`;
+            this.categoryDropDownMenu.style.top = `${event.clientY}px`;
+
+            // Create rename button
+            const renameButton = document
+                .importNode(this.categoryMenuButtonTemplate.content, true)
+                .querySelector("button");
+            renameButton.textContent = "Rename";
+            this.initRenameButton(renameButton, category);
+            this.categoryDropDownMenu.appendChild(renameButton);
+
+            // Create delete button
+            const deleteButton = document
+                .importNode(this.categoryMenuButtonTemplate.content, true)
+                .querySelector("button");
+            deleteButton.textContent = "Delete";
+            this.initDeleteButton(deleteButton, category);
+            this.categoryDropDownMenu.appendChild(deleteButton);
+        });
+    }
+
+    initRenameButton(renameButton, category) {
+        renameButton.addEventListener("click", (event) => {
+            event.preventDefault();
+            console.log("Rename button clicked");
+        });
+    }
+
+    initDeleteButton(deleteButton, category) {
+        deleteButton.addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            // TODO: User cannot delete dead coral
+
+            // To delete a category, make sure that the category
+            // is not used by any mask
+
+            // Check is the category is used in current image
+            const core = new Core();
+            let imageIds = await core.getImageIdsByCategory(category);
+
+            // If the category is a coral, also need to check
+            // other status of the coral.
+            const isCoral = category.isCoral();
+            if (isCoral) {
+                const otherStatusCategories =
+                    category.getCategoriesOfOtherStatus();
+                for (const otherCategory of otherStatusCategories) {
+                    const otherImageIds = await core.getImageIdsByCategory(
+                        otherCategory
+                    );
+                    for (const id of otherImageIds) {
+                        imageIds.add(id);
+                    }
+                }
+            }
+
+            // Sort the image ids
+            imageIds = Array.from(imageIds).sort();
+
+            if (imageIds.length > 0) {
+                let message = `${category.getCategoryName()} is detected in the following image ids:\n`;
+                for (const id of imageIds) {
+                    message += `${id}, `;
+                }
+                message +=
+                    "\nPlease remove the annotation before deleting the category.";
+
+                if (isCoral) {
+                    message +=
+                        "\n\nNote: The category is a coral. Please also remove the masks of other status of the coral.";
+                }
+
+                const generalPopManager = new GeneralPopManager();
+                generalPopManager.clear();
+                generalPopManager.updateLargeText("Warning");
+                generalPopManager.updateText(message);
+                generalPopManager.addButton("ok", "OK", () => {
+                    generalPopManager.hide();
+                });
+                generalPopManager.show();
+            } else {
+                // Delete the category
+                const categoryManager = new CategoryManager();
+
+                const categoriesToDelete = [category];
+                if (isCoral) {
+                    // If the category is a coral, also delete the other status
+                    const otherStatusCategories =
+                        category.getCategoriesOfOtherStatus();
+                    for (const otherCategory of otherStatusCategories) {
+                        categoriesToDelete.push(otherCategory);
+                    }
+                }
+
+                for (const category of categoriesToDelete) {
+                    categoryManager.removeCategory(category);
+                }
+
+                this.updateCategoryButtons();
+
+                const actionPanel = new ActionPanel();
+                actionPanel.updateCategoryButtons();
+            }
+        });
     }
 
     getCurrentType() {

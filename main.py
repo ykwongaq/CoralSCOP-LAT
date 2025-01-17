@@ -91,6 +91,11 @@ def create_mask(prompts: List[Dict]) -> Dict:
     return server.create_mask(prompts)
 
 
+@eel.expose
+def get_data_ids_by_category_id(category_id: int) -> List[int]:
+    return server.get_data_ids_by_category_id(category_id)
+
+
 if __name__ == "__main__":
     setup_logging()
     print("Please wait for the tool to be ready ...")

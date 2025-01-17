@@ -116,22 +116,22 @@
                                     <span class="arrow-tooltip">Save</span>
                                 </button>
                                 <div
-                                id="file-dropdown-menu-save"
-                                class="normal-dropdown"
-                            >
-                                <button
-                                    class="normal-dropdown__link"
-                                    id="save-button"
+                                    id="file-dropdown-menu-save"
+                                    class="normal-dropdown"
                                 >
-                                    Save
-                                </button>
-                                <button
-                                    class="normal-dropdown__link"
-                                    id="save-to-button"
-                                >
-                                    Save To
-                                </button>
-                            </div>
+                                    <button
+                                        class="normal-dropdown__link"
+                                        id="save-button"
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        class="normal-dropdown__link"
+                                        id="save-to-button"
+                                    >
+                                        Save To
+                                    </button>
+                                </div>
                             </li>
                             <li class="nav-list__item">
                                 <button
@@ -315,6 +315,26 @@
                                 id="label-container"
                                 class="label-container color-plate-list"
                             ></div>
+                            <div
+                                id="label-dropdown-menu"
+                                class="normal-dropdown label-dropdown-menu"
+                            >
+                                <!-- <button
+                                    class="normal-dropdown__link"
+                                    id="rename-label-button"
+                                >
+                                    Rename
+                                </button>
+                                <button
+                                    class="normal-dropdown__link"
+                                    id="delete-label-button"
+                                >
+                                    Delete
+                                </button> -->
+                            </div>
+                            <template id="category-menu-button-template">
+                                <button class="normal-dropdown__link"></button>
+                            </template>
                         </div>
                         <div class="side-bar__blk">
                             <div class="toggle-input-blk toggle-fn">
@@ -461,14 +481,14 @@
                                         class="float-bar__button hidden"
                                     >
                                         <!-- <span class="ico-undo icon"></span> -->
-                                         Undo
+                                        Undo
                                     </button>
                                     <button
                                         id="reset-button"
                                         class="float-bar__button hidden"
                                     >
                                         <!-- <span class="ico-rotate icon"></span> -->
-                                         Reset
+                                        Reset
                                     </button>
                                     <button
                                         id="confirm-button"
@@ -652,18 +672,6 @@
                 </div>
                 <div id="defaultPage" class="main-section page"></div>
             </div>
-        </div>
-
-        <div
-            id="label-dropdown-menu"
-            class="normal-dropdown label-dropdown-menu"
-        >
-            <button class="normal-dropdown__link" id="rename-label-button">
-                Rename
-            </button>
-            <button class="normal-dropdown__link" id="delete-label-button">
-                Delete
-            </button>
         </div>
 
         <div id="loading-pop" class="loading-pop modal-pop">

@@ -180,4 +180,36 @@ class Core {
     isDataModified() {
         return this.dataModified;
     }
+
+    /**
+     * Get the list of id of the images that
+     * contain the category
+     * @param {Category} category
+     * @returns {Array} List of image ids that contain the category
+     */
+    async getImageIdsByCategory(category) {
+        const imageIds = new Set();
+        const categoryId = category.getCategoryId();
+
+        // Check current data
+        const data = this.getData();
+        for (const mask of data.getMasks()) {
+            if (mask.getCategory().getCategoryId() === categoryId) {
+                imageIds.add(data.getIdx());
+            }
+        }
+
+        const otherIds = await eel.get_data_ids_by_category_id(
+            category.getCategoryId()
+        )();
+        for (const id of otherIds) {
+            // Ignore the current data, since the data is not saved
+            if (id === data.getIdx()) {
+                continue;
+            }
+            imageIds.add(id);
+        }
+
+        return imageIds;
+    }
 }

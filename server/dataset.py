@@ -160,3 +160,15 @@ class Dataset:
 
     def set_category_info(self, category_info: List[Dict]):
         self.category_info = category_info
+
+    def get_data_list_by_category_id(self, category_id: int) -> List[Data]:
+        """
+        Get a list of data that containing the given category id
+        """
+        target_data = []
+        for data in self.data.values():
+            for annotation in data.get_segmentation()["annotations"]:
+                if annotation["category_id"] == category_id:
+                    target_data.append(data)
+                    break
+        return target_data
