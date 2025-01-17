@@ -96,7 +96,7 @@ class LabelPanel {
                 this.updateCategoryButtons();
 
                 const actionPanel = new ActionPanel();
-                actionPanel.updateButtons();
+                actionPanel.updateCategoryButtons();
             });
         }
     }
@@ -215,8 +215,41 @@ class LabelPanel {
         // Buttons
         const maskHideButton = item.querySelector(".label-hide-fn");
         maskHideButton.addEventListener("click", (event) => {
-            console.log("Hide mask");
+            maskHideButton.classList.toggle("active");
+
+            const value = maskHideButton.getAttribute("value");
+            const newStatus = value === "1" ? 0 : 1;
+            maskHideButton.setAttribute("value", newStatus);
+
+            const core = new Core();
+            const data = core.getData();
+            const masks = data.getMasks();
+
+            const shouldDisplay = newStatus === 1;
+            for (const mask of masks) {
+                const categoryId = mask.getCategory().getCategoryId();
+                if (categoryId == category.getCategoryId()) {
+                    mask.setShouldDisplay(shouldDisplay);
+                }
+            }
+
+            const canvas = new Canvas();
+            canvas.updateMasks();
         });
+
+        // Activate the button based on the mask status
+        const core = new Core();
+        const data = core.getData();
+        const masks = data.getMasks();
+        for (const mask of masks) {
+            const categoryId = mask.getCategory().getCategoryId();
+            if (categoryId == category.getCategoryId()) {
+                const shouldDisplay = mask.shouldDisplay();
+                maskHideButton.classList.toggle("active", !shouldDisplay);
+                maskHideButton.setAttribute("value", shouldDisplay ? 1 : 0);
+                break;
+            }
+        }
 
         const menuButton = item.querySelector(".label-menu-fn");
         menuButton.addEventListener("click", (event) => {
