@@ -538,6 +538,19 @@
                     class="main-section page statistic-page statistic-content-container"
                 >
                     <div class="main-section__inner">
+                        <div class="chart-toggle-blk">
+                            <p class="chart-toggle-blk__title">
+                                Ignore Undefined Coral
+                            </p>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    id="toogle-ignore-undefined-button"
+                                    checked
+                                />
+                                <span class="switch__slider"></span>
+                            </label>
+                        </div>
                         <h2 class="main-section__title">Statistic Report</h2>
                         <div class="main-section__content">
                             <section class="chart-group">
@@ -550,12 +563,12 @@
                     </div>
                     <template id="chart-item-template">
                         <div class="chart-item">
+                            <p class="chart-name chart-item__name"></p>
                             <div class="chart-item__top">
                                 <div class="chart chart-box"></div>
                                 <div class="legends"></div>
                             </div>
                             <div class="chart-item__bottom">
-                                <p class="chart-name chart-item__name"></p>
                                 <button class="download-btn button">
                                     Download Png
                                 </button>
@@ -714,6 +727,11 @@
             </div>
         </div>
         <div id="loading-pop-backdrop" class="modal-pop-backdrop"></div>
+
+        <script
+            type="text/javascript"
+            src="https://www.gstatic.com/charts/loader.js"
+        ></script>
 
         <script src="eel.js"></script>
         <script src="./js/slider.js"></script>

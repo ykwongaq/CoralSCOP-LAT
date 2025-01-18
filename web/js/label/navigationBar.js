@@ -51,6 +51,9 @@ class NavigationBar {
     initStatisticButton() {
         this.statisticButton.addEventListener("click", () => {
             this.showPage(NavigationBar.STATISTIC_PAGE);
+
+            const statisticPage = new StatisticPage();
+            statisticPage.update();
         });
     }
 

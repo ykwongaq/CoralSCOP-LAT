@@ -69,12 +69,12 @@ Download `Font Awesome 6` `Free For Web` here `https://fontawesome.com/download`
 
 The structure for `css` folder should be
 
-```
 css
 |- fontawesome-free-6.6.0-web
 |- labelPage
 |- preprocessPage
 |- ...
+
 ```
 
 ## Todo
@@ -85,4 +85,6 @@ css
 4. Quick Start
 5. Rearrange id after delete
 6. Smart exit alert
-7. Statistic
+7. Statistic Page - Project level statistic
+8. Create mask with category
+```
