@@ -255,8 +255,65 @@ class LabelPanel {
         const maskHideButton = item.querySelector(".label-hide-fn");
         this.initHideCategoryButton(maskHideButton, category);
 
+        // Enable menu button
         const menuButton = item.querySelector(".label-menu-fn");
-        this.initCategoryMenuButton(menuButton, category);
+        menuButton.addEventListener("click", (event) => {
+            event.preventDefault();
+
+            // Clear the original menu and display it
+            this.categoryDropDownMenu.innerHTML = "";
+            this.categoryDropDownMenu.style.display = "block";
+            this.categoryDropDownMenu.style.left = `${event.clientX}px`;
+            this.categoryDropDownMenu.style.top = `${event.clientY}px`;
+
+            // Create rename button
+            // If the category is a coral, then user can only rename the coral
+            // at the healthy status
+            if (
+                !category.isCoral() ||
+                (category.isCoral() && category.isHealthy())
+            ) {
+                const renameButton = document
+                    .importNode(this.categoryMenuButtonTemplate.content, true)
+                    .querySelector("button");
+                renameButton.textContent = "Rename";
+                renameButton.addEventListener("click", (event) => {
+                    // When the rename button is clicked, hide the menu
+                    this.categoryDropDownMenu.style.display = "none";
+
+                    // The text label will become a input text box for user input
+                    labelText.contentEditable = true;
+                    labelText.focus();
+
+                    // Select the text
+                    const range = document.createRange();
+                    const selection = window.getSelection();
+                    range.selectNodeContents(labelText);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                });
+                this.categoryDropDownMenu.appendChild(renameButton);
+            }
+
+            // Create delete button
+            const deleteButton = document
+                .importNode(this.categoryMenuButtonTemplate.content, true)
+                .querySelector("button");
+            deleteButton.textContent = "Delete";
+            this.initDeleteButton(deleteButton, category);
+            this.categoryDropDownMenu.appendChild(deleteButton);
+        });
+
+        // Handle rename
+        labelText.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                this.renameCategory(labelText, category);
+            }
+        });
+        labelText.addEventListener("blur", (event) => {
+            this.renameCategory(labelText, category);
+        });
 
         return item;
     }
@@ -312,14 +369,22 @@ class LabelPanel {
             this.categoryDropDownMenu.style.top = `${event.clientY}px`;
 
             // Create rename button
-            const renameButton = document
-                .importNode(this.categoryMenuButtonTemplate.content, true)
-                .querySelector("button");
-            renameButton.textContent = "Rename";
-            this.initRenameButton(renameButton, category);
-            this.categoryDropDownMenu.appendChild(renameButton);
+            // If the category is a coral, then user can only rename the coral
+            // at the healthy status
+            if (
+                !category.isCoral() ||
+                (category.isCoral() && category.isHealthy())
+            ) {
+                const renameButton = document
+                    .importNode(this.categoryMenuButtonTemplate.content, true)
+                    .querySelector("button");
+                renameButton.textContent = "Rename";
+                this.initRenameButton(renameButton, category);
+                this.categoryDropDownMenu.appendChild(renameButton);
+            }
 
             // Create delete button
+
             const deleteButton = document
                 .importNode(this.categoryMenuButtonTemplate.content, true)
                 .querySelector("button");
@@ -332,7 +397,9 @@ class LabelPanel {
     initRenameButton(renameButton, category) {
         renameButton.addEventListener("click", (event) => {
             event.preventDefault();
-            console.log("Rename button clicked");
+
+            // Rename the category
+            const generalPopManager = new GeneralPopManager();
         });
     }
 
@@ -425,6 +492,63 @@ class LabelPanel {
                 actionPanel.updateCategoryButtons();
             }
         });
+    }
+
+    /**
+     * Rename the category based on the input
+     * in the text label. <br>
+     *
+     * The following cases will not rename the category:
+     * - The input is empty
+     * - If the category is a coral, the input starts with "Bleached"
+     * @param {HTMLParagraphElement} textLabel
+     * @param {Category} category
+     */
+    renameCategory(textLabel, category) {
+        // Change the input text to a normal text
+        textLabel.contentEditable = false;
+
+        const newName = textLabel.innerHTML;
+
+        // Check if the input is empty
+        if (newName.length === 0) {
+            const generalPopManager = new GeneralPopManager();
+            generalPopManager.clear();
+            generalPopManager.updateLargeText("Warning");
+            generalPopManager.updateText("The category name cannot be empty.");
+            generalPopManager.addButton("ok", "OK", () => {
+                generalPopManager.hide();
+            });
+            generalPopManager.show();
+            return;
+        }
+
+        // Check if the input starts with "Bleached"
+        if (
+            category.isCoral() &&
+            newName.toLowerCase().startsWith("bleached")
+        ) {
+            const generalPopManager = new GeneralPopManager();
+            generalPopManager.clear();
+            generalPopManager.updateLargeText("Warning");
+            generalPopManager.updateText(
+                "The category name cannot start with 'Bleached'."
+            );
+            generalPopManager.addButton("ok", "OK", () => {
+                generalPopManager.hide();
+            });
+            generalPopManager.show();
+            return;
+        }
+
+        // Rename the category
+        const categoryManager = new CategoryManager();
+        categoryManager.renameCategory(category, newName);
+
+        this.updateCategoryButtons();
+
+        const actionPanel = new ActionPanel();
+        actionPanel.updateCategoryButtons();
     }
 
     getCurrentType() {

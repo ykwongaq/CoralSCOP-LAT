@@ -18,6 +18,10 @@ class ActionState {
     }
 
     handleShortCut(key, event) {
+        if (event.target.hasAttribute("no-shortcuts")) {
+            return;
+        }
+
         if (key in this.shortCutsDict) {
             this.shortCutsDict[key](event);
         }

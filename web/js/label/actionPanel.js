@@ -54,12 +54,7 @@ class ActionPanel {
             "c",
             (event) => {
                 const labelPanel = new LabelPanel();
-                if (
-                    labelPanel.searchInput !== document.activeElement &&
-                    labelPanel.addCategoryInput !== document.activeElement
-                ) {
-                    this.labelToggleButton.click();
-                }
+                this.labelToggleButton.click();
             }
         );
         document.addEventListener("keydown", (event) => {
@@ -101,12 +96,7 @@ class ActionPanel {
             "r",
             (event) => {
                 const labelPanel = new LabelPanel();
-                if (
-                    labelPanel.searchInput !== document.activeElement &&
-                    labelPanel.addCategoryInput !== document.activeElement
-                ) {
-                    this.removeButton.click();
-                }
+                this.removeButton.click();
             }
         );
         document.addEventListener("keydown", (event) => {
@@ -154,12 +144,7 @@ class ActionPanel {
             "Control+z",
             (event) => {
                 const labelPanel = new LabelPanel();
-                if (
-                    labelPanel.searchInput !== document.activeElement &&
-                    labelPanel.addCategoryInput !== document.activeElement
-                ) {
-                    this.undoPromptButton.click();
-                }
+                this.undoPromptButton.click();
             }
         );
         actionManager.registerShortCut(
@@ -167,12 +152,7 @@ class ActionPanel {
             "r",
             (event) => {
                 const labelPanel = new LabelPanel();
-                if (
-                    labelPanel.searchInput !== document.activeElement &&
-                    labelPanel.addCategoryInput !== document.activeElement
-                ) {
-                    this.resetPromptButton.click();
-                }
+                this.resetPromptButton.click();
             }
         );
         actionManager.registerShortCut(

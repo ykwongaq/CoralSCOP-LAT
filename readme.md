@@ -77,3 +77,12 @@ css
 |- ...
 ```
 
+## Todo
+
+1. Continue button from project creation page to labeling page
+2. Undo and Redo
+3. Shortcuts
+4. Quick Start
+5. Rearrange id after delete
+6. Smart exit alert
+7. Statistic

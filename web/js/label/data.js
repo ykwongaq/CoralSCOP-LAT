@@ -274,7 +274,7 @@ class CategoryManager {
         const newSuperCategoryId = this.findAvariableSuperCategoryId();
         const newSuperCategoryName = categoryName;
 
-        // Add healthy category)
+        // Add healthy category
         this.addCategory(
             categoryName,
             null,
@@ -285,7 +285,8 @@ class CategoryManager {
         );
 
         // Add bleached category
-        const newCategoryName = CategoryManager.BLEACHED_PREFIX + categoryName;
+        const newCategoryName =
+            CategoryManager.coralCategoryNameToBleachedName(categoryName);
         this.addCategory(
             newCategoryName,
             null,
@@ -377,14 +378,12 @@ class CategoryManager {
      */
     findAvariableSuperCategoryId() {
         let superCategoryId = 0;
-        console.log(Object.keys(this.superCategoryDict));
         for (let i = 0; i <= Object.keys(this.superCategoryDict).length; i++) {
             if (!(superCategoryId.toString() in this.superCategoryDict)) {
                 break;
             }
             superCategoryId++;
         }
-        console.log("super category id: ", superCategoryId);
         return superCategoryId;
     }
 
@@ -402,6 +401,10 @@ class CategoryManager {
         return false;
     }
 
+    /**
+     * Remove the category from the category list and the super category list
+     * @param {Category} category
+     */
     removeCategory(category) {
         const categoryId = category.getCategoryId();
         const superCategoryId = category.getSuperCategoryId();
@@ -415,14 +418,68 @@ class CategoryManager {
             (category) => category["id"] !== categoryId
         );
         this.superCategoryDict[superCategoryId] = newSuperCategoryList;
-
         if (newSuperCategoryList.length === 0) {
             delete this.superCategoryDict[superCategoryId];
         }
+    }
 
-        console.log("Category removed: ", category.getCategoryId());
-        console.log("Category dict: ", this.categoryDict);
-        console.log("Super category dict: ", this.superCategoryDict);
+    /**
+     * Rename the target category into the new category name. <br>
+     *
+     * It is assumed that if the given category is a coral, then it
+     * should be at healthy status. <br>
+     *
+     * If the category is a coral, then rename the bleached category as well.
+     * @param {Category} category - The category to be renamed
+     * @param {string} newCategoryName - The new category name
+     */
+    renameCategory(category, newCategoryName) {
+        if (category.isCoral() && !category.isHealthy()) {
+            console.error("Invalid category status");
+            return;
+        }
+
+        // Rename the category
+        this.renameCategory_(category, newCategoryName, newCategoryName);
+
+        if (category.isCoral()) {
+            // Rename the bleached category
+            const bleachedCategoryName =
+                CategoryManager.coralCategoryNameToBleachedName(
+                    newCategoryName
+                );
+            const bleachedCategory = this.getCorrespondingCategoryByStatus(
+                category,
+                CategoryManager.STATUS_BLEACHED
+            );
+            this.renameCategory_(
+                bleachedCategory,
+                bleachedCategoryName,
+                newCategoryName
+            );
+        }
+    }
+
+    renameCategory_(category, newCategoryName, newSuperCategoryName) {
+        const categoryId = category.getCategoryId();
+        const superCategoryId = category.getSuperCategoryId();
+
+        // Update the category name
+        this.categoryDict[categoryId]["name"] = newCategoryName;
+        this.categoryDict[categoryId]["supercategory"] = newSuperCategoryName;
+
+        // Update the super category name
+        const superCategoryList = this.superCategoryDict[superCategoryId];
+        for (const categoryInfo of superCategoryList) {
+            if (categoryInfo["id"] === categoryId) {
+                categoryInfo["name"] = newCategoryName;
+                categoryInfo["supercategory"] = newSuperCategoryName;
+            }
+        }
+    }
+
+    static coralCategoryNameToBleachedName(categoryName) {
+        return CategoryManager.BLEACHED_PREFIX + categoryName;
     }
 }
 

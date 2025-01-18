@@ -48,12 +48,7 @@ class TopPanel {
             (event) => {
                 const labelPanel = new LabelPanel();
                 // Check if the input is not in the search input or add category input
-                if (
-                    labelPanel.searchInput !== document.activeElement &&
-                    labelPanel.addCategoryInput !== document.activeElement
-                ) {
-                    this.nextImageButton.click();
-                }
+                this.nextImageButton.click();
             }
         );
         document.addEventListener("keydown", (event) => {
@@ -91,12 +86,7 @@ class TopPanel {
             (event) => {
                 const labelPanel = new LabelPanel();
                 // Check if the input is not in the search input or add category input
-                if (
-                    labelPanel.searchInput !== document.activeElement &&
-                    labelPanel.addCategoryInput !== document.activeElement
-                ) {
-                    this.prevImageButton.click();
-                }
+                this.prevImageButton.click();
             }
         );
         document.addEventListener("keydown", (event) => {
