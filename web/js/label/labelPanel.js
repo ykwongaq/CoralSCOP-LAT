@@ -121,15 +121,34 @@ class LabelPanel {
             }
 
             // Ignore if the label name is started with "Bleached"
-            if (strippedLabelName.startsWith("Bleached")) {
-                // TODO: Pop up a warning message
+            if (strippedLabelName.toLowerCase().startsWith("Bleached")) {
+                const generalPopManager = new GeneralPopManager();
+                generalPopManager.clear();
+                generalPopManager.updateLargeText("Warning");
+                generalPopManager.updateText(
+                    "The label name cannot start with 'Bleached'."
+                );
+                generalPopManager.addButton("ok", "OK", () => {
+                    generalPopManager.hide();
+                });
+                generalPopManager.show();
                 return;
             }
 
             const categoryManager = new CategoryManager();
             const success = categoryManager.addCoralCategory(labelName);
             if (!success) {
-                // TODO: Pop up a warning message
+                // Cannot add the category because the category name is duplicated
+                const generalPopManager = new GeneralPopManager();
+                generalPopManager.clear();
+                generalPopManager.updateLargeText("Warning");
+                generalPopManager.updateText(
+                    "The category name is duplicated."
+                );
+                generalPopManager.addButton("ok", "OK", () => {
+                    generalPopManager.hide();
+                });
+                generalPopManager.show();
             }
 
             this.updateCategoryButtons();
@@ -321,7 +340,19 @@ class LabelPanel {
         deleteButton.addEventListener("click", async (event) => {
             event.preventDefault();
 
-            // TODO: User cannot delete dead coral
+            // Cannot delete a dead coral category
+            if (category.isCoral() && category.isDead()) {
+                const generalPopManager = new GeneralPopManager();
+                generalPopManager.clear();
+                generalPopManager.updateLargeText("Warning");
+                generalPopManager.updateText(
+                    "Cannot delete a dead coral category."
+                );
+                generalPopManager.addButton("ok", "OK", () => {
+                    generalPopManager.hide();
+                });
+                generalPopManager.show();
+            }
 
             // To delete a category, make sure that the category
             // is not used by any mask
