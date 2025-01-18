@@ -75,6 +75,7 @@ class StatisticPage {
 
         this.clearCharts();
         this.genCoralCoverage(data);
+        this.genCoralColonyDistribution(data);
     }
 
     /**
@@ -189,7 +190,69 @@ class StatisticPage {
         this.currentImageGrid.appendChild(chartItem);
     }
 
-    genCoralColonyDistribution(data) {}
+    genCoralColonyDistribution(data) {
+        const chartItem = this.createChartItem();
+        const chartContainer = chartItem.querySelector(".chart");
+        const downloadButton = chartItem.querySelector(".download-btn");
+        const legendsContainer = chartItem.querySelector(".legends");
+        const nameText = chartItem.querySelector(".chart-item__name");
+
+        const dataDistribution = {};
+        for (const mask of data.getMasks()) {
+            const category = mask.getCategory();
+            const superCategoryName = category.getCategorySuperName();
+            if (!(superCategoryName in dataDistribution)) {
+                dataDistribution[superCategoryName] = [category, 0];
+            }
+            dataDistribution[superCategoryName][1] += 1;
+        }
+
+        if (this.ignoreUndefinedCoral()) {
+            const undefinedCategory = new Category(Category.PREDICTED_CORAL_ID);
+            delete dataDistribution[undefinedCategory.getCategorySuperName()];
+        }
+
+        const dataTable = [];
+        const colors = [];
+        const names = [];
+
+        dataTable.push(["Coral Colony", "Count"]);
+        for (const [superCategoryName, [category, count]] of Object.entries(
+            dataDistribution
+        )) {
+            dataTable.push([superCategoryName, count]);
+            colors.push(category.getMaskColor());
+            names.push(superCategoryName);
+        }
+
+        console.log(colors);
+
+        const displayData = google.visualization.arrayToDataTable(dataTable);
+        const chart = new google.visualization.PieChart(chartContainer);
+        const options = {
+            ...this.glbOptions,
+            ...{
+                colors: colors,
+                pieSliceText: "value",
+            },
+        };
+        chart.draw(displayData, options);
+
+        const legends = this.createLegends({ colors: colors, names: names });
+        legends.forEach((legend) => {
+            legendsContainer.appendChild(legend);
+        });
+
+        nameText.textContent = "Coral Colony Distribution";
+
+        downloadButton.addEventListener("click", () => {
+            const [filename, ext] = this.splitFilename(data.getImageName());
+            const outputFilename = `${filename}_coral_colony_distribution`;
+            this.download(chart, outputFilename);
+        });
+
+        this.currentImageGrid.appendChild(chartItem);
+    }
 
     genSpeciesCoverage(data) {}
 
