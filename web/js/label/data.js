@@ -83,6 +83,14 @@ class CategoryManager {
          * Value: List of dictionary containing category information
          */
         this.superCategoryDict = {};
+
+        /**
+         * Status data is used to store the status information
+         * Key: Status id
+         * Value: Name of the status
+         */
+        this.statusDict = {};
+
         return this;
     }
 
@@ -134,6 +142,14 @@ class CategoryManager {
         ];
     }
 
+    getCategoryList() {
+        const categoryList = [];
+        for (const category of Object.values(this.categoryDict)) {
+            categoryList.push(new Category(category["id"]));
+        }
+        return categoryList;
+    }
+
     getSuperCategoryIdByCategoryId(categoryId) {
         return this.categoryDict[categoryId]["supercategory_id"];
     }
@@ -180,6 +196,14 @@ class CategoryManager {
                 this.superCategoryDict[superCategoryId] = [];
             }
             this.superCategoryDict[superCategoryId].push(categoryInfo);
+        }
+    }
+
+    updateStatus(statusInfoList) {
+        this.statusDict = {};
+        for (const statusInfo of statusInfoList) {
+            const statusId = statusInfo["id"];
+            this.statusDict[statusId] = statusInfo["name"];
         }
     }
 
@@ -476,6 +500,23 @@ class CategoryManager {
                 categoryInfo["supercategory"] = newSuperCategoryName;
             }
         }
+    }
+
+    /**
+     * Get the name of the status by id
+     * @param {number} statusId
+     * @returns Name of the status
+     */
+    getStatusName(statusId) {
+        return this.statusDict[statusId];
+    }
+
+    getStatusInfo() {
+        const statusInfo = [];
+        for (const [statusId, statusName] of Object.entries(this.statusDict)) {
+            statusInfo.push({ id: statusId, name: statusName });
+        }
+        return statusInfo;
     }
 
     static coralCategoryNameToBleachedName(categoryName) {

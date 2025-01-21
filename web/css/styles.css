@@ -1459,6 +1459,9 @@ html:has(#confirm-button:not(.hidden)) #default-bar .float-bar__inner {
 .charts-grid .chart-item {
     width: 410px;
     margin-bottom: 40px;
+    display: flex; /* Use Flexbox for children alignment */
+    flex-direction: column; /* Stack children vertically */
+    justify-content: space-between; /* Distribute space evenly */
 }
 .charts-grid .chart-item .chart-box {
     width: 330px;
@@ -1470,6 +1473,9 @@ html:has(#confirm-button:not(.hidden)) #default-bar .float-bar__inner {
     border: 1px solid #e6e9ea;
     margin-bottom: 22px;
     padding-top: 10px;
+    display: flex; /* Use Flexbox for inner content */
+    flex-direction: column; /* Stack inner content vertically */
+    flex: 1; /* Make it take up available space */
 }
 .charts-grid .chart-item__name {
     font-size: 24px;

@@ -1,4 +1,10 @@
 class StatisticPage {
+    static SHALLOW_GRAY_COLOR = "#D3D3D3";
+    static DEEP_GRAY_COLOR = "#7A7A7A";
+    static GREEN_COLOR = "#28A745";
+    static BLACK_COLOR = "#000000";
+    static WHITE_COLOR = "#FFFFFF";
+
     constructor(dom) {
         if (StatisticPage.instance) {
             return StatisticPage.instance;
@@ -76,6 +82,16 @@ class StatisticPage {
         this.clearCharts();
         this.genCoralCoverage(data);
         this.genCoralColonyDistribution(data);
+        this.genSpeciesCoverage(data);
+        this.genOverallCondition(data);
+
+        const categoryManager = new CategoryManager();
+        const categoryList = categoryManager.getCategoryList();
+        for (const category of categoryList) {
+            if (category.isCoral() && category.isHealthy()) {
+                this.genSpeciesCondition(data, category);
+            }
+        }
     }
 
     /**
@@ -119,7 +135,7 @@ class StatisticPage {
 
         let chart = null;
         if (this.ignoreUndefinedCoral()) {
-            const colors = ["#EAB308", "#808080"];
+            const colors = ["#EAB308", StatisticPage.SHALLOW_GRAY_COLOR];
             const names = ["Coral", "Non-Coral"];
 
             var displayData = [
@@ -148,7 +164,13 @@ class StatisticPage {
                 legendsContainer.appendChild(legend);
             });
         } else {
-            const colors = ["#EAB308", "#1B68D3", "#808080"];
+            const undefinedCategory = new Category(Category.PREDICTED_CORAL_ID);
+
+            const colors = [
+                "#EAB308",
+                undefinedCategory.getMaskColor(),
+                StatisticPage.SHALLOW_GRAY_COLOR,
+            ];
             const names = ["Coral", "Undefined Coral", "Non-Coral"];
 
             var displayData = [
@@ -225,8 +247,6 @@ class StatisticPage {
             names.push(superCategoryName);
         }
 
-        console.log(colors);
-
         const displayData = google.visualization.arrayToDataTable(dataTable);
         const chart = new google.visualization.PieChart(chartContainer);
         const options = {
@@ -254,11 +274,254 @@ class StatisticPage {
         this.currentImageGrid.appendChild(chartItem);
     }
 
-    genSpeciesCoverage(data) {}
+    genSpeciesCoverage(data) {
+        const chartItem = this.createChartItem();
+        const chartContainer = chartItem.querySelector(".chart");
+        const downloadButton = chartItem.querySelector(".download-btn");
+        const legendsContainer = chartItem.querySelector(".legends");
+        const nameText = chartItem.querySelector(".chart-item__name");
 
-    genOverallCondition(data) {}
+        const speciesData = {};
+        for (const mask of data.getMasks()) {
+            const category = mask.getCategory();
+            const area = mask.getArea();
+            const superCategoryName = category.getCategorySuperName();
 
-    genSpeciesCondition(data, category) {}
+            if (!(superCategoryName in speciesData)) {
+                speciesData[superCategoryName] = [category, 0];
+            }
+
+            speciesData[superCategoryName][1] += area;
+        }
+
+        if (this.ignoreUndefinedCoral()) {
+            const undefinedCategory = new Category(Category.PREDICTED_CORAL_ID);
+            delete speciesData[undefinedCategory.getCategorySuperName()];
+        }
+
+        const imageHeight = data.getImageHeight();
+        const imageWidth = data.getImageWidth();
+        const imageArea = imageHeight * imageWidth;
+        let nonCoralArea = imageArea;
+        for (const [superCategoryName, [category, area]] of Object.entries(
+            speciesData
+        )) {
+            nonCoralArea -= area;
+        }
+
+        const dataTable = [];
+        const colors = [];
+        const names = [];
+
+        dataTable.push(["Species", "Area"]);
+        for (const [superCategoryName, [category, area]] of Object.entries(
+            speciesData
+        )) {
+            dataTable.push([superCategoryName, area]);
+            colors.push(category.getMaskColor());
+            names.push(superCategoryName);
+        }
+
+        dataTable.push(["Non-Coral", nonCoralArea]);
+        colors.push(StatisticPage.SHALLOW_GRAY_COLOR);
+        names.push("Non-Coral");
+
+        const displayData = google.visualization.arrayToDataTable(dataTable);
+        const chart = new google.visualization.PieChart(chartContainer);
+        const options = {
+            ...this.glbOptions,
+            ...{
+                colors: colors,
+            },
+        };
+        chart.draw(displayData, options);
+
+        const legends = this.createLegends({ colors: colors, names: names });
+        legends.forEach((legend) => {
+            legendsContainer.appendChild(legend);
+        });
+
+        nameText.textContent = "Species Coverage";
+
+        downloadButton.addEventListener("click", () => {
+            const [filename, ext] = this.splitFilename(data.getImageName());
+            const outputFilename = `${filename}_species_coverage`;
+            this.download(chart, outputFilename);
+        });
+
+        this.currentImageGrid.appendChild(chartItem);
+    }
+
+    genOverallCondition(data) {
+        const chartItem = this.createChartItem();
+        const chartContainer = chartItem.querySelector(".chart");
+        const downloadButton = chartItem.querySelector(".download-btn");
+        const legendsContainer = chartItem.querySelector(".legends");
+        const nameText = chartItem.querySelector(".chart-item__name");
+
+        const categoryManager = new CategoryManager();
+
+        const speciesData = {};
+        for (const mask of data.getMasks()) {
+            const category = mask.getCategory();
+            const area = mask.getArea();
+            const status = category.getStatus();
+            const statusName = categoryManager.getStatusName(status);
+
+            if (!(statusName in speciesData)) {
+                speciesData[statusName] = [category, 0];
+            }
+
+            speciesData[statusName][1] += area;
+        }
+
+        if (this.ignoreUndefinedCoral()) {
+            const undefinedCategory = new Category(Category.PREDICTED_CORAL_ID);
+            const undefinedStatusName = categoryManager.getStatusName(
+                undefinedCategory.getStatus()
+            );
+            delete speciesData[undefinedStatusName];
+        }
+
+        const imageHeight = data.getImageHeight();
+        const imageWidth = data.getImageWidth();
+        const imageArea = imageHeight * imageWidth;
+        let nonCoralArea = imageArea;
+
+        for (const [statusName, [category, area]] of Object.entries(
+            speciesData
+        )) {
+            nonCoralArea -= area;
+        }
+
+        const dataTable = [];
+        const colors = [];
+        const names = [];
+
+        dataTable.push(["Status", "Area"]);
+        for (const [statusName, [category, area]] of Object.entries(
+            speciesData
+        )) {
+            dataTable.push([statusName, area]);
+            let color = null;
+            switch (category.getStatus()) {
+                case CategoryManager.STATUS_HEALTHY:
+                    color = StatisticPage.GREEN_COLOR;
+                    break;
+                case CategoryManager.STATUS_DEAD:
+                    color = StatisticPage.BLACK_COLOR;
+                    break;
+                case CategoryManager.STATUS_BLEACHED:
+                    color = StatisticPage.DEEP_GRAY_COLOR;
+                    break;
+                default:
+                    color = StatisticPage.SHALLOW_GRAY_COLOR;
+            }
+            colors.push(color);
+            names.push(statusName);
+        }
+
+        dataTable.push(["Non-Coral", nonCoralArea]);
+        colors.push(StatisticPage.SHALLOW_GRAY_COLOR);
+        names.push("Non-Coral");
+
+        const displayData = google.visualization.arrayToDataTable(dataTable);
+        const chart = new google.visualization.PieChart(chartContainer);
+        const options = {
+            ...this.glbOptions,
+            ...{
+                colors: colors,
+            },
+        };
+        chart.draw(displayData, options);
+
+        const legends = this.createLegends({ colors: colors, names: names });
+        legends.forEach((legend) => {
+            legendsContainer.appendChild(legend);
+        });
+
+        nameText.textContent = "Health Status Distribution";
+
+        downloadButton.addEventListener("click", () => {
+            const [filename, ext] = this.splitFilename(data.getImageName());
+            const outputFilename = `${filename}_health_status_distribution`;
+            this.download(chart, outputFilename);
+        });
+
+        this.currentImageGrid.appendChild(chartItem);
+    }
+
+    genSpeciesCondition(data, category) {
+        const chartItem = this.createChartItem();
+        const chartContainer = chartItem.querySelector(".chart");
+        const downloadButton = chartItem.querySelector(".download-btn");
+        const legendsContainer = chartItem.querySelector(".legends");
+        const nameText = chartItem.querySelector(".chart-item__name");
+
+        if (!category.isCoral()) {
+            return;
+        }
+
+        let healthyArea = 0;
+        let bleachedArea = 0;
+
+        for (const mask of data.getMasks()) {
+            const category = mask.getCategory();
+            if (
+                category.getSuperCategoryId() != category.getSuperCategoryId()
+            ) {
+                continue;
+            }
+
+            const area = mask.getArea();
+            if (category.getStatus() === CategoryManager.STATUS_HEALTHY) {
+                healthyArea += area;
+            } else if (
+                category.getStatus() === CategoryManager.STATUS_BLEACHED
+            ) {
+                bleachedArea += area;
+            }
+        }
+
+        const dataTable = [];
+        const colors = [];
+        const names = [];
+
+        dataTable.push(["Status", "Area"]);
+        dataTable.push(["Healthy", healthyArea]);
+        colors.push(StatisticPage.GREEN_COLOR);
+        names.push("Healthy");
+
+        dataTable.push(["Bleached", bleachedArea]);
+        colors.push(StatisticPage.DEEP_GRAY_COLOR);
+        names.push("Bleached");
+
+        const displayData = google.visualization.arrayToDataTable(dataTable);
+        const chart = new google.visualization.PieChart(chartContainer);
+        const options = {
+            ...this.glbOptions,
+            ...{
+                colors: colors,
+            },
+        };
+        chart.draw(displayData, options);
+
+        const legends = this.createLegends({ colors: colors, names: names });
+        legends.forEach((legend) => {
+            legendsContainer.appendChild(legend);
+        });
+
+        const superCategoryName = category.getCategorySuperName();
+        nameText.textContent = `${superCategoryName}`;
+
+        downloadButton.addEventListener("click", () => {
+            const [filename, ext] = this.splitFilename(data.getImageName());
+            const outputFilename = `${filename}_${superCategoryName}_condition`;
+            this.download(chart, outputFilename);
+        });
+
+        this.currentImageGrid.appendChild(chartItem);
+    }
 
     clearCharts() {
         this.currentImageGrid.innerHTML = "";

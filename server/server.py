@@ -162,7 +162,8 @@ class Server:
             "image_path": str,
             "idx": int,
             "segmentation": List[Dict] - Annotation in coco format,
-            "category_info": List[Dict] - Category information
+            "category_info": List[Dict] - Category information,
+            "status_info": List[Dict] - Status information
         }
         """
 
@@ -173,8 +174,14 @@ class Server:
             self.logger.error(f"Category info not found")
             return None
 
+        status_info = self.dataset.get_status_info()
+        if status_info is None:
+            self.logger.error(f"Status info not found")
+            return None
+
         response = data.to_json()
         response["category_info"] = category_info
+        response["status_info"] = status_info
 
         return response
 
@@ -271,6 +278,7 @@ class Server:
         data_idx = data["images"][0]["id"]
         self.dataset.update_data(data_idx, segmentation)
         self.dataset.set_category_info(data["category_info"])
+        self.dataset.set_status_info(data["status_info"])
 
     @time_it
     def save_dataset(self, output_dir: str):

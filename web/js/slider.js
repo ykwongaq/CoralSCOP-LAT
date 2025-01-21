@@ -1,12 +1,12 @@
 class Slider {
-    constructor(_dom, options) {
+    constructor(_dom, min = 0, max = 100) {
         this.eventHandlers = {};
 
         this.container = _dom;
         this.slider = _dom.querySelector("[type=range]");
         this.input = _dom.querySelector("[type=text]");
-        this.max = 100;
-        this.min = 0;
+        this.max = max;
+        this.min = min;
         this.value = this.slider.value;
         this.suffix = this.slider.dataset.suffix ?? "";
         this.input.value = `${this.value}${this.suffix}`;

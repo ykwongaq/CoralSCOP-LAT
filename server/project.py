@@ -181,10 +181,28 @@ class CategoryJson:
         }
 
 
+class StatusJson:
+    def __init__(self):
+        self.id = None
+        self.name = None
+
+    def set_id(self, id: int):
+        self.id = id
+
+    def set_name(self, name: str):
+        self.name = name
+
+    def to_json(self):
+        assert self.id is not None, "id is not set"
+        assert self.name is not None, "name is not set"
+        return {"id": self.id, "name": self.name}
+
+
 class ProjectInfoJson:
     def __init__(self):
         self.last_image_idx = None
         self.category_info: List[CategoryJson] = []
+        self.status_info: List[StatusJson] = []
 
     def set_last_image_idx(self, last_image_idx: int):
         self.last_image_idx = last_image_idx
@@ -192,11 +210,15 @@ class ProjectInfoJson:
     def add_category_info(self, category_info: CategoryJson):
         self.category_info.append(category_info)
 
+    def add_status_info(self, status_info: StatusJson):
+        self.status_info.append(status_info)
+
     def to_json(self):
         assert self.last_image_idx is not None, "last_image_idx is not set"
         return {
             "last_image_idx": self.last_image_idx,
             "category_info": [category.to_json() for category in self.category_info],
+            "status_info": [status.to_json() for status in self.status_info],
         }
 
 
@@ -386,8 +408,8 @@ class ProjectCreator:
 
         detected_coral_category = CategoryJson()
         detected_coral_category.set_id(-1)
-        detected_coral_category.set_name("Detected Coral")
-        detected_coral_category.set_super_category("Detected Coral")
+        detected_coral_category.set_name("Undefined Coral")
+        detected_coral_category.set_super_category("Undefined Coral")
         detected_coral_category.set_super_category_id(-1)
         detected_coral_category.set_is_coral(True)
         detected_coral_category.set_status(-1)
@@ -401,6 +423,26 @@ class ProjectCreator:
         dead_coral_category.set_is_coral(True)
         dead_coral_category.set_status(2)
         project_info_json.add_category_info(dead_coral_category)
+
+        healty_status = StatusJson()
+        healty_status.set_id(0)
+        healty_status.set_name("Healthy")
+        project_info_json.add_status_info(healty_status)
+
+        bleached_status = StatusJson()
+        bleached_status.set_id(1)
+        bleached_status.set_name("Bleached")
+        project_info_json.add_status_info(bleached_status)
+
+        dead_status = StatusJson()
+        dead_status.set_id(2)
+        dead_status.set_name("Dead")
+        project_info_json.add_status_info(dead_status)
+
+        undefined_status = StatusJson()
+        undefined_status.set_id(-1)
+        undefined_status.set_name("Undefined")
+        project_info_json.add_status_info(undefined_status)
 
         save_json(project_info_json.to_json(), project_info_path)
 
@@ -441,44 +483,6 @@ class ProjectCreator:
             self.logger.info("No task running.")
             return
         self.stop_event.set()
-
-    # def save(self, output_dir: str):
-    #     """
-    #     Save the project data to a zip file with .coral extension.
-    #     """
-    #     output_temp_dir = os.path.join(output_dir, TEMP_CREATE_NAME)
-
-    #     output_file = os.path.join(output_dir, "project.coral")
-
-    #     # Detect is there is a project.coral file in the output_dir
-    #     # If yes, change the output_file to project_1.coral and so on
-    #     i = 1
-    #     while os.path.exists(output_file):
-    #         output_file = os.path.join(output_dir, f"project_{i}.coral")
-    #         i += 1
-
-    #         # Add exit case to prevent infinite loop
-    #         if i > 1000:
-    #             raise Exception("Too many project files in the output directory")
-
-    #     with zipfile.ZipFile(output_file, "w") as archive:
-    #         for root, _, files in os.walk(output_temp_dir):
-    #             for file in files:
-    #                 archive.write(
-    #                     os.path.join(root, file),
-    #                     os.path.relpath(os.path.join(root, file), output_temp_dir),
-    #                 )
-
-    #     # Delete the temporary folder
-    #     self.clear_temp_folder(output_dir)
-
-    # def clear_temp_folder(self, output_dir: str) -> None:
-    #     """
-    #     Clear the temporary folder in the output directory.
-    #     """
-    #     temp_folder = os.path.join(output_dir, TEMP_CREATE_NAME)
-    #     if os.path.exists(temp_folder):
-    #         shutil.rmtree(temp_folder)
 
     def find_available_project_name(self, output_dir: str) -> str:
         project_name = "project.coral"
@@ -570,6 +574,7 @@ class ProjectCreator:
 
         # Save the project info
         new_project_info_path = os.path.join(new_temp_dir, "project_info.json")
+
         project_info_json = ProjectInfoJson()
         project_info_json.set_last_image_idx(dataset.get_last_saved_id())
         for category in dataset.get_category_info():
@@ -581,6 +586,15 @@ class ProjectCreator:
             category_json.set_is_coral(category["is_coral"])
             category_json.set_status(category["status"])
             project_info_json.add_category_info(category_json)
+
+        self.logger.debug(f"Status info: {dataset.get_status_info()}")
+        for status in dataset.get_status_info():
+            status_json = StatusJson()
+            status_json.set_id(status["id"])
+            status_json.set_name(status["name"])
+            project_info_json.add_status_info(status_json)
+        project_info_json.set_last_image_idx(dataset.get_last_saved_id())
+
         save_json(project_info_json.to_json(), new_project_info_path)
 
         # Zip the original project files back
@@ -606,80 +620,6 @@ class ProjectCreator:
                         )
             self.logger.info(f"Saving project to {new_project_path}")
             shutil.rmtree(new_temp_dir)
-
-    # def save_dataset(
-    #     self, dataset: Dataset, original_project_path: str, output_path: str
-    # ):
-    #     assert output_path.endswith(".coral"), "Output path must have .coral extension"
-    #     output_dir = os.path.dirname(output_path)
-
-    #     # Unzip the original project_path
-    #     output_temp_dir = os.path.join(output_dir, TEMP_CREATE_NAME)
-    #     with zipfile.ZipFile(output_path, "r") as archive:
-    #         archive.extractall(output_temp_dir)
-
-    #     # Remove the original project_path
-    #     os.remove(output_path)
-
-    #     # Remove all the outdated annotation files
-    #     annotation_folder = os.path.join(output_temp_dir, "annotations")
-    #     for filename in os.listdir(annotation_folder):
-    #         file_path = os.path.join(annotation_folder, filename)
-    #         os.remove(file_path)
-
-    #     # Save the new annotations
-    #     for data in dataset.get_data_list():
-    #         filename = os.path.splitext(data.get_image_name())[0]
-    #         annotation_path = os.path.join(annotation_folder, f"{filename}.json")
-
-    #         annotation_file_json = AnnotationFileJson()
-
-    #         image_json = ImageJson()
-    #         image_json.set_id(data.get_idx())
-    #         image_json.set_filename(data.get_image_name())
-    #         image_json.set_width(data.get_image_width())
-    #         image_json.set_height(data.get_image_height())
-    #         annotation_file_json.add_image(image_json)
-
-    #         for mask in data.get_segmentation()["annotations"]:
-    #             annotation_json = AnnotationJson()
-    #             annotation_json.set_segmentation(mask["segmentation"])
-    #             annotation_json.set_bbox(mask["bbox"])
-    #             annotation_json.set_area(mask["area"])
-    #             annotation_json.set_category_id(mask["category_id"])
-    #             annotation_json.set_id(mask["id"])
-    #             annotation_json.set_image_id(data.get_idx())
-    #             annotation_json.set_iscrowd(mask["iscrowd"])
-    #             annotation_json.set_predicted_iou(mask["predicted_iou"])
-    #             annotation_file_json.add_annotation(annotation_json)
-
-    #         save_json(annotation_file_json.to_json(), annotation_path)
-
-    #     project_info_path = os.path.join(output_temp_dir, "project_info.json")
-    #     project_info_json = ProjectInfoJson()
-    #     project_info_json.set_last_image_idx(dataset.get_last_saved_id())
-    #     for category in dataset.get_category_info():
-    #         category_json = CategoryJson()
-    #         category_json.set_id(category["id"])
-    #         category_json.set_name(category["name"])
-    #         category_json.set_super_category(category["supercategory"])
-    #         category_json.set_super_category_id(category["supercategory_id"])
-    #         category_json.set_is_coral(category["is_coral"])
-    #         category_json.set_status(category["status"])
-    #         project_info_json.add_category_info(category_json)
-    #     save_json(project_info_json.to_json(), project_info_path)
-
-    #     # Compress the files back to the project_path
-    #     with zipfile.ZipFile(output_path, "w") as archive:
-    #         for root, _, files in os.walk(output_temp_dir):
-    #             for file in files:
-    #                 archive.write(
-    #                     os.path.join(root, file),
-    #                     os.path.relpath(os.path.join(root, file), output_temp_dir),
-    #                 )
-
-    #     # Remove the temporary folder
-    #     shutil.rmtree(output_temp_dir)
 
 
 class ProjectLoader:
@@ -752,7 +692,9 @@ class ProjectLoader:
         project_info = load_json(project_info_path)
         last_image_idx = project_info["last_image_idx"]
         category_info = project_info["category_info"]
+        status_info = project_info["status_info"]
         dataset.set_category_info(category_info)
+        dataset.set_status_info(status_info)
 
         # Delete the temporary folder
         shutil.rmtree(temp_output_dir)
