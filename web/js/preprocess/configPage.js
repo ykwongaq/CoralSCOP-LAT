@@ -45,12 +45,17 @@ class ConfigPage {
     }
 
     initSliders() {
-        const sliderBlocks = this.pageDom.querySelectorAll(
-            ".settings-group .slider-blk"
+        const minAreaBlock = this.pageDom.querySelector("#min-area-block");
+        minAreaBlock.Slider = new Slider(minAreaBlock, 0, 20);
+
+        const minConfidenceBlock = this.pageDom.querySelector(
+            "#min-confidence-block"
         );
-        sliderBlocks.forEach((item) => {
-            item.Slider = new Slider(item);
-        });
+        minConfidenceBlock.Slider = new Slider(minConfidenceBlock, 0, 100);
+
+        const maxOverlapBlock =
+            this.pageDom.querySelector("#max-overlap-block");
+        maxOverlapBlock.Slider = new Slider(maxOverlapBlock, 0, 50);
     }
 
     initSaveButton() {
