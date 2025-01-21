@@ -13,7 +13,19 @@ class NavigationBar {
         this.galleryButton = this.dom.querySelector("#gallery-button");
         this.labelButton = this.dom.querySelector("#label-button");
         this.statisticButton = this.dom.querySelector("#statistic-button");
+
         this.exportButton = this.dom.querySelector("#file-button");
+        this.exportDropDownMenu = this.dom.querySelector("#file-dropdown-menu");
+        this.exportImageButton = this.dom.querySelector("#export-image-button");
+        this.exportAnnotatedImageButton = this.dom.querySelector(
+            "#export-annotated-image-button"
+        );
+        this.exportCOCOButton = this.dom.querySelector("#export-coco-button");
+        this.exportExcelButton = this.dom.querySelector("#export-excel-button");
+        this.exportChartsButton = this.dom.querySelector(
+            "#export-graph-button"
+        );
+        this.exportAllButton = this.dom.querySelector("#export-all-button");
 
         this.saveDropdownButton = this.dom.querySelector(
             "#save-drop-down-button"
@@ -59,7 +71,23 @@ class NavigationBar {
 
     initExportButton() {
         this.exportButton.addEventListener("click", () => {
-            // TODO: Implement export functionality
+            this.exportDropDownMenu.style.display =
+                this.exportDropDownMenu.style.display === "block"
+                    ? "none"
+                    : "block";
+        });
+
+        this.exportImageButton.addEventListener("click", () => {});
+        this.exportAnnotatedImageButton.addEventListener("click", () => {});
+        this.exportCOCOButton.addEventListener("click", () => {});
+        this.exportExcelButton.addEventListener("click", () => {});
+        this.exportChartsButton.addEventListener("click", () => {});
+        this.exportAllButton.addEventListener("click", () => {});
+
+        window.addEventListener("click", (event) => {
+            if (!event.target.matches("#file-button")) {
+                this.exportDropDownMenu.style.display = "none";
+            }
         });
     }
 
