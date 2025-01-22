@@ -13,6 +13,7 @@ from .embedding import EmbeddingGenerator
 from .segmentation import CoralSegmentation
 from .dataset import Dataset, Data
 from PIL import Image
+from .util.data import zip_file, unzip_file
 
 
 from typing import Dict, Tuple, List, Union
@@ -740,3 +741,29 @@ class ProjectLoader:
             for filename in os.listdir(asset_folder):
                 file_path = os.path.join(asset_folder, filename)
                 os.remove(file_path)
+
+
+class ProjectExport:
+    def __init__(self, project_path: str):
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.project_path = project_path
+
+    def export_images(self, output_dir: str):
+        project_folder = os.path.dirname(self.project_path)
+
+        # Extract the project files
+        temp_dir = os.path.join(project_folder, TEMP_LOAD_NAME)
+        unzip_file(self.project_path, temp_dir)
+
+        # Create images folder
+        image_folder = os.path.join(output_dir, "images")
+        os.makedirs(image_folder, exist_ok=True)
+
+        # Copy the images to the images folder
+        project_image_folder = os.path.join(temp_dir, "images")
+        for image_name in os.listdir(project_image_folder):
+            image_path = os.path.join(project_image_folder, image_name)
+            shutil.copy(image_path, image_folder)
+
+        # Zip back the project files
+        zip_file(temp_dir, self.project_path)

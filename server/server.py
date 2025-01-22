@@ -9,7 +9,7 @@ from .segmentation import CoralSegmentation
 # from .maskEiditor import MaskEidtor
 from .maskCreator import MaskCreator, Prompt
 from .util.general import get_resource_path
-from .project import ProjectCreator, ProjectCreateRequest, ProjectLoader
+from .project import ProjectCreator, ProjectCreateRequest, ProjectLoader, ProjectExport
 from .dataset import Dataset, Data
 from .util.coco import to_coco_annotation, coco_mask_to_rle
 
@@ -332,3 +332,9 @@ class Server:
         annotation["rle"] = coco_mask_to_rle(annotation["segmentation"])
 
         return annotation
+
+    @time_it
+    def export_images(self, output_dir: str):
+        self.logger.info(f"Exporting images to {output_dir} ...")
+        project_export = ProjectExport(self.project_path)
+        project_export.export_images(output_dir)
