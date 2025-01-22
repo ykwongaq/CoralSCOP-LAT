@@ -96,6 +96,11 @@ def get_data_ids_by_category_id(category_id: int) -> List[int]:
     return server.get_data_ids_by_category_id(category_id)
 
 
+@eel.expose
+def export_images(output_dir: str):
+    server.export_images(output_dir)
+
+
 if __name__ == "__main__":
     setup_logging()
     print("Please wait for the tool to be ready ...")

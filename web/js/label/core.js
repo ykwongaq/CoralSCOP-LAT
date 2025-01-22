@@ -215,4 +215,12 @@ class Core {
 
         return imageIds;
     }
+
+    exportImages(outputDir, callBack = null) {
+        eel.export_images(outputDir)(() => {
+            if (callBack != null) {
+                callBack();
+            }
+        });
+    }
 }
