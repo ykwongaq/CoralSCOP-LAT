@@ -87,4 +87,5 @@ css
 6. Smart exit alert
 7. Statistic Page - Project level statistic
 8. Create mask with category
+9. Prevent multiple click on the navigation bar
 ```

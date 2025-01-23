@@ -398,7 +398,8 @@ class ProjectCreator:
 
         if terminated:
             # If the process is terminated, clear the temporary folder and return
-            self.clear_temp_folder(output_dir)
+            # self.clear_temp_folder(output_dir)
+            shutil.rmtree(output_temp_dir)
             status = {}
             status["finished"] = False
             eel.afterProjectCreation(status)
@@ -462,6 +463,7 @@ class ProjectCreator:
 
         status = {}
         status["finished"] = True
+        status["project_path"] = project_path
         eel.afterProjectCreation(status)
 
     def create(self, request: ProjectCreateRequest):
@@ -767,3 +769,20 @@ class ProjectExport:
 
         # Zip back the project files
         zip_file(temp_dir, self.project_path)
+
+    def export_annotated_images(self, output_dir: str, data_list: List[Dict]):
+        """
+        Params:
+        - output_dir: The output directory
+        - data: The list of data of the image, which is a dict
+        {
+            "image_name": str,
+            "encoded_image": str,
+        }
+        """
+        output_annoted_image_folder = os.path.join(output_dir, "annoted_images")
+        os.makedirs(output_annoted_image_folder, exist_ok=True)
+        for data in data_list:
+            image = decode_image_url(data["encoded_image"])
+            image = Image.fromarray(image)
+            image.save(os.path.join(output_annoted_image_folder, data["image_name"]))

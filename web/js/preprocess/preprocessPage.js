@@ -191,9 +191,11 @@ class PreprocessPage {
 
                 // Configure the loading pop up window
                 const loadingPopManager = new LoadingPopManager();
+                loadingPopManager.updateLargeText("Hold Tight!");
                 loadingPopManager.show();
                 loadingPopManager.updateButtonFn(() => {
                     console.log("Quit button clicked.");
+                    loadingPopManager.updateLargeText("Terminating...");
                     eel.terminate_create_project_process()();
                 });
 
@@ -248,7 +250,11 @@ class PreprocessPage {
                 navigateTo("main_page.html");
             });
             generalPopup.addButton("continue-button", "Continue", () => {
-                console.log("Continue button clicked.");
+                const projectPath = status["project_path"];
+                navigateTo(
+                    "label.html?askLoadProject=false&project_path=" +
+                        projectPath
+                );
             });
         } else {
             generalPopup.updateLargeText("Terminated.");
