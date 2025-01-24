@@ -88,4 +88,10 @@ css
 7. Statistic Page - Project level statistic
 8. Create mask with category
 9. Prevent multiple click on the navigation bar
+10. Error handling
+11. Clearer shortcut
+12. Tutorial
+13. Pop up problem in mac
+14. Message in creating project
+15. Performance
 ```

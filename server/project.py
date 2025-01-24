@@ -14,6 +14,7 @@ from .segmentation import CoralSegmentation
 from .dataset import Dataset, Data
 from PIL import Image
 from .util.data import zip_file, unzip_file
+from .util.coco import coco_rle_to_coco_poly
 
 
 from typing import Dict, Tuple, List, Union
@@ -220,6 +221,44 @@ class ProjectInfoJson:
             "last_image_idx": self.last_image_idx,
             "category_info": [category.to_json() for category in self.category_info],
             "status_info": [status.to_json() for status in self.status_info],
+        }
+
+
+class COCOJson:
+    def __init__(self):
+        self.images: List[ImageJson] = []
+        self.annotations: List[AnnotationJson] = []
+        self.categories: List[CategoryJson] = []
+
+    def add_image(self, image: ImageJson):
+        self.images.append(image)
+
+    def add_annotation(self, annotation: AnnotationJson):
+        self.annotations.append(annotation)
+
+    def add_category(self, category: CategoryJson):
+        self.categories.append(category)
+
+    def to_json(self):
+        images = [image.to_json() for image in self.images]
+        annotations = [annotation.to_json() for annotation in self.annotations]
+        categories = [category.to_json() for category in self.categories]
+
+        # Remove the mask with category id -1
+        annotations = [
+            annotation for annotation in annotations if annotation["category_id"] != -1
+        ]
+
+        # Convert coco rle to coco poly
+        for annotation in annotations:
+            annotation["segmentation"] = coco_rle_to_coco_poly(
+                annotation["segmentation"]
+            )
+
+        return {
+            "images": images,
+            "annotations": annotations,
+            "categories": categories,
         }
 
 
@@ -746,6 +785,9 @@ class ProjectLoader:
 
 
 class ProjectExport:
+
+    COCO_FILE_NAME = "coco"
+
     def __init__(self, project_path: str):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.project_path = project_path
@@ -786,3 +828,53 @@ class ProjectExport:
             image = decode_image_url(data["encoded_image"])
             image = Image.fromarray(image)
             image.save(os.path.join(output_annoted_image_folder, data["image_name"]))
+
+    def export_coco(self, output_dir: str, dataset: Dataset):
+        output_coco_file = os.path.join(output_dir, "coco.json")
+
+        # If the file already exist, append a number to the file name
+        i = 1
+        while os.path.exists(output_coco_file):
+            output_coco_file = os.path.join(
+                output_dir, f"{ProjectExport.COCO_FILE_NAME}_{i}.json"
+            )
+            i += 1
+
+            if i > 1000:
+                raise Exception("Too many COCO files in the output directory")
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        coco_json = COCOJson()
+
+        for data in dataset.get_data_list():
+            image_json = ImageJson()
+            image_json.set_id(data.get_idx())
+            image_json.set_filename(data.get_image_name())
+            image_json.set_width(data.get_image_width())
+            image_json.set_height(data.get_image_height())
+            coco_json.add_image(image_json)
+
+            for mask in data.get_segmentation()["annotations"]:
+                annotation_json = AnnotationJson()
+                annotation_json.set_segmentation(mask["segmentation"])
+                annotation_json.set_bbox(mask["bbox"])
+                annotation_json.set_area(mask["area"])
+                annotation_json.set_category_id(mask["category_id"])
+                annotation_json.set_id(mask["id"])
+                annotation_json.set_image_id(data.get_idx())
+                annotation_json.set_iscrowd(mask["iscrowd"])
+                annotation_json.set_predicted_iou(mask["predicted_iou"])
+                coco_json.add_annotation(annotation_json)
+
+        for category in dataset.get_category_info():
+            category_json = CategoryJson()
+            category_json.set_id(category["id"])
+            category_json.set_name(category["name"])
+            category_json.set_super_category(category["supercategory"])
+            category_json.set_super_category_id(category["supercategory_id"])
+            category_json.set_is_coral(category["is_coral"])
+            category_json.set_status(category["status"])
+            coco_json.add_category(category_json)
+
+        save_json(coco_json.to_json(), output_coco_file)

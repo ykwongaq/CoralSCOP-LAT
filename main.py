@@ -110,7 +110,11 @@ def export_images(output_dir: str):
 @eel.expose
 def export_annotated_images(output_dir: str, data_list: List[Dict]):
     server.export_annotated_images(output_dir, data_list)
-    pass
+
+
+@eel.expose
+def export_coco(output_dir: str):
+    server.export_coco(output_dir)
 
 
 if __name__ == "__main__":

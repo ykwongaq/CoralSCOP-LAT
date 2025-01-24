@@ -122,7 +122,30 @@ class NavigationBar {
                 });
             });
         });
-        this.exportCOCOButton.addEventListener("click", () => {});
+
+        this.exportCOCOButton.addEventListener("click", () => {
+            const core = new Core();
+            core.save(() => {
+                core.selectFolder((fileFolder) => {
+                    if (fileFolder === null) {
+                        return;
+                    }
+
+                    const generalPopManager = new GeneralPopManager();
+                    generalPopManager.clear();
+                    generalPopManager.updateLargeText("Exporting");
+                    generalPopManager.updateText(
+                        "Exporting the current project. Please wait."
+                    );
+                    generalPopManager.show();
+
+                    core.exportCOCO(fileFolder, () => {
+                        generalPopManager.hide();
+                    });
+                });
+            });
+        });
+
         this.exportExcelButton.addEventListener("click", () => {});
         this.exportChartsButton.addEventListener("click", () => {});
         this.exportAllButton.addEventListener("click", () => {});

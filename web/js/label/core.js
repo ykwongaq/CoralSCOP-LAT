@@ -280,6 +280,14 @@ class Core {
         });
     }
 
+    exportCOCO(outputDir, callBack = null) {
+        eel.export_coco(outputDir)(() => {
+            if (callBack != null) {
+                callBack();
+            }
+        });
+    }
+
     getDataList(callBack = null) {
         eel.get_data_list()((dataInfoList) => {
             const dataList = [];

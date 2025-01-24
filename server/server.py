@@ -349,3 +349,9 @@ class Server:
         self.logger.info(f"Exporting annotated images to {output_dir} ...")
         project_export = ProjectExport(self.project_path)
         project_export.export_annotated_images(output_dir, data_list)
+
+    @time_it
+    def export_coco(self, output_dir: str):
+        self.logger.info(f"Exporting COCO dataset to {output_dir} ...")
+        project_export = ProjectExport(self.project_path)
+        project_export.export_coco(output_dir, self.get_dataset())

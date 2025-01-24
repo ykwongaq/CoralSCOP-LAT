@@ -1,6 +1,7 @@
 from pycocotools import mask as coco_mask
 import numpy as np
 from typing import Dict, List
+import cv2
 
 
 def coco_mask_to_rle(segmentation: Dict) -> List[int]:
@@ -81,3 +82,22 @@ def to_coco_annotation(mask: np.ndarray) -> Dict:
         "iscrowd": 0,
     }
     return annotation
+
+
+def coco_rle_to_coco_poly(rle: Dict) -> List[int]:
+    mask = decode_coco_mask(rle)
+    # Find contours using OpenCV
+    contours, _ = cv2.findContours(
+        mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    polygons = []
+    for contour in contours:
+        # Flatten the contour array and convert to a list
+        polygon = contour.flatten().tolist()
+        if (
+            len(polygon) >= 6
+        ):  # A valid polygon must have at least 3 points (6 coordinates)
+            polygons.append(polygon)
+
+    return polygons
