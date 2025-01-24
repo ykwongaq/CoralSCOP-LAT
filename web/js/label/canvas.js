@@ -10,7 +10,6 @@ class Canvas {
         this.ctx = this.canvas.getContext("2d");
 
         this.data = null;
-        this.imageUrl = null;
 
         this.imageCache = new Image();
         this.maskCache = new Image();
@@ -515,5 +514,13 @@ class Canvas {
 
         this.promptingMaskCache = new Image();
         this.promptingMaskCache.src = maskCanvas.toDataURL();
+    }
+
+    getEncodedImage() {
+        return this.canvas.toDataURL("image/png");
+    }
+
+    getMaskOpacity() {
+        return this.maskOpacity;
     }
 }

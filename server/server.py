@@ -203,6 +203,11 @@ class Server:
 
         return data
 
+    @time_it
+    def get_data_list(self) -> List[Data]:
+        self.logger.info(f"Getting data list ...")
+        return self.dataset.get_data_list()
+
     def to_next_data(self) -> None:
         """
         Move to the next data. If there are no next data,
@@ -338,3 +343,9 @@ class Server:
         self.logger.info(f"Exporting images to {output_dir} ...")
         project_export = ProjectExport(self.project_path)
         project_export.export_images(output_dir)
+
+    @time_it
+    def export_annotated_images(self, output_dir: str, data_list: List[Dict]):
+        self.logger.info(f"Exporting annotated images to {output_dir} ...")
+        project_export = ProjectExport(self.project_path)
+        project_export.export_annotated_images(output_dir, data_list)

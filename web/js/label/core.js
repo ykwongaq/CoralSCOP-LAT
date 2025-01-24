@@ -61,6 +61,31 @@ class Core {
         });
     }
 
+    loadProjectFromPath(filePath, callBack = null) {
+        eel.load_project(filePath)((galleryDataList) => {
+            eel.get_current_data()((response) => {
+                // Update the category information
+                const categoryManager = new CategoryManager();
+                categoryManager.updateCategoryList(response["category_info"]);
+                categoryManager.updateStatus(response["status_info"]);
+
+                const galleryPage = new GalleryPage();
+                galleryPage.updateGallery(galleryDataList);
+
+                const data = Data.parseResponse(response);
+                this.setData(data);
+                this.showData();
+
+                const navigationBar = new NavigationBar();
+                navigationBar.showPage(NavigationBar.ANNOTATION_PAGE);
+
+                if (callBack != null) {
+                    callBack();
+                }
+            });
+        });
+    }
+
     setData(data) {
         this.data = data;
     }
@@ -220,6 +245,50 @@ class Core {
         eel.export_images(outputDir)(() => {
             if (callBack != null) {
                 callBack();
+            }
+        });
+    }
+
+    exportAnnotatedImages(outputDir, callBack = null) {
+        this.getDataList(async (dataList) => {
+            const annotatedDataInfoList = [];
+            for (const data of dataList) {
+                try {
+                    const annotationRenderer = new AnnotationRenderer();
+                    await annotationRenderer.render(data);
+                    const encodedImage = annotationRenderer.getEncodedImage();
+                    const imageName = data.getImageName();
+                    const annotatedDataInfo = {
+                        image_name: imageName,
+                        encoded_image: encodedImage,
+                    };
+                    annotatedDataInfoList.push(annotatedDataInfo);
+                } catch (error) {
+                    console.error("Failed to export", data.getImageName());
+                    console.error(error);
+                }
+            }
+
+            eel.export_annotated_images(
+                outputDir,
+                annotatedDataInfoList
+            )(() => {
+                if (callBack != null) {
+                    callBack();
+                }
+            });
+        });
+    }
+
+    getDataList(callBack = null) {
+        eel.get_data_list()((dataInfoList) => {
+            const dataList = [];
+            for (const dataInfo of dataInfoList) {
+                dataList.push(Data.parseResponse(dataInfo));
+            }
+
+            if (callBack != null) {
+                callBack(dataList);
             }
         });
     }

@@ -77,6 +77,12 @@ def get_data_by_idx(idx: int) -> Dict:
 
 
 @eel.expose
+def get_data_list() -> List[Dict]:
+    data_list = server.get_data_list()
+    return [data.to_json() for data in data_list]
+
+
+@eel.expose
 def save_data(data: Dict):
     server.save_data(data)
 
@@ -99,6 +105,12 @@ def get_data_ids_by_category_id(category_id: int) -> List[int]:
 @eel.expose
 def export_images(output_dir: str):
     server.export_images(output_dir)
+
+
+@eel.expose
+def export_annotated_images(output_dir: str, data_list: List[Dict]):
+    server.export_annotated_images(output_dir, data_list)
+    pass
 
 
 if __name__ == "__main__":

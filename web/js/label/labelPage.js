@@ -81,6 +81,19 @@ function main() {
             popUpWindow.hide();
         });
         popUpWindow.show();
+    } else {
+        const projectPath = urlParams.get("project_path");
+        if (projectPath !== null) {
+            const generalPopManager = new GeneralPopManager();
+            generalPopManager.clear();
+            generalPopManager.updateLargeText("Hold Tight!");
+            generalPopManager.updateText("Loading Project...");
+            generalPopManager.show();
+            const core = new Core();
+            core.loadProjectFromPath(projectPath, () => {
+                generalPopManager.hide();
+            });
+        }
     }
 
     window.onbeforeunload = function (event) {

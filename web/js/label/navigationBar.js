@@ -99,7 +99,29 @@ class NavigationBar {
                 });
             });
         });
-        this.exportAnnotatedImageButton.addEventListener("click", () => {});
+
+        this.exportAnnotatedImageButton.addEventListener("click", () => {
+            const core = new Core();
+            core.save(() => {
+                core.selectFolder((fileFolder) => {
+                    if (fileFolder === null) {
+                        return;
+                    }
+
+                    const generalPopManager = new GeneralPopManager();
+                    generalPopManager.clear();
+                    generalPopManager.updateLargeText("Exporting");
+                    generalPopManager.updateText(
+                        "Exporting the current project. Please wait."
+                    );
+                    generalPopManager.show();
+
+                    core.exportAnnotatedImages(fileFolder, () => {
+                        generalPopManager.hide();
+                    });
+                });
+            });
+        });
         this.exportCOCOButton.addEventListener("click", () => {});
         this.exportExcelButton.addEventListener("click", () => {});
         this.exportChartsButton.addEventListener("click", () => {});
