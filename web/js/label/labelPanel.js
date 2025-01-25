@@ -106,6 +106,13 @@ class LabelPanel {
                 this.showMaskButton.click();
             }
         );
+        actionManager.registerShortCut(
+            ActionManager.STATE_CREATE_MASK,
+            "s",
+            (event) => {
+                this.showMaskButton.click();
+            }
+        );
         document.addEventListener("keydown", (event) => {
             const key = event.key.toLowerCase();
             if (key === "s") {
