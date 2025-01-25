@@ -80,8 +80,10 @@ class NavigationBar {
         this.exportImageButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
+                this.disableExport();
                 core.selectFolder((fileFolder) => {
                     if (fileFolder === null) {
+                        this.enableExport();
                         return;
                     }
 
@@ -95,6 +97,7 @@ class NavigationBar {
 
                     core.exportImages(fileFolder, () => {
                         generalPopManager.hide();
+                        this.enableExport();
                     });
                 });
             });
@@ -103,8 +106,10 @@ class NavigationBar {
         this.exportAnnotatedImageButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
+                this.disableExport();
                 core.selectFolder((fileFolder) => {
                     if (fileFolder === null) {
+                        this.enableExport();
                         return;
                     }
 
@@ -118,6 +123,7 @@ class NavigationBar {
 
                     core.exportAnnotatedImages(fileFolder, () => {
                         generalPopManager.hide();
+                        this.enableExport();
                     });
                 });
             });
@@ -126,8 +132,10 @@ class NavigationBar {
         this.exportCOCOButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
+                this.disableExport();
                 core.selectFolder((fileFolder) => {
                     if (fileFolder === null) {
+                        this.enableExport();
                         return;
                     }
 
@@ -141,6 +149,7 @@ class NavigationBar {
 
                     core.exportCOCO(fileFolder, () => {
                         generalPopManager.hide();
+                        this.enableExport();
                     });
                 });
             });
@@ -167,6 +176,7 @@ class NavigationBar {
         });
 
         this.saveButton.addEventListener("click", () => {
+            this.disableSave();
             const generalPopManager = new GeneralPopManager();
             generalPopManager.clear();
             generalPopManager.updateLargeText("Save");
@@ -180,6 +190,7 @@ class NavigationBar {
             core.save(() => {
                 core.saveDataset(null, () => {
                     generalPopManager.hide();
+                    this.enableSave();
                 });
             });
         });
@@ -187,8 +198,10 @@ class NavigationBar {
         this.saveToButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
+                this.disableSave();
                 core.selectFolder((fileFolder) => {
                     if (fileFolder === null) {
+                        this.enableSave();
                         return;
                     }
 
@@ -202,6 +215,7 @@ class NavigationBar {
 
                     core.saveDataset(fileFolder, () => {
                         generalPopManager.hide();
+                        this.enableSave();
                     });
                 });
             });
@@ -257,5 +271,33 @@ class NavigationBar {
         this.labelButton.disabled = false;
         this.statisticButton.disabled = false;
         this.exportButton.disabled = false;
+    }
+
+    disableExport() {
+        this.exportImageButton.disabled = true;
+        this.exportAnnotatedImageButton.disabled = true;
+        this.exportCOCOButton.disabled = true;
+        this.exportExcelButton.disabled = true;
+        this.exportChartsButton.disabled = true;
+        this.exportAllButton.disabled = true;
+    }
+
+    enableExport() {
+        this.exportImageButton.disabled = false;
+        this.exportAnnotatedImageButton.disabled = false;
+        this.exportCOCOButton.disabled = false;
+        this.exportExcelButton.disabled = false;
+        this.exportChartsButton.disabled = false;
+        this.exportAllButton.disabled = false;
+    }
+
+    disableSave() {
+        this.saveButton.disabled = true;
+        this.saveToButton.disabled = true;
+    }
+
+    enableSave() {
+        this.saveButton.disabled = false;
+        this.saveToButton.disabled = false;
     }
 }

@@ -830,7 +830,7 @@ class Data {
     }
 
     getImagePath() {
-        return this.imagePath;
+        return encodeURIComponent(this.imagePath);
     }
 
     getIdx() {

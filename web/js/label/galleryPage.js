@@ -41,7 +41,7 @@ class GalleryPage {
 
         // Show image
         const imageElement = item.querySelector("img");
-        imageElement.src = galleryData.image_path;
+        imageElement.src = encodeURIComponent(galleryData.image_path);
 
         // Show filename
         const filenameElement = item.querySelector(".gallery-item__name");
