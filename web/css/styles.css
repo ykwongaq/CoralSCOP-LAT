@@ -891,6 +891,7 @@ input[type="range"]:active::-moz-range-thumb {
     padding: 0 0 20px;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
     padding: 0 0 20px;
+    overflow: auto;
 }
 .gallery-list__item {
     width: 100%;
