@@ -662,7 +662,6 @@ class ProjectCreator:
             category_json.set_status(category["status"])
             project_info_json.add_category_info(category_json)
 
-        self.logger.debug(f"Status info: {dataset.get_status_info()}")
         for status in dataset.get_status_info():
             status_json = StatusJson()
             status_json.set_id(status["id"])

@@ -60,6 +60,7 @@ def to_coco_annotation(mask: np.ndarray) -> Dict:
                 "area": int,
                 "bbox": List[int],
                 "iscrowd": int,
+                "predicted_iou": float
             }
     """
 
@@ -80,6 +81,7 @@ def to_coco_annotation(mask: np.ndarray) -> Dict:
         "id": -1,
         "image_id": -1,
         "iscrowd": 0,
+        "predicted_iou": 1,
     }
     return annotation
 
