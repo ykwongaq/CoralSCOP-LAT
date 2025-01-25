@@ -119,6 +119,7 @@ class TopPanel {
         const data = core.getData();
 
         const imageName = data.getImageName();
-        this.imageNameText.textContent = imageName;
+        const imageIdx = data.getIdx();
+        this.imageNameText.textContent = `${imageIdx + 1}. ${imageName}`;
     }
 }

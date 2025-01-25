@@ -44,8 +44,10 @@ class GalleryPage {
         imageElement.src = encodeURIComponent(galleryData.image_path);
 
         // Show filename
+        const idx = galleryData.idx;
+        const imageName = galleryData.image_name;
         const filenameElement = item.querySelector(".gallery-item__name");
-        filenameElement.textContent = galleryData.image_name;
+        filenameElement.textContent = `${idx + 1}. ${imageName}`;
 
         // Add click event
         item.addEventListener("click", () => {
