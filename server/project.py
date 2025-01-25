@@ -394,6 +394,7 @@ class ProjectCreator:
                 image = Image.open(image_path)
                 image = np.array(image)
             else:
+                image_url = input["image_url"]
                 image = decode_image_url(image_url)
 
             if self.stop_event.is_set():
