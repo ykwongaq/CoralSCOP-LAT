@@ -270,11 +270,19 @@ class ProjectCreateRequest:
             "inputs": [
                 {
                     "image_url": "http://example.com/image.jpg",
-                    "image_name": "image.jpg"
+                    "image_file_name": "image.jpg",
+                    "image_path": "/path/to/image.jpg"
                 }
             ],
+            "config": {
+                "minArea": 0.1,
+                "minConfidence": 0.1,
+                "maxIOU": 0.5
+            },
             "output_dir": "/path/to/output"
         }
+
+        If the image_path is provided, the image_url will be ignored.
         """
         self.request = request
         assert "inputs" in request, "Missing 'inputs' in request"
@@ -328,7 +336,11 @@ class ProjectCreator:
         self.stop_event = threading.Event()
         self.worker_thread = None
 
-    def create_(self, request: ProjectCreateRequest):
+    def create_(
+        self,
+        request: ProjectCreateRequest,
+        frontend_enabled: bool = True,
+    ):
         """
         Create a proejct from the request. The project data will be stored in a zip file with .coral extension.
         """
@@ -357,10 +369,12 @@ class ProjectCreator:
         project_info_path = os.path.join(output_temp_dir, "project_info.json")
 
         # Update process in the frontend
-        eel.updateProgressPercentage(0)
+
+        if frontend_enabled:
+            eel.updateProgressPercentage(0)
+
         terminated = False
         for idx, input in enumerate(inputs):
-            image_url = input["image_url"]
             image_filename = input["image_file_name"]
             filename = os.path.splitext(image_filename)[0]
 
@@ -375,7 +389,13 @@ class ProjectCreator:
             self.logger.info(f"Processing image {image_filename} ...")
 
             # Create image
-            image = decode_image_url(image_url)
+            if "image_path" in input:
+                image_path = input["image_path"]
+                image = Image.open(image_path)
+                image = np.array(image)
+            else:
+                image = decode_image_url(image_url)
+
             if self.stop_event.is_set():
                 self.logger.info("Project creation stopped.")
                 terminated = True
@@ -433,7 +453,9 @@ class ProjectCreator:
 
             process_percentage = (idx + 1) / len(inputs) * 100
             process_percentage = int(process_percentage)
-            eel.updateProgressPercentage(process_percentage)
+
+            if frontend_enabled:
+                eel.updateProgressPercentage(process_percentage)
 
         if terminated:
             # If the process is terminated, clear the temporary folder and return
@@ -441,7 +463,9 @@ class ProjectCreator:
             shutil.rmtree(output_temp_dir)
             status = {}
             status["finished"] = False
-            eel.afterProjectCreation(status)
+
+            if frontend_enabled:
+                eel.afterProjectCreation(status)
             return
 
         project_info_json = ProjectInfoJson()
@@ -503,9 +527,15 @@ class ProjectCreator:
         status = {}
         status["finished"] = True
         status["project_path"] = project_path
-        eel.afterProjectCreation(status)
 
-    def create(self, request: ProjectCreateRequest):
+        if frontend_enabled:
+            eel.afterProjectCreation(status)
+
+    def create(
+        self,
+        request: ProjectCreateRequest,
+        frontend_enabled: bool = True,
+    ):
         """
         Create a project from the request. A threading process will be created to handle user termination.
         """
@@ -514,7 +544,9 @@ class ProjectCreator:
             return
 
         self.stop_event.clear()
-        self.worker_thread = threading.Thread(target=self.create_, args=(request,))
+        self.worker_thread = threading.Thread(
+            target=self.create_, args=(request, frontend_enabled)
+        )
         self.worker_thread.start()
 
     def terminate(self):

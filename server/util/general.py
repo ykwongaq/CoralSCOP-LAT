@@ -25,14 +25,14 @@ def time_it(func):
     return wrapper
 
 
-def decode_image_url(image_url):
+def decode_image_url(image_url: str) -> np.ndarray:
     encoded = remove_image_url_header(image_url)
     data = base64.b64decode(encoded)
 
     image = Image.open(BytesIO(data))
-    
+
     if image.mode == "RGBA":
-        image = image.convert("RGB") 
+        image = image.convert("RGB")
     image = np.array(image)
     return image
 
