@@ -1,11 +1,34 @@
 import argparse
 import os
+import logging
 
 from PIL import Image
 from server.project import ProjectCreateRequest, ProjectCreator
 from server.embedding import EmbeddingGenerator
 from server.segmentation import CoralSegmentation
 from typing import Dict, List, Generator
+
+
+# Initialize logging
+def setup_logging():
+    # Define a custom format for the log messages
+    log_format = "[%(levelname)s][%(asctime)s][%(name)s] %(message)s"
+    date_format = "%Y-%m-%d|%H:%M:%S"
+
+    # Create console handler and set level to debug
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+
+    # Create formatter and add it to the handlers
+    formatter = logging.Formatter(fmt=log_format, datefmt=date_format)
+    console_handler.setFormatter(formatter)
+
+    # Get the root logger and set level to debug
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    # Add the handlers to the root logger
+    root_logger.addHandler(console_handler)
 
 
 def is_image(file_path: str) -> bool:
@@ -22,6 +45,7 @@ def batch_iterator(input_list: List, batch_size: int) -> Generator:
 
 
 def main(args):
+    setup_logging()
     batch_size = args.batch_size
     assert batch_size > 0, "Batch size should be greater than 0"
 
