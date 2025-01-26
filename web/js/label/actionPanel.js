@@ -162,6 +162,20 @@ class ActionPanel {
                 this.confirmPromptButton.click();
             }
         );
+        actionManager.registerShortCut(
+            ActionManager.DEFAULT_STATE,
+            "w",
+            (event) => {
+                this.addMaskButton.click();
+            }
+        );
+        actionManager.registerShortCut(
+            ActionManager.STATE_CREATE_MASK,
+            "w",
+            (event) => {
+                this.backButton.click();
+            }
+        );
 
         document.addEventListener("keydown", (event) => {
             const key = event.key.toLowerCase();
@@ -181,6 +195,12 @@ class ActionPanel {
             const key = event.key.toLowerCase();
             if (key === " ") {
                 actionManager.handleShortCut(" ", event);
+            }
+        });
+        document.addEventListener("keydown", (event) => {
+            const key = event.key.toLowerCase();
+            if (key === "w") {
+                actionManager.handleShortCut("e", event);
             }
         });
     }
