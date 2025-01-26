@@ -410,12 +410,8 @@ class ProjectCreator:
                 break
 
             # Detect coral
-            masks = self.segmentation.generate_masks_json(image)
-            masks = self.segmentation.filter(masks, min_area, min_confidence, max_iou)
-            for mask in masks:
-                mask["image_id"] = idx
-
             annotation_file_json = AnnotationFileJson()
+            masks = self.segmentation.generate_masks_json(image)
 
             image_json = ImageJson()
             image_json.set_id(idx)
@@ -424,17 +420,27 @@ class ProjectCreator:
             image_json.set_height(image.shape[0])
             annotation_file_json.add_image(image_json)
 
-            for mask in masks:
-                annotation_json = AnnotationJson()
-                annotation_json.set_segmentation(mask["segmentation"])
-                annotation_json.set_bbox(mask["bbox"])
-                annotation_json.set_area(mask["area"])
-                annotation_json.set_category_id(mask["category_id"])
-                annotation_json.set_id(mask["id"])
-                annotation_json.set_image_id(idx)
-                annotation_json.set_iscrowd(mask["iscrowd"])
-                annotation_json.set_predicted_iou(mask["predicted_iou"])
-                annotation_file_json.add_annotation(annotation_json)
+            if len(masks) == 0:
+                pass
+            else:
+                masks = self.segmentation.filter(
+                    masks, min_area, min_confidence, max_iou
+                )
+                self.logger.info(f"Finalized masks: {len(masks)}")
+                for mask in masks:
+                    mask["image_id"] = idx
+
+                for mask in masks:
+                    annotation_json = AnnotationJson()
+                    annotation_json.set_segmentation(mask["segmentation"])
+                    annotation_json.set_bbox(mask["bbox"])
+                    annotation_json.set_area(mask["area"])
+                    annotation_json.set_category_id(mask["category_id"])
+                    annotation_json.set_id(mask["id"])
+                    annotation_json.set_image_id(idx)
+                    annotation_json.set_iscrowd(mask["iscrowd"])
+                    annotation_json.set_predicted_iou(mask["predicted_iou"])
+                    annotation_file_json.add_annotation(annotation_json)
 
             end_time = time.time()
             self.logger.info(f"Processed image in {end_time - start_time:.2f} seconds")
