@@ -33,12 +33,22 @@ class Core {
     }
 
     loadProject() {
+        const navigationBar = new NavigationBar();
+        navigationBar.disable();
+
         this.selectFile((filePath) => {
             if (filePath === null) {
+                navigationBar.enable();
                 return;
             }
 
             eel.load_project(filePath)((galleryDataList) => {
+                const generalPopManager = new GeneralPopManager();
+                generalPopManager.clear();
+                generalPopManager.updateLargeText("Loading project...");
+                generalPopManager.updateText("Please wait...");
+                generalPopManager.show();
+
                 eel.get_current_data()((response) => {
                     // Update the category information
                     const categoryManager = new CategoryManager();
@@ -54,8 +64,10 @@ class Core {
                     this.setData(data);
                     this.showData();
 
-                    const navigationBar = new NavigationBar();
                     navigationBar.showPage(NavigationBar.ANNOTATION_PAGE);
+
+                    generalPopManager.hide();
+                    navigationBar.enable();
                 });
             });
         });

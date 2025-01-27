@@ -82,7 +82,7 @@ class NavigationBar {
         this.exportImageButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
-                this.disableExport();
+                this.disable();
                 core.selectFolder((fileFolder) => {
                     if (fileFolder === null) {
                         this.enableExport();
@@ -108,7 +108,7 @@ class NavigationBar {
         this.exportAnnotatedImageButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
-                this.disableExport();
+                this.disable();
                 core.selectFolder((fileFolder) => {
                     if (fileFolder === null) {
                         this.enableExport();
@@ -134,7 +134,7 @@ class NavigationBar {
         this.exportCOCOButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
-                this.disableExport();
+                this.disable();
                 core.selectFolder((fileFolder) => {
                     if (fileFolder === null) {
                         this.enableExport();
@@ -160,7 +160,7 @@ class NavigationBar {
         this.exportExcelButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
-                this.disableExport();
+                this.disable();
                 core.selectFolder((fileFolder) => {
                     if (fileFolder === null) {
                         this.enableExport();
@@ -186,7 +186,7 @@ class NavigationBar {
         this.exportChartsButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
-                this.disableExport();
+                this.disable();
                 core.selectFolder(async (fileFolder) => {
                     if (fileFolder === null) {
                         this.enableExport();
@@ -212,7 +212,7 @@ class NavigationBar {
         this.exportAllButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
-                this.disableExport();
+                this.disable();
                 core.selectFolder((fileFolder) => {
                     if (fileFolder === null) {
                         this.enableExport();
@@ -260,7 +260,7 @@ class NavigationBar {
         });
 
         this.saveButton.addEventListener("click", () => {
-            this.disableSave();
+            this.disable();
             const generalPopManager = new GeneralPopManager();
             generalPopManager.clear();
             generalPopManager.updateLargeText("Save");
@@ -282,7 +282,7 @@ class NavigationBar {
         this.saveToButton.addEventListener("click", () => {
             const core = new Core();
             core.save(() => {
-                this.disableSave();
+                this.disable();
                 core.selectFolder((fileFolder) => {
                     if (fileFolder === null) {
                         this.enableSave();
@@ -348,6 +348,8 @@ class NavigationBar {
         this.labelButton.disabled = true;
         this.statisticButton.disabled = true;
         this.exportButton.disabled = true;
+        this.disableExport();
+        this.disableSave();
     }
 
     enable() {
@@ -355,6 +357,8 @@ class NavigationBar {
         this.labelButton.disabled = false;
         this.statisticButton.disabled = false;
         this.exportButton.disabled = false;
+        this.enableExport();
+        this.enableSave();
     }
 
     disableExport() {
