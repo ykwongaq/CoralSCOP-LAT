@@ -201,7 +201,7 @@ class NavigationBar {
                     );
                     generalPopManager.show();
 
-                    await core.exportCharts(fileFolder, () => {
+                    core.exportCharts(fileFolder, () => {
                         generalPopManager.hide();
                         this.enableExport();
                     });
@@ -209,7 +209,39 @@ class NavigationBar {
             });
         });
 
-        this.exportAllButton.addEventListener("click", () => {});
+        this.exportAllButton.addEventListener("click", () => {
+            const core = new Core();
+            core.save(() => {
+                this.disableExport();
+                core.selectFolder((fileFolder) => {
+                    if (fileFolder === null) {
+                        this.enableExport();
+                        return;
+                    }
+
+                    const generalPopManager = new GeneralPopManager();
+                    generalPopManager.clear();
+                    generalPopManager.updateLargeText("Exporting");
+                    generalPopManager.updateText(
+                        "Exporting all the files. Please wait."
+                    );
+                    generalPopManager.show();
+
+                    core.exportImages(fileFolder, () => {
+                        core.exportAnnotatedImages(fileFolder, () => {
+                            core.exportCOCO(fileFolder, () => {
+                                core.exportExcel(fileFolder, () => {
+                                    core.exportCharts(fileFolder, () => {
+                                        generalPopManager.hide();
+                                        this.enableExport();
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
 
         window.addEventListener("click", (event) => {
             if (!event.target.matches("#file-button")) {
