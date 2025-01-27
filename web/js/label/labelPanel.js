@@ -101,21 +101,21 @@ class LabelPanel {
         const actionManager = new ActionManager();
         actionManager.registerShortCut(
             ActionManager.DEFAULT_STATE,
-            "s",
+            "tab",
             (event) => {
                 this.showMaskButton.click();
             }
         );
         actionManager.registerShortCut(
             ActionManager.STATE_CREATE_MASK,
-            "s",
+            "tab",
             (event) => {
                 this.showMaskButton.click();
             }
         );
         document.addEventListener("keydown", (event) => {
             const key = event.key.toLowerCase();
-            if (key === "s") {
+            if (key === "tab") {
                 actionManager.handleShortCut(key, event);
             }
         });
