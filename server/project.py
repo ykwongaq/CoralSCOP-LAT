@@ -15,6 +15,7 @@ from .dataset import Dataset, Data
 from PIL import Image
 from .util.data import zip_file, unzip_file
 from .util.coco import coco_rle_to_coco_poly
+from .util.excel import ExcelUtil
 
 
 from typing import Dict, Tuple, List, Union
@@ -497,22 +498,22 @@ class ProjectCreator:
         project_info_json.add_category_info(dead_coral_category)
 
         healty_status = StatusJson()
-        healty_status.set_id(0)
+        healty_status.set_id(Data.STATUS_HEALTHY)
         healty_status.set_name("Healthy")
         project_info_json.add_status_info(healty_status)
 
         bleached_status = StatusJson()
-        bleached_status.set_id(1)
+        bleached_status.set_id(Data.STATUS_BLEACHED)
         bleached_status.set_name("Bleached")
         project_info_json.add_status_info(bleached_status)
 
         dead_status = StatusJson()
-        dead_status.set_id(2)
+        dead_status.set_id(Data.STATUS_DEAD)
         dead_status.set_name("Dead")
         project_info_json.add_status_info(dead_status)
 
         undefined_status = StatusJson()
-        undefined_status.set_id(-1)
+        undefined_status.set_id(Data.STATUS_UNDEFINED)
         undefined_status.set_name("Undefined")
         project_info_json.add_status_info(undefined_status)
 
@@ -916,3 +917,19 @@ class ProjectExport:
             coco_json.add_category(category_json)
 
         save_json(coco_json.to_json(), output_coco_file)
+
+    def export_excel(self, output_dir: str, dataset: Dataset):
+
+        excel_output_dir = os.path.join(output_dir, "excel")
+        os.makedirs(excel_output_dir, exist_ok=True)
+
+        excel_util = ExcelUtil(dataset.get_category_info())
+
+        data_list = dataset.get_data_list()
+        for data in data_list:
+            image_name = data.get_image_name()
+            image_name_without_ext = os.path.splitext(image_name)[0]
+            excel_output_path = os.path.join(
+                excel_output_dir, f"{image_name_without_ext}.xlsx"
+            )
+            excel_util.export_excel(data, excel_output_path)

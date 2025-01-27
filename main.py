@@ -117,6 +117,11 @@ def export_coco(output_dir: str):
     server.export_coco(output_dir)
 
 
+@eel.expose
+def export_excel(output_dir: str):
+    server.export_excel(output_dir)
+
+
 if __name__ == "__main__":
     setup_logging()
     print("Please wait for the tool to be ready ...")

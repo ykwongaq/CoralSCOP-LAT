@@ -288,6 +288,14 @@ class Core {
         });
     }
 
+    exportExcel(outputDir, callBack = null) {
+        eel.export_excel(outputDir)(() => {
+            if (callBack != null) {
+                callBack();
+            }
+        });
+    }
+
     getDataList(callBack = null) {
         eel.get_data_list()((dataInfoList) => {
             const dataList = [];

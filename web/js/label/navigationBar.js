@@ -155,7 +155,31 @@ class NavigationBar {
             });
         });
 
-        this.exportExcelButton.addEventListener("click", () => {});
+        this.exportExcelButton.addEventListener("click", () => {
+            const core = new Core();
+            core.save(() => {
+                this.disableExport();
+                core.selectFolder((fileFolder) => {
+                    if (fileFolder === null) {
+                        this.enableExport();
+                        return;
+                    }
+
+                    const generalPopManager = new GeneralPopManager();
+                    generalPopManager.clear();
+                    generalPopManager.updateLargeText("Exporting");
+                    generalPopManager.updateText(
+                        "Exporting the current project. Please wait."
+                    );
+                    generalPopManager.show();
+
+                    core.exportExcel(fileFolder, () => {
+                        generalPopManager.hide();
+                        this.enableExport();
+                    });
+                });
+            });
+        });
         this.exportChartsButton.addEventListener("click", () => {});
         this.exportAllButton.addEventListener("click", () => {});
 

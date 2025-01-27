@@ -7,6 +7,11 @@ from .util.coco import coco_mask_to_rle
 
 class Data:
 
+    STATUS_UNDEFINED = -1
+    STATUS_HEALTHY = 0
+    STATUS_BLEACHED = 1
+    STATUS_DEAD = 2
+
     def __init__(self):
         self.image_name = None
         self.image_path = None
