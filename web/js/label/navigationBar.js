@@ -91,7 +91,7 @@ class NavigationBar {
                     generalPopManager.clear();
                     generalPopManager.updateLargeText("Exporting");
                     generalPopManager.updateText(
-                        "Exporting the current project. Please wait."
+                        "Exporting the images. Please wait."
                     );
                     generalPopManager.show();
 
@@ -117,7 +117,7 @@ class NavigationBar {
                     generalPopManager.clear();
                     generalPopManager.updateLargeText("Exporting");
                     generalPopManager.updateText(
-                        "Exporting the current project. Please wait."
+                        "Exporting the annotated images. Please wait."
                     );
                     generalPopManager.show();
 
@@ -143,7 +143,7 @@ class NavigationBar {
                     generalPopManager.clear();
                     generalPopManager.updateLargeText("Exporting");
                     generalPopManager.updateText(
-                        "Exporting the current project. Please wait."
+                        "Exporting the coco json. Please wait."
                     );
                     generalPopManager.show();
 
@@ -169,7 +169,7 @@ class NavigationBar {
                     generalPopManager.clear();
                     generalPopManager.updateLargeText("Exporting");
                     generalPopManager.updateText(
-                        "Exporting the current project. Please wait."
+                        "Exporting the excel files. Please wait."
                     );
                     generalPopManager.show();
 
@@ -180,7 +180,33 @@ class NavigationBar {
                 });
             });
         });
-        this.exportChartsButton.addEventListener("click", () => {});
+
+        this.exportChartsButton.addEventListener("click", () => {
+            const core = new Core();
+            core.save(() => {
+                this.disableExport();
+                core.selectFolder(async (fileFolder) => {
+                    if (fileFolder === null) {
+                        this.enableExport();
+                        return;
+                    }
+
+                    const generalPopManager = new GeneralPopManager();
+                    generalPopManager.clear();
+                    generalPopManager.updateLargeText("Exporting");
+                    generalPopManager.updateText(
+                        "Exporting the charts. Please wait."
+                    );
+                    generalPopManager.show();
+
+                    await core.exportCharts(fileFolder, () => {
+                        generalPopManager.hide();
+                        this.enableExport();
+                    });
+                });
+            });
+        });
+
         this.exportAllButton.addEventListener("click", () => {});
 
         window.addEventListener("click", (event) => {

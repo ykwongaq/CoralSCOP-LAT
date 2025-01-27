@@ -122,6 +122,11 @@ def export_excel(output_dir: str):
     server.export_excel(output_dir)
 
 
+@eel.expose
+def export_charts(output_dir: str, requests: List[Dict]):
+    server.export_charts(output_dir, requests)
+
+
 if __name__ == "__main__":
     setup_logging()
     print("Please wait for the tool to be ready ...")

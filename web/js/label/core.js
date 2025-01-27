@@ -296,6 +296,42 @@ class Core {
         });
     }
 
+    /**
+     * Send a list of requst to server side to export the chart.
+     *
+     * Request format:
+     * {
+     *  "encoded_chart": string,
+     *  "chart_name": string
+     * }
+     * @param {string} outputDir
+     * @param {function} callBack
+     */
+    async exportCharts(outputDir, callBack = null) {
+        const statisticPage = new StatisticPage();
+        statisticPage.update();
+        const exportImageUrls = await statisticPage.getExportImageUrls();
+
+        const requests = [];
+        for (const chartName in exportImageUrls) {
+            const encodedChart = exportImageUrls[chartName];
+            const request = {
+                encoded_chart: encodedChart,
+                chart_name: chartName,
+            };
+            requests.push(request);
+        }
+
+        eel.export_charts(
+            outputDir,
+            requests
+        )(() => {
+            if (callBack != null) {
+                callBack();
+            }
+        });
+    }
+
     getDataList(callBack = null) {
         eel.get_data_list()((dataInfoList) => {
             const dataList = [];

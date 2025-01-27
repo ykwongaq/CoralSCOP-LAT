@@ -361,3 +361,9 @@ class Server:
         self.logger.info(f"Exporting Excel dataset to {output_dir} ...")
         project_export = ProjectExport(self.project_path)
         project_export.export_excel(output_dir, self.get_dataset())
+
+    @time_it
+    def export_charts(self, output_dir: str, requests: List[Dict]):
+        self.logger.info(f"Exporting charts to {output_dir} ...")
+        project_export = ProjectExport(self.project_path)
+        project_export.export_charts(output_dir, requests)

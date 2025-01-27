@@ -933,3 +933,25 @@ class ProjectExport:
                 excel_output_dir, f"{image_name_without_ext}.xlsx"
             )
             excel_util.export_excel(data, excel_output_path)
+
+    def export_charts(self, output_dir: str, requests: List[Dict]):
+        """
+        Export the charts to the output directory
+
+        Request format:
+        {
+            "encoded_chart": string,
+            "chart_name": string,
+        }
+        """
+        output_chart_dir = os.path.join(output_dir, "charts")
+        os.makedirs(output_chart_dir, exist_ok=True)
+
+        for request in requests:
+            chart_name = request["chart_name"]
+            encoded_chart = request["encoded_chart"]
+
+            chart_path = os.path.join(output_chart_dir, f"{chart_name}.png")
+            chart = decode_image_url(encoded_chart)
+            Image.fromarray(chart).save(chart_path)
+            self.logger.info(f"Exported chart: {chart_name}")

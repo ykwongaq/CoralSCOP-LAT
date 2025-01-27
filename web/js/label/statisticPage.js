@@ -38,6 +38,8 @@ class StatisticPage {
 
         this.ignoreUndefinedCoral_ = true;
 
+        this.chartUrls = {};
+
         return this;
     }
 
@@ -202,7 +204,8 @@ class StatisticPage {
             });
         }
 
-        nameText.textContent = "Coral Coverage";
+        const name = "Coral Coverage";
+        nameText.textContent = name;
 
         downloadButton.addEventListener("click", () => {
             const [filename, ext] = this.splitFilename(data.getImageName());
@@ -210,6 +213,7 @@ class StatisticPage {
             this.download(chart, outputFilename);
         });
         this.currentImageGrid.appendChild(chartItem);
+        this.chartUrls[name] = chart.getImageURI();
     }
 
     genCoralColonyDistribution(data) {
@@ -263,7 +267,8 @@ class StatisticPage {
             legendsContainer.appendChild(legend);
         });
 
-        nameText.textContent = "Coral Colony Distribution";
+        const name = "Coral Colony Distribution";
+        nameText.textContent = name;
 
         downloadButton.addEventListener("click", () => {
             const [filename, ext] = this.splitFilename(data.getImageName());
@@ -272,6 +277,7 @@ class StatisticPage {
         });
 
         this.currentImageGrid.appendChild(chartItem);
+        this.chartUrls[name] = chart.getImageURI();
     }
 
     genSpeciesCoverage(data) {
@@ -341,7 +347,8 @@ class StatisticPage {
             legendsContainer.appendChild(legend);
         });
 
-        nameText.textContent = "Species Coverage";
+        const name = "Species Coverage";
+        nameText.textContent = name;
 
         downloadButton.addEventListener("click", () => {
             const [filename, ext] = this.splitFilename(data.getImageName());
@@ -350,6 +357,7 @@ class StatisticPage {
         });
 
         this.currentImageGrid.appendChild(chartItem);
+        this.chartUrls[name] = chart.getImageURI();
     }
 
     genOverallCondition(data) {
@@ -439,7 +447,8 @@ class StatisticPage {
             legendsContainer.appendChild(legend);
         });
 
-        nameText.textContent = "Health Status Distribution";
+        const name = "Health Status Distribution";
+        nameText.textContent = name;
 
         downloadButton.addEventListener("click", () => {
             const [filename, ext] = this.splitFilename(data.getImageName());
@@ -448,6 +457,7 @@ class StatisticPage {
         });
 
         this.currentImageGrid.appendChild(chartItem);
+        this.chartUrls[name] = chart.getImageURI();
     }
 
     genSpeciesCondition(data, category) {
@@ -465,18 +475,19 @@ class StatisticPage {
         let bleachedArea = 0;
 
         for (const mask of data.getMasks()) {
-            const category = mask.getCategory();
+            const maskCategory = mask.getCategory();
             if (
-                category.getSuperCategoryId() != category.getSuperCategoryId()
+                maskCategory.getSuperCategoryId() !=
+                category.getSuperCategoryId()
             ) {
                 continue;
             }
 
             const area = mask.getArea();
-            if (category.getStatus() === CategoryManager.STATUS_HEALTHY) {
+            if (maskCategory.getStatus() === CategoryManager.STATUS_HEALTHY) {
                 healthyArea += area;
             } else if (
-                category.getStatus() === CategoryManager.STATUS_BLEACHED
+                maskCategory.getStatus() === CategoryManager.STATUS_BLEACHED
             ) {
                 bleachedArea += area;
             }
@@ -511,7 +522,8 @@ class StatisticPage {
         });
 
         const superCategoryName = category.getCategorySuperName();
-        nameText.textContent = `${superCategoryName}`;
+        const name = `Condition: ${superCategoryName}`;
+        nameText.textContent = name;
 
         downloadButton.addEventListener("click", () => {
             const [filename, ext] = this.splitFilename(data.getImageName());
@@ -520,10 +532,12 @@ class StatisticPage {
         });
 
         this.currentImageGrid.appendChild(chartItem);
+        this.chartUrls[name] = chart.getImageURI();
     }
 
     clearCharts() {
         this.currentImageGrid.innerHTML = "";
+        this.chartUrls = {};
     }
 
     setIgnoreUndefinedCoral(value) {
@@ -571,5 +585,118 @@ class StatisticPage {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    /**
+     * Export the image of each chart item and return the URLs as a dictionary.
+     * @returns {Promise<Object<string, string>>}
+     */
+    async getExportImageUrls() {
+        const chartItems =
+            this.currentImageGrid.querySelectorAll(".chart-item");
+        const exportUrls = {};
+        for (const chartItem of chartItems) {
+            const nameText = chartItem.querySelector(".chart-item__name");
+            const name = nameText.textContent;
+            const url = await this.exportChartImage(chartItem);
+
+            exportUrls[name] = url;
+        }
+        return exportUrls;
+    }
+
+    /**
+     * Given the chart item, combine the chart and the legends into a single image
+     * and export the image as a data URL.
+     * @param {HTMLElement} chartItem
+     * @returns {Promise<string>}
+     */
+    async exportChartImage(chartItem) {
+        return new Promise((resolve, reject) => {
+            const nameText = chartItem.querySelector(".chart-item__name");
+            const legendsContainer = chartItem.querySelector(".legends");
+            const name = nameText.textContent;
+            const chartUrl = this.chartUrls[name];
+
+            const exportImage = new Image();
+            exportImage.crossOrigin = "anonymous";
+            exportImage.onload = () => {
+                const exportImageWidth = exportImage.width;
+                const exportImageHeight = exportImage.height;
+
+                const legendItems =
+                    legendsContainer.querySelectorAll(".legend-item");
+                const legendItemHeight = 20;
+                const legendGap = 8;
+                const legendTopGap = 20; // space between the chart and the first legend line
+
+                const totalLegendsHeight =
+                    legendItems.length * (legendItemHeight + legendGap);
+                const canvasHeight =
+                    exportImageHeight + totalLegendsHeight + legendTopGap;
+
+                const canvas = document.createElement("canvas");
+                canvas.width = exportImageWidth;
+                canvas.height = canvasHeight;
+                const ctx = canvas.getContext("2d");
+
+                ctx.fillStyle = "#f4f6ff";
+                ctx.fillRect(0, 0, exportImageWidth, canvasHeight);
+
+                ctx.drawImage(exportImage, 0, 0);
+
+                // Draw each legend item
+                let yOffset = exportImageHeight + legendTopGap;
+                for (const legendItem of legendItems) {
+                    const color =
+                        legendItem.style.getPropertyValue("--color") || "#000";
+                    const labelText = legendItem.textContent.trim();
+
+                    // Color box
+                    const boxSize = 16;
+                    ctx.fillStyle = color;
+                    ctx.fillRect(0, yOffset, boxSize, boxSize);
+
+                    // Label
+                    ctx.font = "16px Arial";
+                    ctx.fill;
+                    ctx.fillText(
+                        labelText,
+                        20 + boxSize + 8,
+                        yOffset + boxSize - 2
+                    );
+
+                    yOffset += legendItemHeight + legendGap;
+                }
+
+                // Convert combined canvas to PNG data URL
+                const finalDataUrl = canvas.toDataURL("image/png");
+                resolve(finalDataUrl);
+            };
+            exportImage.src = chartUrl;
+        });
+    }
+    getChartsInfo() {
+        this.update();
+
+        const chartItems =
+            this.currentImageGrid.querySelectorAll(".chart-item");
+
+        const chartsInfo = [];
+        for (const chartItem of chartItems) {
+            const nameText = chartItem.querySelector(".chart-item__name");
+            const name = nameText.textContent;
+
+            const chartUrl = this.chartUrls[name];
+
+            const info = {
+                name: name,
+                chartUrl: chartUrl,
+                chartItem: chartItem,
+            };
+            chartsInfo.push(info);
+        }
+
+        return chartsInfo;
     }
 }
