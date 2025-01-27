@@ -57,6 +57,8 @@ class NavigationBar {
     initLabelButton() {
         this.labelButton.addEventListener("click", () => {
             this.showPage(NavigationBar.ANNOTATION_PAGE);
+            const canvas = new Canvas();
+            canvas.resetViewpoint();
         });
     }
 
