@@ -375,13 +375,12 @@ class StatisticPage {
             speciesData[statusName][1] += area;
         }
 
-        if (this.ignoreUndefinedCoral()) {
-            const undefinedCategory = new Category(Category.PREDICTED_CORAL_ID);
-            const undefinedStatusName = categoryManager.getStatusName(
-                undefinedCategory.getStatus()
-            );
-            delete speciesData[undefinedStatusName];
-        }
+        // Always ignore undefined coral
+        const undefinedCategory = new Category(Category.PREDICTED_CORAL_ID);
+        const undefinedStatusName = categoryManager.getStatusName(
+            undefinedCategory.getStatus()
+        );
+        delete speciesData[undefinedStatusName];
 
         const imageHeight = data.getImageHeight();
         const imageWidth = data.getImageWidth();
