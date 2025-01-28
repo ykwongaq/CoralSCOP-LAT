@@ -1,6 +1,6 @@
 class ConfigPage {
     static DEFAULT_MIN_AREA = 0.001;
-    static DEFAULT_MAX_IOU = 0.01;
+    static DEFAULT_MAX_IOU = 0.001;
     static DEFAULT_MIN_CONFIDENCE = 0.5;
 
     constructor(pageDom) {
