@@ -27,10 +27,10 @@ class EmbeddingGenerator:
     def generate_embedding(self, image: np.ndarray) -> np.ndarray:
         start_time = time.time()
         input_tensor = preprocess_image(Image.fromarray(image))
+        outputs = self.encoder.run(None, {"images": input_tensor})
         self.logger.info(
             f"Generate embedding time: {time.time() - start_time:.2f} seconds"
         )
-        outputs = self.encoder.run(None, {"images": input_tensor})
         return outputs[0]
         # self.predictor.set_image(image)
         # return self.predictor.get_image_embedding().cpu().numpy()
