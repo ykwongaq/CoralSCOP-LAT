@@ -13,7 +13,7 @@ from .project import ProjectCreator, ProjectCreateRequest, ProjectLoader, Projec
 from .dataset import Dataset, Data
 from .util.coco import to_coco_annotation, coco_mask_to_rle
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from functools import wraps
 
@@ -89,39 +89,62 @@ class Server:
         """
         Open a dialog to select a folder
         """
-        root = Tk()
-        root.withdraw()
-        root.wm_attributes("-topmost", 1)
-        folder_path = filedialog.askdirectory(title="Please select a folder")
-        root.destroy()
-        self.logger.info(f"Selected folder: {folder_path}")
-        return folder_path
+        try:
+            root = Tk()
+            root.withdraw()
+            root.wm_attributes("-topmost", 1)
 
-    def select_file(self):
+            # On macOS, explicitly lift the window and force focus
+            root.lift()
+            root.update()  # Ensure the dialog is updated and visible
+
+            folder_path = filedialog.askdirectory(title="Please select a folder")
+            root.destroy()
+
+            if folder_path:
+                self.logger.info(f"Selected folder: {folder_path}")
+                return folder_path
+            else:
+                self.logger.info(f"Folder selection cancelled")
+                return None
+        except Exception as e:
+            self.logger.error(f"Error selecting folder: {e}")
+            return None
+
+    def select_file(self, filetypes: List[Tuple[str, str]] = [("All Files", "*.*")]):
         """
         Open a dialog to select a file
         """
+        try:
+            self.logger.debug(f"Selecting file with filetypes: {filetypes}")
+            # Create a hidden Tkinter root window
+            root = Tk()
+            root.withdraw()  # Hide the root window
+            root.wm_attributes(
+                "-topmost", 1
+            )  # Make the dialog appear on top of other windows
 
-        # Create a hidden Tkinter root window
-        root = Tk()
-        root.withdraw()  # Hide the root window
-        root.wm_attributes(
-            "-topmost", 1
-        )  # Make the dialog appear on top of other windows
+            # On macOS, explicitly lift the window and force focus
+            root.lift()
+            root.update()  # Ensure the dialog is updated and visible
 
-        # Open the file selection dialog
-        file_path = filedialog.askopenfilename(
-            title="Select a File",
-            filetypes=[
-                ("All Files", "*.*"),
-                ("Text Files", "*.txt"),
-                ("Python Files", "*.py"),
-            ],
-        )
-        # Destroy the root window after use
-        root.destroy()
-        self.logger.info(f"Selected file: {file_path}")
-        return file_path
+            # Open the file selection dialog
+            file_path = filedialog.askopenfilename(
+                title="Select a File",
+                filetypes=filetypes,
+            )
+            # Destroy the root window after use
+            root.destroy()
+
+            if file_path:
+                self.logger.info(f"Selected file: {file_path}")
+                return file_path
+            else:
+                self.logger.info(f"File selection cancelled")
+                return None
+        except Exception as e:
+            self.logger.error(f"Error selecting file: {e}")
+            return None
 
     def create_project(self, project_create_request: Dict):
         self.logger.info(f"Creating project ...")

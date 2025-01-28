@@ -102,6 +102,7 @@ function main() {
         // return message;
 
         const core = new Core();
+        console.log(core.getData());
         return core.isDataModified();
     };
 }

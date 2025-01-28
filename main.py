@@ -2,7 +2,7 @@ import logging
 import eel
 
 from server.server import Server
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 
 # Initialize logging
@@ -33,8 +33,24 @@ def select_folder():
 
 
 @eel.expose
-def select_file():
-    return server.select_file()
+def select_file(input_file_types: List[Dict]) -> str:
+    """
+    Open a file dialog to select a file
+
+    input_file_types: List[Dict]
+    {
+        "description": str,
+        "extensions": str
+    }
+    """
+    if input_file_types is None:
+        return server.select_file()
+    else:
+        file_types = [
+            (file_type["description"], file_type["extensions"])
+            for file_type in input_file_types
+        ]
+        return server.select_file(file_types)
 
 
 @eel.expose

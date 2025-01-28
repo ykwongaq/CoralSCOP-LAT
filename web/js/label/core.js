@@ -17,8 +17,8 @@ class Core {
         return this;
     }
 
-    selectFile(callBack = null) {
-        eel.select_file()((filePath) => {
+    selectFile(fileTypes = null, callBack = null) {
+        eel.select_file(fileTypes)((filePath) => {
             if (filePath === null) {
                 return;
             }
@@ -79,7 +79,13 @@ class Core {
         };
 
         if (filePath === null) {
-            this.selectFile((filePath_) => {
+            const fileTypes = [
+                {
+                    description: "CoralSCOP-LAT Project File",
+                    extensions: "*.coral",
+                },
+            ];
+            this.selectFile(fileTypes, (filePath_) => {
                 if (filePath_ === null) {
                     navigationBar.enable();
                     return;
