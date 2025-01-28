@@ -114,9 +114,13 @@ class LabelPanel {
             }
         );
         document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
             const key = event.key.toLowerCase();
             if (key === "tab") {
                 actionManager.handleShortCut(key, event);
+                actionManager.addRegisteredDocumentEvent(event);
             }
         });
     }
@@ -160,6 +164,7 @@ class LabelPanel {
                 return;
             }
 
+            // Prepare the record for history manager
             const categoryManager = new CategoryManager();
             const success = categoryManager.addCoralCategory(labelName);
             if (!success) {
@@ -307,6 +312,7 @@ class LabelPanel {
                     this.categoryDropDownMenu.style.display = "none";
 
                     // The text label will become a input text box for user input
+                    const originalName = labelText.innerHTML;
                     labelText.contentEditable = true;
                     labelText.focus();
 
@@ -316,6 +322,28 @@ class LabelPanel {
                     range.selectNodeContents(labelText);
                     selection.removeAllRanges();
                     selection.addRange(range);
+
+                    // Add event listener for keydown
+                    let enterPressed = false;
+                    labelText.addEventListener("keydown", (event) => {
+                        if (event.key === "Enter") {
+                            event.preventDefault();
+                            enterPressed = true;
+                            this.renameCategory(labelText, category);
+                        }
+                    });
+                    labelText.addEventListener("blur", (event) => {
+                        if (enterPressed) {
+                            enterPressed = false;
+                            return;
+                        }
+                        // When user click outside the text box,
+                        // Remove the event listener and make the name remain unchange
+                        labelText.removeEventListener("keydown", () => {});
+                        labelText.removeEventListener("blur", () => {});
+                        labelText.innerHTML = originalName;
+                        labelText.contentEditable = false;
+                    });
                 });
                 this.categoryDropDownMenu.appendChild(renameButton);
             }
@@ -327,17 +355,6 @@ class LabelPanel {
             deleteButton.textContent = "Delete";
             this.initDeleteButton(deleteButton, category);
             this.categoryDropDownMenu.appendChild(deleteButton);
-        });
-
-        // Handle rename
-        labelText.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                this.renameCategory(labelText, category);
-            }
-        });
-        labelText.addEventListener("blur", (event) => {
-            this.renameCategory(labelText, category);
         });
 
         return item;
@@ -507,9 +524,7 @@ class LabelPanel {
                     }
                 }
 
-                for (const category of categoriesToDelete) {
-                    categoryManager.removeCategory(category);
-                }
+                categoryManager.removeCategories(categoriesToDelete);
 
                 this.updateCategoryButtons();
 

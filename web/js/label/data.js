@@ -151,7 +151,7 @@ class CategoryManager {
     }
 
     getSuperCategoryIdByCategoryId(categoryId) {
-        return this.categoryDict[categoryId]["supercategory_id"];
+        return parseInt(this.categoryDict[categoryId]["supercategory_id"]);
     }
 
     getSupercategoryNameByCategoryId(categoryId) {
@@ -163,7 +163,7 @@ class CategoryManager {
     }
 
     getStatusByCategoryId(categoryId) {
-        return this.categoryDict[categoryId]["status"];
+        return parseInt(this.categoryDict[categoryId]["status"]);
     }
 
     getIsCoralByCategoryId(categoryId) {
@@ -210,7 +210,7 @@ class CategoryManager {
     toJson() {
         const categoryInfo = [];
         for (const category of Object.values(this.categoryDict)) {
-            categoryInfo.push(category);
+            categoryInfo.push(structuredClone(category));
         }
         return categoryInfo;
     }
@@ -317,7 +317,8 @@ class CategoryManager {
             newSuperCategoryName,
             newSuperCategoryId,
             true,
-            CategoryManager.STATUS_BLEACHED
+            CategoryManager.STATUS_BLEACHED,
+            false
         );
 
         return true;
@@ -342,10 +343,16 @@ class CategoryManager {
         superCategoryName = null,
         superCategoryId = null,
         isCoral = true,
-        status = CategoryManager.STATUS_UNDEFINED
+        status = CategoryManager.STATUS_UNDEFINED,
+        saveRecord = true
     ) {
         if (this.containsCategoryName(categoryName)) {
             return false;
+        }
+
+        if (saveRecord) {
+            const core = new Core();
+            core.recordData();
         }
 
         let newCategoryId = categoryId;
@@ -378,6 +385,7 @@ class CategoryManager {
             this.superCategoryDict[newSuperCategoryId] = [];
         }
         this.superCategoryDict[newSuperCategoryId].push(categoryInfo);
+
         return true;
     }
 
@@ -426,12 +434,24 @@ class CategoryManager {
     }
 
     /**
-     * Remove the category from the category list and the super category list
+     * Remove the category from the category list and the super category list.
+     * If you have a list of category, please use removeCategories instead,
+     * because it may affect the history manager.
      * @param {Category} category
      */
     removeCategory(category) {
         const categoryId = category.getCategoryId();
         const superCategoryId = category.getSuperCategoryId();
+
+        // Check if the category exist
+        if (!(categoryId in this.categoryDict)) {
+            console.error("Category does not exist");
+            return;
+        }
+
+        // Save record
+        const core = new Core();
+        core.recordData();
 
         // Remove the category from the category list
         delete this.categoryDict[categoryId];
@@ -444,6 +464,43 @@ class CategoryManager {
         this.superCategoryDict[superCategoryId] = newSuperCategoryList;
         if (newSuperCategoryList.length === 0) {
             delete this.superCategoryDict[superCategoryId];
+        }
+    }
+
+    /**
+     * Remove a list of category. Please do not use removeCategory
+     * for multiple times, because it will affect the history manager.
+     * @param {List} categoryList
+     * @returns
+     */
+    removeCategories(categoryList) {
+        for (const category of categoryList) {
+            if (category.getCategoryId() === Category.PREDICTED_CORAL_ID) {
+                console.error("Cannot remove predicted category");
+                return;
+            }
+        }
+
+        // Save record
+        const core = new Core();
+        core.recordData();
+
+        for (const category of categoryList) {
+            const categoryId = category.getCategoryId();
+            const superCategoryId = category.getSuperCategoryId();
+
+            // Remove the category from the category list
+            delete this.categoryDict[categoryId];
+
+            // Remove the category from the super category list
+            const superCategoryList = this.superCategoryDict[superCategoryId];
+            const newSuperCategoryList = superCategoryList.filter(
+                (category) => category["id"] !== categoryId
+            );
+            this.superCategoryDict[superCategoryId] = newSuperCategoryList;
+            if (newSuperCategoryList.length === 0) {
+                delete this.superCategoryDict[superCategoryId];
+            }
         }
     }
 
@@ -462,6 +519,16 @@ class CategoryManager {
             console.error("Invalid category status");
             return;
         }
+
+        // Check if the category exist
+        if (!(category.getCategoryId() in this.categoryDict)) {
+            console.error("Category does not exist");
+            return;
+        }
+
+        // Save record
+        const core = new Core();
+        core.recordData();
 
         // Rename the category
         this.renameCategory_(category, newCategoryName, newCategoryName);
@@ -663,6 +730,7 @@ class Mask {
 
     setId(maskId) {
         this.maskId = maskId;
+        this.annotation["id"] = maskId;
     }
 
     getCategory() {
@@ -671,6 +739,7 @@ class Mask {
 
     setCategory(category) {
         this.category = category;
+        this.annotation["category_id"] = category.getCategoryId();
     }
 
     getArea() {
@@ -772,12 +841,17 @@ class Mask {
             id: this.getId(),
             image_id: this.getImageId(),
             category_id: this.category.getCategoryId(),
-            segmentation: this.annotation["segmentation"],
+            segmentation: structuredClone(this.annotation["segmentation"]),
             area: this.getArea(),
             bbox: this.annotation["bbox"],
             iscrowd: this.annotation["iscrowd"],
             predicted_iou: this.annotation["predicted_iou"],
         };
+    }
+
+    deepCopy() {
+        const annotation = JSON.parse(JSON.stringify(this.annotation));
+        return new Mask(annotation);
     }
 }
 
@@ -934,5 +1008,22 @@ class Data {
         }
 
         return maskId;
+    }
+
+    deepCopy() {
+        const data = new Data();
+        data.setImageName(this.imageName);
+        data.setImagePath(this.imagePath);
+        data.setIdx(this.idx);
+        data.setImageWidth(this.imageWidth);
+        data.setImageHeight(this.imageHeight);
+
+        const masks = [];
+        for (const mask of this.masks) {
+            masks.push(mask.deepCopy());
+        }
+        data.setMasks(masks);
+
+        return data;
     }
 }

@@ -34,6 +34,9 @@ class ActionPanel {
             "#back-to-edit-mode-btn"
         );
 
+        this.undoButton = this.actionPanelDom.querySelector("#undo-button");
+        this.redoButton = this.actionPanelDom.querySelector("#redo-button");
+
         return this;
     }
 
@@ -42,6 +45,8 @@ class ActionPanel {
         this.initRemoveButton();
         this.initAddMask();
         this.initBackButton();
+        this.initUndoButton();
+        this.initRedoButton();
     }
 
     initLabelToggleButton() {
@@ -58,9 +63,13 @@ class ActionPanel {
             }
         );
         document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
             const key = event.key.toLowerCase();
             if (key === "c") {
                 actionManager.handleShortCut(key, event);
+                actionManager.addRegisteredDocumentEvent(event);
             }
         });
     }
@@ -70,6 +79,12 @@ class ActionPanel {
             // Get the selected masks
             const maskSelector = new MaskSelector();
             const selectedMasks = maskSelector.getSelectedMasks();
+
+            if (selectedMasks.size > 0) {
+                // Record the data
+                const core = new Core();
+                core.recordData();
+            }
 
             // Remove the selected masks
             const core = new Core();
@@ -100,9 +115,13 @@ class ActionPanel {
             }
         );
         document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
             const key = event.key.toLowerCase();
             if (key === "r") {
                 actionManager.handleShortCut(key, event);
+                actionManager.addRegisteredDocumentEvent(event);
             }
         });
     }
@@ -116,6 +135,9 @@ class ActionPanel {
 
             const maskSelector = new MaskSelector();
             maskSelector.clearSelection();
+
+            const canvas = new Canvas();
+            canvas.updateMasks();
 
             this.hide();
         });
@@ -141,7 +163,7 @@ class ActionPanel {
         const actionManager = new ActionManager();
         actionManager.registerShortCut(
             ActionManager.STATE_CREATE_MASK,
-            "Control+z",
+            "control+z",
             (event) => {
                 const labelPanel = new LabelPanel();
                 this.undoPromptButton.click();
@@ -178,29 +200,45 @@ class ActionPanel {
         );
 
         document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
             const key = event.key.toLowerCase();
             if (key === "z" && event.ctrlKey) {
-                actionManager.handleShortCut("Control+Z", event);
+                actionManager.handleShortCut("control+z", event);
+                actionManager.addRegisteredDocumentEvent(event);
             }
         });
 
         document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
             const key = event.key.toLowerCase();
             if (key === "r") {
                 actionManager.handleShortCut("r", event);
+                actionManager.addRegisteredDocumentEvent(event);
             }
         });
 
         document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
             const key = event.key.toLowerCase();
             if (key === " ") {
                 actionManager.handleShortCut(" ", event);
+                actionManager.addRegisteredDocumentEvent(event);
             }
         });
         document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
             const key = event.key.toLowerCase();
             if (key === "w") {
                 actionManager.handleShortCut("e", event);
+                actionManager.addRegisteredDocumentEvent(event);
             }
         });
     }
@@ -219,6 +257,64 @@ class ActionPanel {
 
             const maskSelector = new MaskSelector();
             maskSelector.clearSelection();
+        });
+    }
+
+    initUndoButton() {
+        this.undoButton.addEventListener("click", () => {
+            const core = new Core();
+            core.undo();
+        });
+
+        // Register the shortcut for the label toggle button.
+        // We need ActionManager to handle the shortcut because
+        // different state will have different short cut operation.
+        const actionManager = new ActionManager();
+        actionManager.registerShortCut(
+            ActionManager.DEFAULT_STATE,
+            "control+z",
+            (event) => {
+                this.undoButton.click();
+            }
+        );
+        document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
+            const key = event.key.toLowerCase();
+            if (key === "z" && event.ctrlKey) {
+                actionManager.handleShortCut("control+z", event);
+                actionManager.addRegisteredDocumentEvent(event);
+            }
+        });
+    }
+
+    initRedoButton() {
+        this.redoButton.addEventListener("click", () => {
+            const core = new Core();
+            core.redo();
+        });
+
+        // Register the shortcut for the label toggle button.
+        // We need ActionManager to handle the shortcut because
+        // different state will have different short cut operation.
+        const actionManager = new ActionManager();
+        actionManager.registerShortCut(
+            ActionManager.DEFAULT_STATE,
+            "control+y",
+            (event) => {
+                this.redoButton.click();
+            }
+        );
+        document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
+            const key = event.key.toLowerCase();
+            if (key === "y" && event.ctrlKey) {
+                actionManager.handleShortCut("control+y", event);
+                actionManager.addRegisteredDocumentEvent(event);
+            }
         });
     }
 
@@ -304,6 +400,15 @@ class ActionPanel {
             // Assign category to the selected masks
             const maskSelector = new MaskSelector();
             const selectedMasks = maskSelector.getSelectedMasks();
+
+            console.log(selectedMasks);
+            if (selectedMasks.size > 0) {
+                // Save record
+                console.log("Save record");
+                const core = new Core();
+                core.recordData();
+            }
+
             for (const mask of selectedMasks) {
                 mask.setCategory(category);
             }

@@ -106,6 +106,8 @@ class ActionManager {
         this.maskSelectionState = new MaskSelectionState(this);
 
         this.setState(ActionManager.DEFAULT_STATE);
+
+        this.registeredDocumentEvents = new Set();
     }
 
     rightClickPixel(imageX, imageY) {
@@ -132,14 +134,14 @@ class ActionManager {
     registerShortCut(state, key, callback) {
         const keyCombo = this.normalizeKeyCombo(key);
         switch (state) {
+            default:
+                throw new Error("Invalid state");
             case ActionManager.STATE_SELECT_MASK:
                 this.maskSelectionState.registerShortCut(keyCombo, callback);
                 break;
             case ActionManager.STATE_CREATE_MASK:
                 this.maskCreationState.registerShortCut(keyCombo, callback);
                 break;
-            default:
-                throw new Error("Invalid state");
         }
     }
 
@@ -162,5 +164,17 @@ class ActionManager {
         if (event.altKey) keys.push("alt");
         keys.push(event.key.toLowerCase()); // Add the actual key
         return keys.sort().join("+"); // Sort keys to ensure combinations match any order
+    }
+
+    getRegisteredDocumentEvents() {
+        return this.registeredDocumentEvents;
+    }
+
+    addRegisteredDocumentEvent(event) {
+        this.registeredDocumentEvents.add(event);
+    }
+
+    haveRegisteredDocumentEvent(event) {
+        return this.registeredDocumentEvents.has(event);
     }
 }

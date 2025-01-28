@@ -90,8 +90,15 @@ class MaskCreator {
      * After that, clear the prompts.
      */
     confirmPrompt() {
-        // Add the mask into the
+        if (this.mask === null) {
+            return;
+        }
+
+        // Record data
         const core = new Core();
+        core.recordData();
+
+        // Add the mask into the data
         const data = core.getData();
         data.addMask(this.mask);
 

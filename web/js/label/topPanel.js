@@ -23,14 +23,6 @@ class TopPanel {
 
     initNextImageButton() {
         this.nextImageButton.addEventListener("click", () => {
-            // Clear all selected masks
-            const maskSelector = new MaskSelector();
-            maskSelector.clearSelection();
-
-            // Clear all prompting masks
-            const maskCreator = new MaskCreator();
-            maskCreator.clearPrompts();
-
             this.disableButtons();
             const core = new Core();
             core.nextData(() => {
@@ -52,23 +44,19 @@ class TopPanel {
             }
         );
         document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
             const key = event.key.toLowerCase();
             if (key === "d") {
                 actionManager.handleShortCut(key, event);
+                actionManager.addRegisteredDocumentEvent(event);
             }
         });
     }
 
     initPrevImageButton() {
         this.prevImageButton.addEventListener("click", () => {
-            // Clear all selected masks
-            const maskSelector = new MaskSelector();
-            maskSelector.clearSelection();
-
-            // Clear all prompting masks
-            const maskCreator = new MaskCreator();
-            maskCreator.clearPrompts();
-
             this.disableButtons();
             const core = new Core();
             core.prevData(() => {
@@ -90,9 +78,13 @@ class TopPanel {
             }
         );
         document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
             const key = event.key.toLowerCase();
             if (key === "a") {
                 actionManager.handleShortCut(key, event);
+                actionManager.addRegisteredDocumentEvent(event);
             }
         });
     }

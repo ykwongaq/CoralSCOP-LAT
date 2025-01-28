@@ -52,9 +52,13 @@ class ViewPanel {
             }
         );
         document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
             const key = event.key.toLowerCase();
             if (key === "s") {
                 actionManager.handleShortCut(key, event);
+                actionManager.addRegisteredDocumentEvent(event);
             }
         });
     }
