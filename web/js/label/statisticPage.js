@@ -43,15 +43,21 @@ class StatisticPage {
         return this;
     }
 
-    init() {
-        // this.loadGoogleLib().then(() => {
-        //     // Do nothing
-        // });
-        google.charts.load("current", { packages: ["corechart"] });
-        // Set a callback function to run when the library is loaded
-        google.charts.setOnLoadCallback(() => {});
+    async init() {
+        try {
+            // Attempt to load the Google Charts library
+            const libraryLoaded = await this.loadGoogleLib();
+            if (!libraryLoaded) {
+                console.error("Google Charts library failed to load.");
+                this.displayErrorMessage(); // Optionally display an error message
+                return;
+            }
 
-        this.initIgnoreUndefinedCoralButton();
+            // Proceed with graph initialization
+            this.initIgnoreUndefinedCoralButton();
+        } catch (error) {
+            console.error("Error initializing Google Charts library:", error);
+        }
     }
 
     initIgnoreUndefinedCoralButton() {
@@ -62,22 +68,61 @@ class StatisticPage {
     }
 
     loadGoogleLib() {
-        // If the library hasn't been loaded, create a promise to load it
-        this.loadingPromise = new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             try {
+                // Set a timeout in case the library fails to load
+                const timeout = setTimeout(() => {
+                    console.error("Google Charts library loading timed out.");
+                    resolve(false); // Resolve with `false` if timeout occurs
+                }, 5000); // Timeout after 5 seconds
+
                 google.charts.load("current", { packages: ["corechart"] });
                 google.charts.setOnLoadCallback(() => {
-                    resolve(true); // Resolve when the library is loaded
+                    clearTimeout(timeout); // Clear the timeout on success
+                    resolve(true); // Resolve with `true` if the library loads successfully
                 });
             } catch (error) {
-                reject(error); // Reject if there's an error
+                reject(error); // Reject the promise if an exception occurs
             }
         });
-
-        return this.loadingPromise; // Return the promise (either resolved or in progress)
     }
 
-    update() {
+    async update() {
+        // Ensure Google Charts is available before attempting to draw graphs
+        if (typeof google === "undefined" || !google.visualization) {
+            try {
+                const libraryLoaded = await this.loadGoogleLib();
+                console.log(libraryLoaded);
+                if (!libraryLoaded) {
+                    console.error("Google Charts library failed to load.");
+                    const generalPopUpManager = new GeneralPopManager();
+                    generalPopUpManager.clear();
+                    generalPopUpManager.updateLargeText("Error");
+                    generalPopUpManager.updateText(
+                        "Failed to load Google Charts library. Please try again after connecting to the internet."
+                    );
+                    generalPopUpManager.addButton("ok", "OK", () => {
+                        generalPopUpManager.hide();
+                    });
+                    generalPopUpManager.show();
+
+                    return;
+                }
+            } catch (error) {
+                console.error(error);
+                const generalPopUpManager = new GeneralPopManager();
+                generalPopUpManager.clear();
+                generalPopUpManager.updateLargeText("Error");
+                generalPopUpManager.updateText(
+                    "Failed to load Google Charts library. Please try again after connecting to the internet."
+                );
+                generalPopUpManager.addButton("ok", "OK", () => {
+                    generalPopUpManager.hide();
+                });
+                generalPopUpManager.show();
+            }
+        }
+
         const core = new Core();
         const data = core.getData();
 
@@ -236,6 +281,11 @@ class StatisticPage {
         if (this.ignoreUndefinedCoral()) {
             const undefinedCategory = new Category(Category.PREDICTED_CORAL_ID);
             delete dataDistribution[undefinedCategory.getCategorySuperName()];
+        }
+
+        // Skip if there are no coral colonies
+        if (Object.keys(dataDistribution).length === 0) {
+            return;
         }
 
         const dataTable = [];
