@@ -16,11 +16,13 @@ from PIL import Image
 from .util.data import zip_file, unzip_file
 from .util.coco import coco_rle_to_coco_poly
 from .util.excel import ExcelUtil
+from .util.requests import ProjectCreateRequest
 
 
 from typing import Dict, Tuple, List, Union
 
 TEMP_CREATE_NAME = "__coralscop_lat_temp"
+TEMP_CREATE_NAME_2 = "__coralscop_lat_temp_2"
 TEMP_LOAD_NAME = "__coralscop_lat_temp_load"
 
 
@@ -263,49 +265,6 @@ class COCOJson:
         }
 
 
-class ProjectCreateRequest:
-    def __init__(self, request: Dict):
-        """
-        Request should have the following structure:
-        {
-            "inputs": [
-                {
-                    "image_url": "http://example.com/image.jpg",
-                    "image_file_name": "image.jpg",
-                    "image_path": "/path/to/image.jpg"
-                }
-            ],
-            "config": {
-                "minArea": 0.1,
-                "minConfidence": 0.1,
-                "maxIOU": 0.5
-            },
-            "output_dir": "/path/to/output"
-        }
-
-        If the image_path is provided, the image_url will be ignored.
-        """
-        self.request = request
-        assert "inputs" in request, "Missing 'inputs' in request"
-        assert "output_dir" in request, "Missing 'output_dir' in request"
-        assert "config" in request, "Missing 'config' in request"
-
-    def get_inputs(self) -> List[Dict]:
-        return self.request["inputs"]
-
-    def get_output_dir(self) -> str:
-        return self.request["output_dir"]
-
-    def get_min_area(self) -> float:
-        return self.request["config"]["minArea"]
-
-    def get_min_confidence(self) -> float:
-        return self.request["config"]["minConfidence"]
-
-    def get_max_iou(self) -> float:
-        return self.request["config"]["maxIOU"]
-
-
 class ProjectCreator:
 
     SAM_ENCODER_PATH = "models/vit_h_encoder_quantized.onnx"
@@ -348,7 +307,11 @@ class ProjectCreator:
         inputs = request.get_inputs()
         inputs = sorted(inputs, key=lambda x: x["image_file_name"])
 
-        output_dir = request.get_output_dir()
+        output_file = request.get_output_file()
+        if os.path.exists(output_file):
+            os.remove(output_file)
+
+        output_dir = os.path.dirname(output_file)
 
         min_area = request.get_min_area()
         min_confidence = request.get_min_confidence()
@@ -356,6 +319,8 @@ class ProjectCreator:
 
         # Temporary folders for storing images, embeddings, annotations, and project info
         output_temp_dir = os.path.join(output_dir, TEMP_CREATE_NAME)
+        if os.path.exists(output_temp_dir):
+            shutil.rmtree(output_temp_dir)
         os.makedirs(output_temp_dir, exist_ok=True)
 
         image_folder = os.path.join(output_temp_dir, "images")
@@ -519,8 +484,9 @@ class ProjectCreator:
 
         save_json(project_info_json.to_json(), project_info_path)
 
-        project_name = self.find_available_project_name(output_dir)
-        project_path = os.path.join(output_dir, project_name)
+        # project_name = self.find_available_project_name(output_dir)
+        # project_path = os.path.join(output_dir, project_name)
+        project_path = output_file
         with zipfile.ZipFile(project_path, "w") as archive:
             for root, _, files in os.walk(output_temp_dir):
                 for file in files:
@@ -577,43 +543,185 @@ class ProjectCreator:
                 raise Exception("Too many project files in the output directory")
         return project_name
 
+    # def save_dataset(
+    #     self, dataset: Dataset, original_project_path: str, output_project_path: str
+    # ):
+    #     new_project_dir = os.path.dirname(output_project_path)
+    #     os.makedirs(new_project_dir, exist_ok=True)
+
+    #     # Unzip the original project
+    #     temp_dir = os.path.join(
+    #         os.path.dirname(original_project_path), TEMP_CREATE_NAME
+    #     )
+    #     if os.path.exists(temp_dir):
+    #         shutil.rmtree(temp_dir)
+
+    #     with zipfile.ZipFile(original_project_path, "r") as archive:
+    #         archive.extractall(temp_dir)
+
+    #     # Create the new project folder
+    #     new_temp_dir = os.path.join(new_project_dir, TEMP_CREATE_NAME)
+    #     os.makedirs(new_temp_dir, exist_ok=True)
+    #     if os.path.exists(new_temp_dir):
+    #         shutil.rmtree(new_temp_dir)
+
+    #     original_image_dir = os.path.join(temp_dir, "images")
+    #     new_image_dir = os.path.join(new_temp_dir, "images")
+    #     os.makedirs(new_image_dir, exist_ok=True)
+
+    #     original_embedding_dir = os.path.join(temp_dir, "embeddings")
+    #     new_embedding_dir = os.path.join(new_temp_dir, "embeddings")
+    #     os.makedirs(new_embedding_dir, exist_ok=True)
+
+    #     original_annotation_dir = os.path.join(temp_dir, "annotations")
+    #     new_annotation_dir = os.path.join(new_temp_dir, "annotations")
+    #     os.makedirs(new_annotation_dir, exist_ok=True)
+
+    #     # Remove all the outdated annotation files if exists in the new project
+    #     for filename in os.listdir(new_annotation_dir):
+    #         file_path = os.path.join(new_annotation_dir, filename)
+    #         os.remove(file_path)
+
+    #     # Save the new annotations
+    #     for data in dataset.get_data_list():
+    #         filename = os.path.splitext(data.get_image_name())[0]
+    #         annotation_path = os.path.join(new_annotation_dir, f"{filename}.json")
+
+    #         annotation_file_json = AnnotationFileJson()
+
+    #         image_json = ImageJson()
+    #         image_json.set_id(data.get_idx())
+    #         image_json.set_filename(data.get_image_name())
+    #         image_json.set_width(data.get_image_width())
+    #         image_json.set_height(data.get_image_height())
+    #         annotation_file_json.add_image(image_json)
+
+    #         for mask in data.get_segmentation()["annotations"]:
+    #             annotation_json = AnnotationJson()
+    #             annotation_json.set_segmentation(mask["segmentation"])
+    #             annotation_json.set_bbox(mask["bbox"])
+    #             annotation_json.set_area(mask["area"])
+    #             annotation_json.set_category_id(mask["category_id"])
+    #             annotation_json.set_id(mask["id"])
+    #             annotation_json.set_image_id(data.get_idx())
+    #             annotation_json.set_iscrowd(mask["iscrowd"])
+    #             annotation_json.set_predicted_iou(mask["predicted_iou"])
+    #             annotation_file_json.add_annotation(annotation_json)
+
+    #         save_json(annotation_file_json.to_json(), annotation_path)
+
+    #     # Save the images if the new image folder is not
+    #     # the same as the original image folder
+    #     if original_image_dir != new_image_dir:
+    #         for image_name in os.listdir(original_image_dir):
+    #             image_path = os.path.join(original_image_dir, image_name)
+    #             new_image_path = os.path.join(new_image_dir, image_name)
+    #             shutil.copy(image_path, new_image_path)
+
+    #     # Save the embeddings if the new embedding folder is not
+    #     # the same as the original embedding folder
+    #     if original_embedding_dir != new_embedding_dir:
+    #         for embedding_name in os.listdir(original_embedding_dir):
+    #             embedding_path = os.path.join(original_embedding_dir, embedding_name)
+    #             new_embedding_path = os.path.join(new_embedding_dir, embedding_name)
+    #             shutil.copy(embedding_path, new_embedding_path)
+
+    #     # Save the project info
+    #     new_project_info_path = os.path.join(new_temp_dir, "project_info.json")
+
+    #     project_info_json = ProjectInfoJson()
+    #     project_info_json.set_last_image_idx(dataset.get_last_saved_id())
+    #     for category in dataset.get_category_info():
+    #         category_json = CategoryJson()
+    #         category_json.set_id(category["id"])
+    #         category_json.set_name(category["name"])
+    #         category_json.set_super_category(category["supercategory"])
+    #         category_json.set_super_category_id(category["supercategory_id"])
+    #         category_json.set_is_coral(category["is_coral"])
+    #         category_json.set_status(category["status"])
+    #         project_info_json.add_category_info(category_json)
+
+    #     for status in dataset.get_status_info():
+    #         status_json = StatusJson()
+    #         status_json.set_id(status["id"])
+    #         status_json.set_name(status["name"])
+    #         project_info_json.add_status_info(status_json)
+    #     project_info_json.set_last_image_idx(dataset.get_last_saved_id())
+
+    #     save_json(project_info_json.to_json(), new_project_info_path)
+
+    #     # Zip the original project files back
+    #     with zipfile.ZipFile(original_project_path, "w") as archive:
+    #         for root, _, files in os.walk(temp_dir):
+    #             for file in files:
+    #                 archive.write(
+    #                     os.path.join(root, file),
+    #                     os.path.relpath(os.path.join(root, file), temp_dir),
+    #                 )
+    #     shutil.rmtree(temp_dir)
+
+    #     # Zip the new project files if the new project path is different
+    #     if os.path.dirname(original_project_path) != new_project_dir:
+    #         new_project_name = self.find_available_project_name(new_project_dir)
+    #         new_project_path = os.path.join(new_project_dir, new_project_name)
+    #         with zipfile.ZipFile(new_project_path, "w") as archive:
+    #             for root, _, files in os.walk(new_temp_dir):
+    #                 for file in files:
+    #                     archive.write(
+    #                         os.path.join(root, file),
+    #                         os.path.relpath(os.path.join(root, file), new_temp_dir),
+    #                     )
+    #         self.logger.info(f"Saving project to {new_project_path}")
+    #         shutil.rmtree(new_temp_dir)
+
     def save_dataset(
-        self, dataset: Dataset, original_project_path: str, new_project_dir: str
+        self, dataset: Dataset, project_path_origin: str, project_path_new: str
     ):
-        os.makedirs(new_project_dir, exist_ok=True)
-
-        # Unzip the original project
-        temp_dir = os.path.join(
-            os.path.dirname(original_project_path), TEMP_CREATE_NAME
+        # Unzip the original project to temp folder
+        temp_folder_origin = os.path.join(
+            os.path.dirname(project_path_origin), TEMP_CREATE_NAME
         )
-        with zipfile.ZipFile(original_project_path, "r") as archive:
-            archive.extractall(temp_dir)
+        if os.path.exists(temp_folder_origin):
+            shutil.rmtree(temp_folder_origin)
 
-        # Create the new project folder
-        new_temp_dir = os.path.join(new_project_dir, TEMP_CREATE_NAME)
-        os.makedirs(new_temp_dir, exist_ok=True)
+        os.makedirs(temp_folder_origin, exist_ok=True)
+        with zipfile.ZipFile(project_path_origin, "r") as archive:
+            archive.extractall(temp_folder_origin)
 
-        original_image_dir = os.path.join(temp_dir, "images")
-        new_image_dir = os.path.join(new_temp_dir, "images")
-        os.makedirs(new_image_dir, exist_ok=True)
+        # Create temp folder for the new project
+        temp_folder_new = os.path.join(
+            os.path.dirname(project_path_new), TEMP_CREATE_NAME_2
+        )
+        if os.path.exists(temp_folder_new):
+            shutil.rmtree(temp_folder_new)
+        os.makedirs(temp_folder_new, exist_ok=True)
 
-        original_embedding_dir = os.path.join(temp_dir, "embeddings")
-        new_embedding_dir = os.path.join(new_temp_dir, "embeddings")
-        os.makedirs(new_embedding_dir, exist_ok=True)
+        # Copy the images to the new project folder
+        image_folder_origin = os.path.join(temp_folder_origin, "images")
+        image_folder_new = os.path.join(temp_folder_new, "images")
+        os.makedirs(image_folder_new, exist_ok=True)
+        for image_name in os.listdir(image_folder_origin):
+            image_path_origin = os.path.join(image_folder_origin, image_name)
+            image_path_new = os.path.join(image_folder_new, image_name)
+            shutil.copy(image_path_origin, image_path_new)
 
-        original_annotation_dir = os.path.join(temp_dir, "annotations")
-        new_annotation_dir = os.path.join(new_temp_dir, "annotations")
-        os.makedirs(new_annotation_dir, exist_ok=True)
+        # Copy the embeddings to the new project folder
+        embedding_folder_origin = os.path.join(temp_folder_origin, "embeddings")
+        embedding_folder_new = os.path.join(temp_folder_new, "embeddings")
+        os.makedirs(embedding_folder_new, exist_ok=True)
+        for embedding_name in os.listdir(embedding_folder_origin):
+            embedding_path_origin = os.path.join(
+                embedding_folder_origin, embedding_name
+            )
+            embedding_path_new = os.path.join(embedding_folder_new, embedding_name)
+            shutil.copy(embedding_path_origin, embedding_path_new)
 
-        # Remove all the outdated annotation files if exists in the new project
-        for filename in os.listdir(new_annotation_dir):
-            file_path = os.path.join(new_annotation_dir, filename)
-            os.remove(file_path)
-
-        # Save the new annotations
+        # Generate annotation to the new project folder
+        annotation_folder_new = os.path.join(temp_folder_new, "annotations")
+        os.makedirs(annotation_folder_new, exist_ok=True)
         for data in dataset.get_data_list():
             filename = os.path.splitext(data.get_image_name())[0]
-            annotation_path = os.path.join(new_annotation_dir, f"{filename}.json")
+            annotation_path = os.path.join(annotation_folder_new, f"{filename}.json")
 
             annotation_file_json = AnnotationFileJson()
 
@@ -638,24 +746,8 @@ class ProjectCreator:
 
             save_json(annotation_file_json.to_json(), annotation_path)
 
-        # Save the images if the new image folder is not
-        # the same as the original image folder
-        if original_image_dir != new_image_dir:
-            for image_name in os.listdir(original_image_dir):
-                image_path = os.path.join(original_image_dir, image_name)
-                new_image_path = os.path.join(new_image_dir, image_name)
-                shutil.copy(image_path, new_image_path)
-
-        # Save the embeddings if the new embedding folder is not
-        # the same as the original embedding folder
-        if original_embedding_dir != new_embedding_dir:
-            for embedding_name in os.listdir(original_embedding_dir):
-                embedding_path = os.path.join(original_embedding_dir, embedding_name)
-                new_embedding_path = os.path.join(new_embedding_dir, embedding_name)
-                shutil.copy(embedding_path, new_embedding_path)
-
-        # Save the project info
-        new_project_info_path = os.path.join(new_temp_dir, "project_info.json")
+        # Generate the project info file to the new project folder
+        project_info_path = os.path.join(temp_folder_new, "project_info.json")
 
         project_info_json = ProjectInfoJson()
         project_info_json.set_last_image_idx(dataset.get_last_saved_id())
@@ -676,31 +768,25 @@ class ProjectCreator:
             project_info_json.add_status_info(status_json)
         project_info_json.set_last_image_idx(dataset.get_last_saved_id())
 
-        save_json(project_info_json.to_json(), new_project_info_path)
+        save_json(project_info_json.to_json(), project_info_path)
 
-        # Zip the original project files back
-        with zipfile.ZipFile(original_project_path, "w") as archive:
-            for root, _, files in os.walk(temp_dir):
+        # Remove the temp folder for original project
+        shutil.rmtree(temp_folder_origin)
+
+        # Zip the new project folder to the new project path
+        if os.path.exists(project_path_new):
+            os.remove(project_path_new)
+
+        with zipfile.ZipFile(project_path_new, "w") as archive:
+            for root, _, files in os.walk(temp_folder_new):
                 for file in files:
                     archive.write(
                         os.path.join(root, file),
-                        os.path.relpath(os.path.join(root, file), temp_dir),
+                        os.path.relpath(os.path.join(root, file), temp_folder_new),
                     )
-        shutil.rmtree(temp_dir)
 
-        # Zip the new project files if the new project path is different
-        if os.path.dirname(original_project_path) != new_project_dir:
-            new_project_name = self.find_available_project_name(new_project_dir)
-            new_project_path = os.path.join(new_project_dir, new_project_name)
-            with zipfile.ZipFile(new_project_path, "w") as archive:
-                for root, _, files in os.walk(new_temp_dir):
-                    for file in files:
-                        archive.write(
-                            os.path.join(root, file),
-                            os.path.relpath(os.path.join(root, file), new_temp_dir),
-                        )
-            self.logger.info(f"Saving project to {new_project_path}")
-            shutil.rmtree(new_temp_dir)
+        # Remove the temp folder for the new project
+        shutil.rmtree(temp_folder_new)
 
 
 class ProjectLoader:
@@ -868,21 +954,35 @@ class ProjectExport:
             image = Image.fromarray(image)
             image.save(os.path.join(output_annoted_image_folder, data["image_name"]))
 
-    def export_coco(self, output_dir: str, dataset: Dataset):
-        output_coco_file = os.path.join(output_dir, "coco.json")
+    def is_file_path(self, path):
+        # Check if the path looks like a file (e.g., has an extension)
+        return not path.endswith(os.sep) and os.path.splitext(path)[1] != ""
 
-        # If the file already exist, append a number to the file name
-        i = 1
-        while os.path.exists(output_coco_file):
-            output_coco_file = os.path.join(
-                output_dir, f"{ProjectExport.COCO_FILE_NAME}_{i}.json"
-            )
-            i += 1
+    def export_coco(self, output_path: str, dataset: Dataset):
+        """
+        the output_path can be a directory or a file path
+        """
 
-            if i > 1000:
-                raise Exception("Too many COCO files in the output directory")
+        if self.is_file_path(output_path):
+            output_coco_file = output_path
+            if os.path.exists(output_coco_file):
+                os.remove(output_coco_file)
+        else:
+            output_dir = output_path
+            output_coco_file = os.path.join(output_dir, "coco.json")
 
-        os.makedirs(output_dir, exist_ok=True)
+            # If the file already exist, append a number to the file name
+            i = 1
+            while os.path.exists(output_coco_file):
+                output_coco_file = os.path.join(
+                    output_dir, f"{ProjectExport.COCO_FILE_NAME}_{i}.json"
+                )
+                i += 1
+
+                if i > 1000:
+                    raise Exception("Too many COCO files in the output directory")
+
+            os.makedirs(output_dir, exist_ok=True)
 
         coco_json = COCOJson()
 
@@ -954,4 +1054,4 @@ class ProjectExport:
             chart_path = os.path.join(output_chart_dir, f"{chart_name}.png")
             chart = decode_image_url(encoded_chart)
             Image.fromarray(chart).save(chart_path)
-            self.logger.info(f"Exported chart: {chart_name}")
+            self.logger.info(f"Exported chart: {chart_name} to {chart_path}")

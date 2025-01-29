@@ -180,8 +180,16 @@ class PreprocessPage {
             this.disableCreateProjectButton();
             this.disableNavigationButton();
 
+            const fileDialogRequest = new FileDialogRequest();
+            fileDialogRequest.setTitle("Save CoralSCOP-LAT Project File");
+            fileDialogRequest.addFileType(
+                "CoralSCOP-LAT Project File",
+                "*.coral"
+            );
+            fileDialogRequest.setDefaultExt(".coral");
+
             // Ask user to select the project folder
-            eel.select_folder()((projectPath) => {
+            eel.select_save_file(fileDialogRequest.toJson())((projectPath) => {
                 // If user does not select any folder, do nothing
                 if (projectPath === null) {
                     this.enableCreateProjectButton();
@@ -206,7 +214,7 @@ class PreprocessPage {
                  * 2. afterProjectCreation
                  */
                 const createProjectRequest = new CreateProjectRequest();
-                createProjectRequest.setOutputDir(projectPath);
+                createProjectRequest.setOutputPath(projectPath);
                 const selectedImageNames =
                     this.imageSelector.getSelectedImageNames();
                 selectedImageNames.sort((a, b) => a.localeCompare(b));
@@ -222,7 +230,7 @@ class PreprocessPage {
                 const config = this.configPage.getConfig();
                 createProjectRequest.setConfig(config);
 
-                eel.create_project(createProjectRequest.toDict())();
+                eel.create_project(createProjectRequest.toJson())();
             });
         });
     }

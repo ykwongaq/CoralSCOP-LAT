@@ -2,7 +2,7 @@ import logging
 import time
 import os
 
-from tkinter import Tk, filedialog
+from tkinter import Tk, filedialog, messagebox
 from .embedding import EmbeddingGenerator
 from .segmentation import CoralSegmentation
 
@@ -12,6 +12,7 @@ from .util.general import get_resource_path
 from .project import ProjectCreator, ProjectCreateRequest, ProjectLoader, ProjectExport
 from .dataset import Dataset, Data
 from .util.coco import to_coco_annotation, coco_mask_to_rle
+from .util.requests import FileDialogRequest
 
 from typing import Dict, List, Tuple
 
@@ -85,7 +86,7 @@ class Server:
         self.current_image_idx: int = 0
         self.project_path: str = None
 
-    def select_folder(self):
+    def select_folder(self, file_dialog_request: FileDialogRequest):
         """
         Open a dialog to select a folder
         """
@@ -98,7 +99,7 @@ class Server:
             root.lift()
             root.update()  # Ensure the dialog is updated and visible
 
-            folder_path = filedialog.askdirectory(title="Please select a folder")
+            folder_path = filedialog.askdirectory(title=file_dialog_request.get_title())
             root.destroy()
 
             if folder_path:
@@ -111,12 +112,12 @@ class Server:
             self.logger.error(f"Error selecting folder: {e}")
             return None
 
-    def select_file(self, filetypes: List[Tuple[str, str]] = [("All Files", "*.*")]):
+    def select_file(self, file_dialog_request: FileDialogRequest):
         """
         Open a dialog to select a file
         """
         try:
-            self.logger.debug(f"Selecting file with filetypes: {filetypes}")
+
             # Create a hidden Tkinter root window
             root = Tk()
             root.withdraw()  # Hide the root window
@@ -130,8 +131,8 @@ class Server:
 
             # Open the file selection dialog
             file_path = filedialog.askopenfilename(
-                title="Select a File",
-                filetypes=filetypes,
+                title=file_dialog_request.get_title(),
+                filetypes=file_dialog_request.get_filetypes(),
             )
             # Destroy the root window after use
             root.destroy()
@@ -144,6 +145,50 @@ class Server:
                 return None
         except Exception as e:
             self.logger.error(f"Error selecting file: {e}")
+            return None
+
+    def select_save_file(self, file_dialog_request: FileDialogRequest):
+        try:
+            root = Tk()
+            root.withdraw()
+
+            root.wm_attributes("-topmost", 1)
+            root.lift()
+            root.update()
+
+            while True:
+                self.logger.info(
+                    f"defualtextension: {file_dialog_request.get_defaultextension()}"
+                )
+                file_path = filedialog.asksaveasfilename(
+                    title=file_dialog_request.get_title(),
+                    defaultextension=file_dialog_request.get_defaultextension(),
+                    filetypes=file_dialog_request.get_filetypes(),
+                )
+
+                if not file_path:
+                    self.logger.info(f"No file selected. Operation canceled.")
+                    return None
+
+                if os.path.basename(file_path) == "":
+                    messagebox.showerror(
+                        "Invalid File Name", "You must provide a valid file name."
+                    )
+                    continue
+
+                if os.path.exists(file_path):
+                    confirm = messagebox.askyesno(
+                        "File Exists",
+                        f"The file '{os.path.basename(file_path)}' already exists. Do you want to overwrite it?",
+                    )
+
+                    if not confirm:
+                        continue
+
+                self.logger.info(f"Selected save file: {file_path}")
+                return file_path
+        except Exception as e:
+            self.logger.error(f"Error selecting save file: {e}")
             return None
 
     def create_project(self, project_create_request: Dict):
@@ -309,16 +354,17 @@ class Server:
         self.dataset.set_status_info(data["status_info"])
 
     @time_it
-    def save_dataset(self, output_dir: str):
-        self.logger.info(f"Saving the dataset to {self.get_project_path()} ...")
+    def save_dataset(self, output_path: str):
+
+        if output_path is None:
+            output_path = self.get_project_path()
+
+        self.logger.info(f"Saving the dataset to {output_path} ...")
 
         project_creator = ProjectCreator(
             self.embeddings_generator, self.coral_segmentation
         )
-
-        if output_dir is None:
-            output_dir = os.path.dirname(self.get_project_path())
-        project_creator.save_dataset(self.dataset, self.get_project_path(), output_dir)
+        project_creator.save_dataset(self.dataset, self.get_project_path(), output_path)
 
     def get_project_path(self) -> str:
         return self.project_path
@@ -374,10 +420,10 @@ class Server:
         project_export.export_annotated_images(output_dir, data_list)
 
     @time_it
-    def export_coco(self, output_dir: str):
-        self.logger.info(f"Exporting COCO dataset to {output_dir} ...")
+    def export_coco(self, output_path: str):
+        self.logger.info(f"Exporting COCO dataset to {output_path} ...")
         project_export = ProjectExport(self.project_path)
-        project_export.export_coco(output_dir, self.get_dataset())
+        project_export.export_coco(output_path, self.get_dataset())
 
     @time_it
     def export_excel(self, output_dir: str):

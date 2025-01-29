@@ -15,7 +15,7 @@ class Request {
  */
 class CreateProjectRequest extends Request {
     static INPUTS = "inputs";
-    static OUTPUT_DIR = "output_dir";
+    static OUTPUT_FILE = "output_file";
     static CONFIG = "config";
 
     static IMAGE_URL = "image_url";
@@ -25,7 +25,7 @@ class CreateProjectRequest extends Request {
         super();
         this.request = {};
         this.request[CreateProjectRequest.INPUTS] = [];
-        this.request[CreateProjectRequest.OUTPUT_DIR] = "";
+        this.request[CreateProjectRequest.OUTPUT_FILE] = "";
         this.request[CreateProjectRequest.CONFIG] = "";
     }
 
@@ -36,15 +36,50 @@ class CreateProjectRequest extends Request {
         this.request[CreateProjectRequest.INPUTS].push(item);
     }
 
-    setOutputDir(outputDir) {
-        this.request[CreateProjectRequest.OUTPUT_DIR] = outputDir;
+    setOutputPath(outputFile) {
+        this.request[CreateProjectRequest.OUTPUT_FILE] = outputFile;
     }
 
     setConfig(config) {
         this.request[CreateProjectRequest.CONFIG] = config;
     }
 
-    toDict() {
+    toJson() {
+        return this.request;
+    }
+}
+
+class FileDialogRequest extends Request {
+    static DEFAULT_EXT = "defaultextension";
+    static FILE_TYPES = "fileTypes";
+    static DESCRIPTION = "description";
+    static EXTENSIONS = "extensions";
+    static TITLE = "title";
+
+    constructor() {
+        super();
+        this.request = {};
+        this.request[FileDialogRequest.TITLE] = null;
+        this.request[FileDialogRequest.DEFAULT_EXT] = null;
+        this.request[FileDialogRequest.FILE_TYPES] = [];
+    }
+
+    setDefaultExt(defaultExt) {
+        this.request[FileDialogRequest.DEFAULT_EXT] = defaultExt;
+    }
+
+    setTitle(title) {
+        this.request[FileDialogRequest.TITLE] = title;
+    }
+
+    addFileType(description, extensions) {
+        let item = {};
+        item[FileDialogRequest.DESCRIPTION] = description;
+        item[FileDialogRequest.EXTENSIONS] = extensions;
+        this.request[FileDialogRequest.FILE_TYPES].push(item);
+    }
+
+    toJson() {
         return this.request;
     }
 }

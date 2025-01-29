@@ -83,9 +83,10 @@ class NavigationBar {
             const core = new Core();
             core.save(() => {
                 this.disable();
-                core.selectFolder((fileFolder) => {
+                core.selectFolder(null, (fileFolder) => {
                     if (fileFolder === null) {
-                        this.enableExport();
+                        console.log("No folder selected");
+                        this.enable();
                         return;
                     }
 
@@ -99,7 +100,7 @@ class NavigationBar {
 
                     core.exportImages(fileFolder, () => {
                         generalPopManager.hide();
-                        this.enableExport();
+                        this.enable();
                     });
                 });
             });
@@ -109,9 +110,9 @@ class NavigationBar {
             const core = new Core();
             core.save(() => {
                 this.disable();
-                core.selectFolder((fileFolder) => {
+                core.selectFolder(null, (fileFolder) => {
                     if (fileFolder === null) {
-                        this.enableExport();
+                        this.enable();
                         return;
                     }
 
@@ -125,7 +126,7 @@ class NavigationBar {
 
                     core.exportAnnotatedImages(fileFolder, () => {
                         generalPopManager.hide();
-                        this.enableExport();
+                        this.enable();
                     });
                 });
             });
@@ -135,9 +136,15 @@ class NavigationBar {
             const core = new Core();
             core.save(() => {
                 this.disable();
-                core.selectFolder((fileFolder) => {
-                    if (fileFolder === null) {
-                        this.enableExport();
+
+                const request = new FileDialogRequest();
+                request.setTitle("Select the folder to save the coco json");
+                request.addFileType("COCO JSON File", ["*.json"]);
+                request.setDefaultExt(".json");
+
+                core.selectSaveFile(request, (filePath) => {
+                    if (filePath === null) {
+                        this.enable();
                         return;
                     }
 
@@ -149,9 +156,9 @@ class NavigationBar {
                     );
                     generalPopManager.show();
 
-                    core.exportCOCO(fileFolder, () => {
+                    core.exportCOCO(filePath, () => {
                         generalPopManager.hide();
-                        this.enableExport();
+                        this.enable();
                     });
                 });
             });
@@ -161,9 +168,9 @@ class NavigationBar {
             const core = new Core();
             core.save(() => {
                 this.disable();
-                core.selectFolder((fileFolder) => {
+                core.selectFolder(null, (fileFolder) => {
                     if (fileFolder === null) {
-                        this.enableExport();
+                        this.enable();
                         return;
                     }
 
@@ -177,7 +184,7 @@ class NavigationBar {
 
                     core.exportExcel(fileFolder, () => {
                         generalPopManager.hide();
-                        this.enableExport();
+                        this.enable();
                     });
                 });
             });
@@ -187,9 +194,9 @@ class NavigationBar {
             const core = new Core();
             core.save(() => {
                 this.disable();
-                core.selectFolder(async (fileFolder) => {
+                core.selectFolder(null, async (fileFolder) => {
                     if (fileFolder === null) {
-                        this.enableExport();
+                        this.enable();
                         return;
                     }
 
@@ -203,7 +210,7 @@ class NavigationBar {
 
                     core.exportCharts(fileFolder, () => {
                         generalPopManager.hide();
-                        this.enableExport();
+                        this.enable();
                     });
                 });
             });
@@ -213,9 +220,9 @@ class NavigationBar {
             const core = new Core();
             core.save(() => {
                 this.disable();
-                core.selectFolder((fileFolder) => {
+                core.selectFolder(null, (fileFolder) => {
                     if (fileFolder === null) {
-                        this.enableExport();
+                        this.enable();
                         return;
                     }
 
@@ -233,7 +240,7 @@ class NavigationBar {
                                 core.exportExcel(fileFolder, () => {
                                     core.exportCharts(fileFolder, () => {
                                         generalPopManager.hide();
-                                        this.enableExport();
+                                        this.enable();
                                     });
                                 });
                             });
@@ -274,7 +281,7 @@ class NavigationBar {
             core.save(() => {
                 core.saveDataset(null, () => {
                     generalPopManager.hide();
-                    this.enableSave();
+                    this.enable();
                 });
             });
         });
@@ -283,9 +290,17 @@ class NavigationBar {
             const core = new Core();
             core.save(() => {
                 this.disable();
-                core.selectFolder((fileFolder) => {
-                    if (fileFolder === null) {
-                        this.enableSave();
+                const fileDialogRequest = new FileDialogRequest();
+                fileDialogRequest.setTitle("Save CoralSCOP-LAT Project File");
+                fileDialogRequest.addFileType(
+                    "CoralSCOP-LAT Project File",
+                    "*.coral"
+                );
+                fileDialogRequest.setDefaultExt(".coral");
+
+                core.selectSaveFile(fileDialogRequest, (filePath) => {
+                    if (filePath === null) {
+                        this.enable();
                         return;
                     }
 
@@ -297,9 +312,9 @@ class NavigationBar {
                     );
                     generalPopManager.show();
 
-                    core.saveDataset(fileFolder, () => {
+                    core.saveDataset(filePath, () => {
                         generalPopManager.hide();
-                        this.enableSave();
+                        this.enable();
                     });
                 });
             });

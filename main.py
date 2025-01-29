@@ -3,6 +3,7 @@ import eel
 
 from server.server import Server
 from typing import List, Dict, Tuple
+from server.util.requests import FileDialogRequest
 
 
 # Initialize logging
@@ -28,29 +29,21 @@ def setup_logging():
 
 
 @eel.expose
-def select_folder():
-    return server.select_folder()
+def select_folder(request: Dict) -> str:
+    file_dialog_request = FileDialogRequest(request)
+    return server.select_folder(file_dialog_request)
 
 
 @eel.expose
-def select_file(input_file_types: List[Dict]) -> str:
-    """
-    Open a file dialog to select a file
+def select_file(request: Dict) -> str:
+    file_dialog_request = FileDialogRequest(request)
+    return server.select_file(file_dialog_request)
 
-    input_file_types: List[Dict]
-    {
-        "description": str,
-        "extensions": str
-    }
-    """
-    if input_file_types is None:
-        return server.select_file()
-    else:
-        file_types = [
-            (file_type["description"], file_type["extensions"])
-            for file_type in input_file_types
-        ]
-        return server.select_file(file_types)
+
+@eel.expose
+def select_save_file(request: Dict) -> str:
+    file_dialog_request = FileDialogRequest(request)
+    return server.select_save_file(file_dialog_request)
 
 
 @eel.expose
@@ -104,8 +97,8 @@ def save_data(data: Dict):
 
 
 @eel.expose
-def save_dataset(output_dir: str):
-    server.save_dataset(output_dir)
+def save_dataset(output_path: str):
+    server.save_dataset(output_path)
 
 
 @eel.expose
@@ -129,8 +122,8 @@ def export_annotated_images(output_dir: str, data_list: List[Dict]):
 
 
 @eel.expose
-def export_coco(output_dir: str):
-    server.export_coco(output_dir)
+def export_coco(output_path: str):
+    server.export_coco(output_path)
 
 
 @eel.expose

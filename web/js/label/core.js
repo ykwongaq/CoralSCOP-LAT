@@ -17,21 +17,53 @@ class Core {
         return this;
     }
 
-    selectFile(fileTypes = null, callBack = null) {
-        eel.select_file(fileTypes)((filePath) => {
-            if (filePath === null) {
-                return;
-            }
+    /**
+     * Select a path to the file
+     * @param {FileDialogRequest} request
+     * @param {function} callBack
+     */
+    selectFile(request, callBack = null) {
+        if (request === null) {
+            request = new FileDialogRequest();
+            request.setTitle("Select File");
+        }
+        eel.select_file(request.toJson())((filePath) => {
+            // if (filePath === null) {
+            //     return;
+            // }
             callBack(filePath);
         });
     }
 
-    selectFolder(callBack = null) {
-        eel.select_folder()((folderPath) => {
-            if (folderPath === null) {
-                return;
-            }
+    /**
+     * Select a path to the folder
+     * @param {FileDialogRequest} request
+     * @param {function} callBack
+     */
+    selectFolder(request, callBack = null) {
+        if (request === null) {
+            request = new FileDialogRequest();
+            request.setTitle("Select Folder");
+        }
+        eel.select_folder(request.toJson())((folderPath) => {
+            // if (folderPath === null) {
+            //     return;
+            // }
             callBack(folderPath);
+        });
+    }
+
+    /**
+     * Select a file path to save a file
+     * @param {FileDialogRequest} request
+     * @param {function} callBack
+     */
+    selectSaveFile(request, callBack = null) {
+        eel.select_save_file(request.toJson())((filePath) => {
+            // if (filePath === null) {
+            //     return;
+            // }
+            callBack(filePath);
         });
     }
 
@@ -79,13 +111,13 @@ class Core {
         };
 
         if (filePath === null) {
-            const fileTypes = [
-                {
-                    description: "CoralSCOP-LAT Project File",
-                    extensions: "*.coral",
-                },
-            ];
-            this.selectFile(fileTypes, (filePath_) => {
+            const fileDialogRequest = new FileDialogRequest();
+            fileDialogRequest.setTitle("Save CoralSCOP-LAT Project File");
+            fileDialogRequest.addFileType(
+                "CoralSCOP-LAT Project File",
+                "*.coral"
+            );
+            this.selectFile(fileDialogRequest, (filePath_) => {
                 if (filePath_ === null) {
                     navigationBar.enable();
                     return;
@@ -265,8 +297,8 @@ class Core {
         topPanel.update();
     }
 
-    saveDataset(output_dir, callBack = null) {
-        eel.save_dataset(output_dir)(() => {
+    saveDataset(filePath, callBack = null) {
+        eel.save_dataset(filePath)(() => {
             if (callBack != null) {
                 callBack();
             }
@@ -356,8 +388,8 @@ class Core {
         });
     }
 
-    exportCOCO(outputDir, callBack = null) {
-        eel.export_coco(outputDir)(() => {
+    exportCOCO(outputPath, callBack = null) {
+        eel.export_coco(outputPath)(() => {
             if (callBack != null) {
                 callBack();
             }
@@ -387,6 +419,7 @@ class Core {
         const statisticPage = new StatisticPage();
         statisticPage.update();
         const exportImageUrls = await statisticPage.getExportImageUrls();
+        console.log(exportImageUrls);
 
         const requests = [];
         for (const chartName in exportImageUrls) {

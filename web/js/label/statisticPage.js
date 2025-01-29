@@ -572,7 +572,7 @@ class StatisticPage {
         });
 
         const superCategoryName = category.getCategorySuperName();
-        const name = `Condition: ${superCategoryName}`;
+        const name = `Condition - ${superCategoryName}`;
         nameText.textContent = name;
 
         downloadButton.addEventListener("click", () => {
