@@ -78,9 +78,8 @@ class MaskCreator {
         }
 
         const core = new Core();
-        core.createPromptedMask(this.prompts).then((annotation) => {
+        core.createPromptedMask(this.prompts, (annotation) => {
             this.mask = new Mask(annotation);
-
             canvas.showPromptedMask(this.mask, this.prompts);
         });
     }

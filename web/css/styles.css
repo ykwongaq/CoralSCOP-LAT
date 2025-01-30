@@ -1564,6 +1564,18 @@ html:has(#confirm-button:not(.hidden)) #default-bar .float-bar__inner {
     font-weight: 300;
     /* white-space: pre-wrap; */
 }
+.model-pop__textarea {
+    width: 100%;
+    border: 1px solid #ccc;
+    overflow: auto;
+    resize: none;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    background-color: #f9f9f9;
+    margin: 3px;
+    height: 200px;
+    display: block;
+}
 .modal-pop-backdrop {
     position: fixed;
     inset: 0;

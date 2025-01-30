@@ -751,9 +751,19 @@
             <div class="modal-pop__inner">
                 <p id="general-pop-large-text" class="modal-pop__lg-text"></p>
                 <p id="general-pop-text" class="modal-pop__text"></p>
-                <div id="button-container" class="modal-pop__row">
-                    <!-- <button id="general-pop-button" class="button">OK</button> -->
-                </div>
+                <div id="button-container" class="modal-pop__row"></div>
+            </div>
+        </div>
+        <div id="error-pop" class="modal-pop">
+            <div class="modal-pop__inner">
+                <p id="error-pop-large-text" class="modal-pop__lg-text"></p>
+                <p id="error-pop-text" class="modal-pop__text"></p>
+                <textarea
+                    id="error-pop-textarea"
+                    class="model-pop__textarea"
+                    readonly
+                ></textarea>
+                <div id="button-container" class="modal-pop__row"></div>
             </div>
         </div>
         <div id="loading-pop-backdrop" class="modal-pop-backdrop"></div>
@@ -771,6 +781,7 @@
         <script src="js/label/historyManager.js"></script>
         <script src="js/generalPopManager.js"></script>
         <script src="js/loadingPopManager.js"></script>
+        <script src="js/errorPopManager.js"></script>
         <script src="js/label/data.js"></script>
         <script src="js/label/maskCreator.js"></script>
         <script src="js/label/maskSelector.js"></script>

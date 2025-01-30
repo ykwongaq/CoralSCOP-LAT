@@ -2,7 +2,8 @@
  * Core of the frontend. It is used to communicate with the backend.
  */
 class Core {
-    DEFAULT_HISTORY_SIZE = 10;
+    static DEFAULT_HISTORY_SIZE = 10;
+    static ISSUE_URL = "https://github.com/ykwongaq/CoralSCOP-LAT/issues";
 
     constructor() {
         if (Core.instance) {
@@ -22,17 +23,25 @@ class Core {
      * @param {FileDialogRequest} request
      * @param {function} callBack
      */
-    selectFile(request, callBack = null) {
+    selectFile(request, callBack = null, errorCallBack = null) {
         if (request === null) {
             request = new FileDialogRequest();
             request.setTitle("Select File");
         }
-        eel.select_file(request.toJson())((filePath) => {
-            // if (filePath === null) {
-            //     return;
-            // }
-            callBack(filePath);
-        });
+
+        eel.select_file(request.toJson())()
+            .then((filePath) => {
+                if (callBack) {
+                    callBack(filePath);
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
     }
 
     /**
@@ -40,17 +49,25 @@ class Core {
      * @param {FileDialogRequest} request
      * @param {function} callBack
      */
-    selectFolder(request, callBack = null) {
+    selectFolder(request, callBack = null, errorCallBack = null) {
         if (request === null) {
             request = new FileDialogRequest();
             request.setTitle("Select Folder");
         }
-        eel.select_folder(request.toJson())((folderPath) => {
-            // if (folderPath === null) {
-            //     return;
-            // }
-            callBack(folderPath);
-        });
+
+        eel.select_folder(request.toJson())()
+            .then((folderPath) => {
+                if (callBack) {
+                    callBack(folderPath);
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
     }
 
     /**
@@ -58,56 +75,83 @@ class Core {
      * @param {FileDialogRequest} request
      * @param {function} callBack
      */
-    selectSaveFile(request, callBack = null) {
-        eel.select_save_file(request.toJson())((filePath) => {
-            // if (filePath === null) {
-            //     return;
-            // }
-            callBack(filePath);
-        });
+    selectSaveFile(request, callBack = null, errorCallBack = null) {
+        eel.select_save_file(request.toJson())()
+            .then((filePath) => {
+                if (callBack) {
+                    callBack(filePath);
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
     }
 
-    loadProject(filePath = null, callBack = null) {
+    loadProject(filePath = null, callBack = null, errorCallBack = null) {
         const navigationBar = new NavigationBar();
         navigationBar.disable();
 
         const loadProject_ = (filePath_, callBack_) => {
-            eel.load_project(filePath_)((galleryDataList) => {
-                const generalPopManager = new GeneralPopManager();
-                generalPopManager.clear();
-                generalPopManager.updateLargeText("Loading project...");
-                generalPopManager.updateText("Please wait...");
-                generalPopManager.show();
+            eel.load_project(filePath_)()
+                .then((galleryDataList) => {
+                    const generalPopManager = new GeneralPopManager();
+                    generalPopManager.clear();
+                    generalPopManager.updateLargeText("Loading project...");
+                    generalPopManager.updateText("Please wait...");
+                    generalPopManager.show();
 
-                eel.get_current_data()((response) => {
-                    // Update the category information
-                    const categoryManager = new CategoryManager();
-                    categoryManager.updateCategoryList(
-                        response["category_info"]
-                    );
-                    categoryManager.updateStatus(response["status_info"]);
+                    eel.get_current_data()()
+                        .then((response) => {
+                            // Update the category information
+                            const categoryManager = new CategoryManager();
+                            categoryManager.updateCategoryList(
+                                response["category_info"]
+                            );
+                            categoryManager.updateStatus(
+                                response["status_info"]
+                            );
 
-                    const galleryPage = new GalleryPage();
-                    galleryPage.updateGallery(galleryDataList);
+                            const galleryPage = new GalleryPage();
+                            galleryPage.updateGallery(galleryDataList);
 
-                    const data = Data.parseResponse(response);
-                    this.setData(data);
+                            const data = Data.parseResponse(response);
+                            this.setData(data);
 
-                    this.dataHistoryManager = new HistoryManager(
-                        Core.DEFAULT_HISTORY_SIZE
-                    );
-                    this.showData();
+                            this.dataHistoryManager = new HistoryManager(
+                                Core.DEFAULT_HISTORY_SIZE
+                            );
+                            this.showData();
 
-                    navigationBar.showPage(NavigationBar.ANNOTATION_PAGE);
+                            navigationBar.showPage(
+                                NavigationBar.ANNOTATION_PAGE
+                            );
 
-                    generalPopManager.hide();
-                    navigationBar.enable();
+                            generalPopManager.hide();
+                            navigationBar.enable();
 
-                    if (callBack_ != null) {
-                        callBack_();
+                            if (callBack_ != null) {
+                                callBack_();
+                            }
+                        })
+                        .catch((error) => {
+                            if (errorCallBack != null) {
+                                errorCallBack(error);
+                            } else {
+                                this.popUpError(error);
+                            }
+                        });
+                })
+                .catch((error) => {
+                    if (errorCallBack != null) {
+                        errorCallBack(error);
+                    } else {
+                        this.popUpError(error);
                     }
                 });
-            });
         };
 
         if (filePath === null) {
@@ -117,13 +161,40 @@ class Core {
                 "CoralSCOP-LAT Project File",
                 "*.coral"
             );
-            this.selectFile(fileDialogRequest, (filePath_) => {
-                if (filePath_ === null) {
-                    navigationBar.enable();
-                    return;
+            this.selectFile(
+                fileDialogRequest,
+                (filePath_) => {
+                    if (filePath_ === null) {
+                        navigationBar.enable();
+                        return;
+                    }
+                    loadProject_(filePath_, callBack);
+                },
+                (error) => {
+                    if (errorCallBack != null) {
+                        errorCallBack(error);
+                    } else {
+                        const errorPopManager = new ErrorPopManager();
+                        errorPopManager.clear();
+                        errorPopManager.updateLargeText("Error");
+                        errorPopManager.updateText(
+                            `Please re-launch the application. Or report the issue to the developer via <a href="${Core.ISSUE_URL}" target="_blank">Github</a>`
+                        );
+                        errorPopManager.addButton("OK", "OK", () => {
+                            errorPopManager.hide();
+                            navigateTo("main_page.html");
+                        });
+
+                        let errorMsg =
+                            "Error Message:\n\n" +
+                            error.errorText +
+                            "\n\n" +
+                            error.errorTraceback;
+                        errorPopManager.updateTextBox(errorMsg);
+                        errorPopManager.show();
+                    }
                 }
-                loadProject_(filePath_, callBack);
-            });
+            );
         } else {
             loadProject_(filePath, callBack);
         }
@@ -145,7 +216,6 @@ class Core {
     }
 
     loadRecord(record) {
-        console.log("loading record:", record);
         // Clear all selected masks
         const maskSelector = new MaskSelector();
         maskSelector.clearSelection();
@@ -177,7 +247,7 @@ class Core {
      * }
      * @param {function} callBack
      */
-    save(callBack = null) {
+    save(callBack = null, errorCallBack = null) {
         const data = this.data.toJson();
 
         const categoryManager = new CategoryManager();
@@ -187,99 +257,130 @@ class Core {
         data["category_info"] = categoryInfo;
         data["status_info"] = statusInfo;
 
-        eel.save_data(data)(() => {
-            this.setDataModified(false);
-            if (callBack != null) {
-                callBack();
-            }
-        });
-    }
-
-    nextData(callBack = null) {
-        this.save(() => {
-            eel.get_next_data()((response) => {
-                if (response === null) {
-                    alert("Failed to load next data");
-                    return;
-                }
-
-                // Clear all selected masks
-                const maskSelector = new MaskSelector();
-                maskSelector.clearSelection();
-
-                // Clear all prompting masks
-                const maskCreator = new MaskCreator();
-                maskCreator.clearPrompts();
-
-                this.setData(Data.parseResponse(response));
-
-                this.dataHistoryManager = new HistoryManager(
-                    Core.DEFAULT_HISTORY_SIZE
-                );
-                this.showData();
-
+        eel.save_data(data)()
+            .then(() => {
                 if (callBack != null) {
                     callBack();
                 }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
             });
+    }
+
+    nextData(callBack = null, errorCallBack = null) {
+        this.save(() => {
+            eel.get_next_data()()
+                .then((response) => {
+                    if (response === null) {
+                        alert("Failed to load next data");
+                        return;
+                    }
+
+                    // Clear all selected masks
+                    const maskSelector = new MaskSelector();
+                    maskSelector.clearSelection();
+
+                    // Clear all prompting masks
+                    const maskCreator = new MaskCreator();
+                    maskCreator.clearPrompts();
+
+                    this.setData(Data.parseResponse(response));
+
+                    this.dataHistoryManager = new HistoryManager(
+                        Core.DEFAULT_HISTORY_SIZE
+                    );
+                    this.showData();
+
+                    if (callBack != null) {
+                        callBack();
+                    }
+                })
+                .catch((error) => {
+                    if (errorCallBack != null) {
+                        errorCallBack(error);
+                    } else {
+                        this.popUpError(error);
+                    }
+                });
         });
     }
 
-    prevData(callBack = null) {
+    prevData(callBack = null, errorCallBack = null) {
         this.save(() => {
-            eel.get_prev_data()((response) => {
-                if (response === null) {
-                    alert("Failed to load previous data");
-                    return;
-                }
+            eel.get_prev_data()()
+                .then((response) => {
+                    if (response === null) {
+                        alert("Failed to load previous data");
+                        return;
+                    }
 
-                // Clear all selected masks
-                const maskSelector = new MaskSelector();
-                maskSelector.clearSelection();
+                    // Clear all selected masks
+                    const maskSelector = new MaskSelector();
+                    maskSelector.clearSelection();
 
-                // Clear all prompting masks
-                const maskCreator = new MaskCreator();
-                maskCreator.clearPrompts();
+                    // Clear all prompting masks
+                    const maskCreator = new MaskCreator();
+                    maskCreator.clearPrompts();
 
-                this.setData(Data.parseResponse(response));
-                this.dataHistoryManager = new HistoryManager(
-                    Core.DEFAULT_HISTORY_SIZE
-                );
-                this.showData();
+                    this.setData(Data.parseResponse(response));
+                    this.dataHistoryManager = new HistoryManager(
+                        Core.DEFAULT_HISTORY_SIZE
+                    );
+                    this.showData();
 
-                if (callBack != null) {
-                    callBack();
-                }
-            });
+                    if (callBack != null) {
+                        callBack();
+                    }
+                })
+                .catch((error) => {
+                    if (errorCallBack != null) {
+                        errorCallBack(error);
+                    } else {
+                        this.popUpError(error);
+                    }
+                });
         });
     }
 
-    jumpData(idx, callBack = null) {
+    jumpData(idx, callBack = null, errorCallBack = null) {
         this.save(() => {
-            eel.get_data_by_idx(idx)((response) => {
-                if (response === null) {
-                    alert("Failed to load data");
-                    return;
-                }
+            eel.get_data_by_idx(idx)()
+                .then((response) => {
+                    if (response === null) {
+                        alert("Failed to load data");
+                        return;
+                    }
 
-                // Clear all selected masks
-                const maskSelector = new MaskSelector();
-                maskSelector.clearSelection();
+                    // Clear all selected masks
+                    const maskSelector = new MaskSelector();
+                    maskSelector.clearSelection();
 
-                // Clear all prompting masks
-                const maskCreator = new MaskCreator();
-                maskCreator.clearPrompts();
+                    // Clear all prompting masks
+                    const maskCreator = new MaskCreator();
+                    maskCreator.clearPrompts();
 
-                this.setData(Data.parseResponse(response));
-                this.dataHistoryManager = new HistoryManager(
-                    Core.DEFAULT_HISTORY_SIZE
-                );
-                this.showData();
+                    this.setData(Data.parseResponse(response));
+                    this.dataHistoryManager = new HistoryManager(
+                        Core.DEFAULT_HISTORY_SIZE
+                    );
+                    this.showData();
 
-                if (callBack != null) {
-                    callBack();
-                }
-            });
+                    if (callBack != null) {
+                        callBack();
+                    }
+                })
+                .catch((error) => {
+                    if (errorCallBack != null) {
+                        errorCallBack(error);
+                    } else {
+                        this.popUpError(error);
+                    }
+                });
         });
     }
 
@@ -297,16 +398,36 @@ class Core {
         topPanel.update();
     }
 
-    saveDataset(filePath, callBack = null) {
-        eel.save_dataset(filePath)(() => {
-            if (callBack != null) {
-                callBack();
-            }
-        });
+    saveDataset(filePath, callBack = null, errorCallBack = null) {
+        eel.save_dataset(filePath)()
+            .then(() => {
+                if (callBack != null) {
+                    callBack();
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
     }
 
-    createPromptedMask(prompts) {
-        return eel.create_mask(prompts)();
+    createPromptedMask(prompts, callBack = null, errorCallBack = null) {
+        eel.create_mask(prompts)()
+            .then((annotation) => {
+                if (callBack != null) {
+                    callBack(annotation);
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
     }
 
     setDataModified(modified) {
@@ -335,9 +456,11 @@ class Core {
             }
         }
 
-        const otherIds = await eel.get_data_ids_by_category_id(
-            category.getCategoryId()
-        )();
+        const otherIds = await eel
+            .get_data_ids_by_category_id(category.getCategoryId())()
+            .catch((error) => {
+                this.popUpError(error);
+            });
         for (const id of otherIds) {
             // Ignore the current data, since the data is not saved
             if (id === data.getIdx()) {
@@ -349,15 +472,23 @@ class Core {
         return imageIds;
     }
 
-    exportImages(outputDir, callBack = null) {
-        eel.export_images(outputDir)(() => {
-            if (callBack != null) {
-                callBack();
-            }
-        });
+    exportImages(outputDir, callBack = null, callBackError = null) {
+        eel.export_images(outputDir)()
+            .then(() => {
+                if (callBack != null) {
+                    callBack();
+                }
+            })
+            .catch((error) => {
+                if (callBackError != null) {
+                    callBackError(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
     }
 
-    exportAnnotatedImages(outputDir, callBack = null) {
+    exportAnnotatedImages(outputDir, callBack = null, errorCallBack = null) {
         this.getDataList(async (dataList) => {
             const annotatedDataInfoList = [];
             for (const data of dataList) {
@@ -372,36 +503,59 @@ class Core {
                     };
                     annotatedDataInfoList.push(annotatedDataInfo);
                 } catch (error) {
-                    console.error("Failed to export", data.getImageName());
-                    console.error(error);
+                    if (errorCallBack != null) {
+                        errorCallBack(error);
+                    } else {
+                        this.popUpError(error);
+                    }
                 }
             }
+            eel.export_annotated_images(outputDir, annotatedDataInfoList)()
+                .then(() => {
+                    if (callBack != null) {
+                        callBack();
+                    }
+                })
+                .catch((error) => {
+                    if (errorCallBack != null) {
+                        errorCallBack(error);
+                    } else {
+                        this.popUpError(error);
+                    }
+                });
+        });
+    }
 
-            eel.export_annotated_images(
-                outputDir,
-                annotatedDataInfoList
-            )(() => {
+    exportCOCO(outputPath, callBack = null, errorCallBack = null) {
+        eel.export_coco(outputPath)()
+            .then(() => {
                 if (callBack != null) {
                     callBack();
                 }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
             });
-        });
     }
 
-    exportCOCO(outputPath, callBack = null) {
-        eel.export_coco(outputPath)(() => {
-            if (callBack != null) {
-                callBack();
-            }
-        });
-    }
-
-    exportExcel(outputDir, callBack = null) {
-        eel.export_excel(outputDir)(() => {
-            if (callBack != null) {
-                callBack();
-            }
-        });
+    exportExcel(outputDir, callBack = null, errorCallBack = null) {
+        eel.export_excel(outputDir)()
+            .then(() => {
+                if (callBack != null) {
+                    callBack();
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
     }
 
     /**
@@ -415,7 +569,7 @@ class Core {
      * @param {string} outputDir
      * @param {function} callBack
      */
-    async exportCharts(outputDir, callBack = null) {
+    async exportCharts(outputDir, callBack = null, errorCallBack = null) {
         const statisticPage = new StatisticPage();
         statisticPage.update();
         const exportImageUrls = await statisticPage.getExportImageUrls();
@@ -431,27 +585,40 @@ class Core {
             requests.push(request);
         }
 
-        eel.export_charts(
-            outputDir,
-            requests
-        )(() => {
-            if (callBack != null) {
-                callBack();
-            }
-        });
+        eel.export_charts(outputDir, requests)()
+            .then(() => {
+                if (callBack != null) {
+                    callBack();
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
     }
 
-    getDataList(callBack = null) {
-        eel.get_data_list()((dataInfoList) => {
-            const dataList = [];
-            for (const dataInfo of dataInfoList) {
-                dataList.push(Data.parseResponse(dataInfo));
-            }
+    getDataList(callBack = null, errorCallBack = null) {
+        eel.get_data_list()()
+            .then((dataInfoList) => {
+                const dataList = [];
+                for (const dataInfo of dataInfoList) {
+                    dataList.push(Data.parseResponse(dataInfo));
+                }
 
-            if (callBack != null) {
-                callBack(dataList);
-            }
-        });
+                if (callBack != null) {
+                    callBack(dataList);
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
     }
 
     undo() {
@@ -474,5 +641,28 @@ class Core {
             return;
         }
         this.loadRecord(nextRecord);
+    }
+
+    popUpError(error, shownMessage = null) {
+        const errorPopManager = new ErrorPopManager();
+        errorPopManager.clear();
+        errorPopManager.updateLargeText("Error");
+        errorPopManager.updateText(
+            shownMessage
+                ? shownMessage
+                : `Please re-launch the application. Or report the issue to the developer via <a href="${Core.ISSUE_URL}" target="_blank">Github</a>`
+        );
+        errorPopManager.addButton("OK", "OK", () => {
+            errorPopManager.hide();
+        });
+
+        let errorMsg =
+            "Error Message:\n\n" +
+            error.errorText +
+            "\n\n" +
+            error.errorTraceback;
+        errorPopManager.updateTextBox(errorMsg);
+        errorPopManager.show();
+        console.error(error);
     }
 }

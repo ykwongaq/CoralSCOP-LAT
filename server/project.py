@@ -922,6 +922,8 @@ class ProjectExport:
 
         # Extract the project files
         temp_dir = os.path.join(project_folder, TEMP_LOAD_NAME)
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
         unzip_file(self.project_path, temp_dir)
 
         # Create images folder
@@ -934,8 +936,8 @@ class ProjectExport:
             image_path = os.path.join(project_image_folder, image_name)
             shutil.copy(image_path, image_folder)
 
-        # Zip back the project files
-        zip_file(temp_dir, self.project_path)
+        # Remove the temporary folder
+        shutil.rmtree(temp_dir)
 
     def export_annotated_images(self, output_dir: str, data_list: List[Dict]):
         """
