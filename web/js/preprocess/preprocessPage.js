@@ -189,8 +189,8 @@ class PreprocessPage {
             fileDialogRequest.setDefaultExt(".coral");
 
             // Ask user to select the project folder
-            eel.select_save_file(fileDialogRequest.toJson())((projectPath) => {
-                // If user does not select any folder, do nothing
+            const core = new Core();
+            core.selectSaveFile(fileDialogRequest, (projectPath) => {
                 if (projectPath === null) {
                     this.enableCreateProjectButton();
                     this.enableNavigationButton();
@@ -202,9 +202,8 @@ class PreprocessPage {
                 loadingPopManager.updateLargeText("Hold Tight!");
                 loadingPopManager.show();
                 loadingPopManager.updateButtonFn(() => {
-                    console.log("Quit button clicked.");
                     loadingPopManager.updateLargeText("Terminating...");
-                    eel.terminate_create_project_process()();
+                    core.terminateCreateProjectProcess();
                 });
 
                 /**
@@ -230,8 +229,51 @@ class PreprocessPage {
                 const config = this.configPage.getConfig();
                 createProjectRequest.setConfig(config);
 
-                eel.create_project(createProjectRequest.toJson())();
+                core.createProject(createProjectRequest);
             });
+            // eel.select_save_file(fileDialogRequest.toJson())((projectPath) => {
+            //     // If user does not select any folder, do nothing
+            //     if (projectPath === null) {
+            //         this.enableCreateProjectButton();
+            //         this.enableNavigationButton();
+            //         return;
+            //     }
+
+            //     // Configure the loading pop up window
+            //     const loadingPopManager = new LoadingPopManager();
+            //     loadingPopManager.updateLargeText("Hold Tight!");
+            //     loadingPopManager.show();
+            //     loadingPopManager.updateButtonFn(() => {
+            //         console.log("Quit button clicked.");
+            //         loadingPopManager.updateLargeText("Terminating...");
+            //         eel.terminate_create_project_process()();
+            //     });
+
+            //     /**
+            //      * Pass the selected images to the server side.
+            //      * From the server side, the following function will be called:
+            //      * 1. updateProgressPercentage
+            //      * 2. afterProjectCreation
+            //      */
+            //     const createProjectRequest = new CreateProjectRequest();
+            //     createProjectRequest.setOutputPath(projectPath);
+            //     const selectedImageNames =
+            //         this.imageSelector.getSelectedImageNames();
+            //     selectedImageNames.sort((a, b) => a.localeCompare(b));
+            //     for (const selectedImageName of selectedImageNames) {
+            //         const imageDom =
+            //             this.imageSelector.getImageDomByImageName(
+            //                 selectedImageName
+            //             );
+            //         const image_url = imageDom.src;
+            //         createProjectRequest.addInput(image_url, selectedImageName);
+            //     }
+
+            //     const config = this.configPage.getConfig();
+            //     createProjectRequest.setConfig(config);
+
+            //     eel.create_project(createProjectRequest.toJson())();
+            // });
         });
     }
 
@@ -364,28 +406,6 @@ class PreprocessPage {
     disableNavigationButton() {
         this.backMainPageButton.enabled = false;
     }
-}
-
-/**
- * This function will be called in the server side
- * Update the precentage text shown in the loading pop window
- * @param {number} percentage
- */
-eel.expose(updateProgressPercentage);
-function updateProgressPercentage(percentage) {
-    const loadingPopManager = new LoadingPopManager();
-    loadingPopManager.updatePercentage(percentage);
-}
-
-/**
- * This function will be called in the server side.
- * It will be called after the project creation process is done.
- * @param {Object} status
- */
-eel.expose(afterProjectCreation);
-function afterProjectCreation(status) {
-    const preprocessPage = new PreprocessPage();
-    preprocessPage.afterProjectCreation(status);
 }
 
 function main() {
