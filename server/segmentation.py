@@ -93,7 +93,9 @@ class CoralSegmentation:
         start_time = time.time()
         filtered_index_by_area = self.filter_by_area(masks, min_area)
         self.logger.info(f"Filter by area: {time.time() - start_time:.2f} seconds")
-        self.logger.info(f"Filtered result by area: {filtered_index_by_area}")
+        self.logger.info(
+            f"Remain {len(filtered_index_by_area)} masks after filtering by area: {filtered_index_by_area}"
+        )
 
         start_time = time.time()
         filtered_index_by_confidence = self.filter_by_confidence(masks, min_confidence)
@@ -101,20 +103,24 @@ class CoralSegmentation:
             f"Filter by confidence: {time.time() - start_time:.2f} seconds"
         )
         self.logger.info(
-            f"Filtered result by confidence: {filtered_index_by_confidence}"
+            f"Remain {len(filtered_index_by_confidence)} masks after filtering by confidence: {filtered_index_by_confidence}"
         )
 
         start_time = time.time()
         filtered_index_by_iou = self.filter_by_iou(masks, max_iou)
         self.logger.info(f"Filter by iou: {time.time() - start_time:.2f} seconds")
-        self.logger.info(f"Filtered result by iou: {filtered_index_by_iou}")
+        self.logger.info(
+            f"Remain {len(filtered_index_by_iou)} masks after filtering by iou: {filtered_index_by_iou}"
+        )
 
         filtered_index = (
             filtered_index_by_area
             & filtered_index_by_confidence
             & filtered_index_by_iou
         )
-        self.logger.info(f"Filtered result: {filtered_index}")
+        self.logger.info(
+            f"Remain {len(filtered_index)} masks after all filtering: {filtered_index}"
+        )
 
         filtered_indices = list(filtered_index)
         masks = [masks[idx] for idx in filtered_indices]
@@ -206,7 +212,7 @@ class CoralSegmentation:
 
         # Stack into a single 2D array of shape (N, -1)
         # This operation can take time for large H*W, but it's done once.
-        M = np.stack(flattened_masks, axis=0).astype(np.uint8)  # shape: (N, H*W)
+        M = np.stack(flattened_masks, axis=0).astype(np.float32)  # shape: (N, H*W)
 
         # Compute intersection for every pair via matrix multiplication:
         # intersection[i, j] = sum(M[i, :] * M[j, :])
@@ -235,7 +241,7 @@ class CoralSegmentation:
                 # Keep this mask
                 keep.append(idx)
                 # Suppress all masks that have IoU above threshold with this mask
-                to_suppress = iou_matrix[idx] > iou_threshold
+                to_suppress = iou_matrix[idx] >= iou_threshold
                 suppressed[to_suppress] = True
 
         # Sort kept indices back in ascending order to match typical indexing order
