@@ -410,31 +410,35 @@
                     <div class="float-bar" id="action-panel">
                         <div class="float-bar__inner">
                             <div class="float-bar__item">
-                                <div class="toggle-color-plate-popup toggle-fn">
+                                <div
+                                    class="toggle-color-plate-popup toggle-fn"
+                                    id="category-selector"
+                                >
                                     <div
                                         class="toggle-color-plate-popup__pop toggle-fn__hide"
                                     >
                                         <p
                                             class="toggle-color-plate-popup__label"
                                         >
-                                            Colour
+                                            Label
                                         </p>
                                         <div
                                             class="color-plate-list toggle-color-plate-popup__list"
-                                            id="color-selection-container"
                                         ></div>
                                     </div>
                                     <button
-                                        id="assign-label-toggle-button"
-                                        class="toggle-fn__btn toggle-color-plate-popup__button float-bar__button"
+                                        id="assign-category-toggle-button"
+                                        class="toggle-fn__btn toggle-color-plate-popup__button float-bar__button toggle-button"
                                     >
                                         <span
-                                            id="selected-label-color"
-                                            class="color-blk"
-                                        ></span>
-                                        <span id="selectedLabelColorText"
-                                            >Assign Label (C)</span
+                                            class="color-blk selected-category-box"
+                                            style="display: none"
                                         >
+                                            <span
+                                                class="label-sm-blk__text selected-category-text"
+                                            ></span>
+                                        </span>
+                                        <span>Assign Label (C)</span>
                                     </button>
                                 </div>
                             </div>
@@ -504,6 +508,34 @@
 
                     <div id="actionContainer-bar" class="float-bar">
                         <div class="float-bar__inner">
+                            <div
+                                class="toggle-color-plate-popup toggle-fn"
+                                id="category-selector-prompt"
+                            >
+                                <div
+                                    class="toggle-color-plate-popup__pop toggle-fn__hide"
+                                >
+                                    <p class="toggle-color-plate-popup__label">
+                                        Label
+                                    </p>
+                                    <div
+                                        class="color-plate-list toggle-color-plate-popup__list"
+                                    ></div>
+                                </div>
+                                <button
+                                    id="assign-category-toggle-button"
+                                    class="toggle-fn__btn toggle-color-plate-popup__button float-bar__button toggle-button"
+                                >
+                                    <span
+                                        class="color-blk selected-category-box"
+                                    >
+                                        <span
+                                            class="label-sm-blk__text selected-category-text"
+                                        ></span>
+                                    </span>
+                                    <span>Assign Label (C)</span>
+                                </button>
+                            </div>
                             <div class="float-bar__item">
                                 <div
                                     id="actionContainer"
@@ -793,6 +825,7 @@
         <script src="js/label/core.js"></script>
         <script src="js/label/viewPanel.js"></script>
         <script src="js/label/topPanel.js"></script>
+        <script src="js/label/categorySelector.js"></script>
         <script src="js/label/actionPanel.js"></script>
         <script src="js/label/statisticPage.js"></script>
         <script src="js/label/galleryPage.js"></script>

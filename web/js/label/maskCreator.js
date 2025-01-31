@@ -93,6 +93,14 @@ class MaskCreator {
             return;
         }
 
+        // Check is user select the prompt mask category
+        const actionPanel = new ActionPanel();
+        const promptCategorySelector = actionPanel.getPromptCategorySelector();
+        const selectedCategory = promptCategorySelector.getSelectedCategory();
+        if (selectedCategory) {
+            this.mask.setCategory(selectedCategory);
+        }
+
         // Record data
         const core = new Core();
         core.recordData();

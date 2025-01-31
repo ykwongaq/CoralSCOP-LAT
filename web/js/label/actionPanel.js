@@ -7,20 +7,26 @@ class ActionPanel {
 
         this.actionPanelDom = actionPanel;
         this.actionContainerDom = actionContainerDom;
-        this.colorSelectionContainer = this.actionPanelDom.querySelector(
-            "#color-selection-container"
-        );
-        this.selectedLabelColor = this.actionPanelDom.querySelector(
-            "#selected-label-color"
-        );
+
+        this.categorySelectorDom =
+            this.actionPanelDom.querySelector("#category-selector");
         this.labelSmallButtonTemplate = this.actionPanelDom.querySelector(
             "#label-small-btn-template"
         );
-        this.labelToggleButton = this.actionPanelDom.querySelector(
-            "#assign-label-toggle-button"
+        this.categorySelector = new CategorySelector(
+            this.categorySelectorDom,
+            this.labelSmallButtonTemplate
         );
 
         this.removeButton = this.actionPanelDom.querySelector("#remove-button");
+
+        this.promptCategorySelectorDom = this.actionContainerDom.querySelector(
+            "#category-selector-prompt"
+        );
+        this.promptCategorySelector = new CategorySelector(
+            this.promptCategorySelectorDom,
+            this.labelSmallButtonTemplate
+        );
 
         this.addMaskButton =
             this.actionPanelDom.querySelector("#add-mask-button");
@@ -41,7 +47,9 @@ class ActionPanel {
     }
 
     init() {
-        this.initLabelToggleButton();
+        // this.initLabelToggleButton();
+        this.initCategorySelector();
+        this.initPromptCategorySelector();
         this.initRemoveButton();
         this.initAddMask();
         this.initBackButton();
@@ -49,7 +57,30 @@ class ActionPanel {
         this.initRedoButton();
     }
 
-    initLabelToggleButton() {
+    initCategorySelector() {
+        const toggleButton = this.categorySelector.getToggleButton();
+
+        this.categorySelector.addCategorySelectionCallback((category) => {
+            // Assign category to the selected masks
+            const maskSelector = new MaskSelector();
+            const selectedMasks = maskSelector.getSelectedMasks();
+
+            if (selectedMasks.size > 0) {
+                // Save record
+                const core = new Core();
+                core.recordData();
+            }
+
+            for (const mask of selectedMasks) {
+                mask.setCategory(category);
+            }
+            maskSelector.clearSelection();
+
+            // Update canvas visualization
+            const canvas = new Canvas();
+            canvas.updateMasks();
+        });
+
         // Register the shortcut for the label toggle button.
         // We need ActionManager to handle the shortcut because
         // different state will have different short cut operation.
@@ -58,8 +89,33 @@ class ActionPanel {
             ActionManager.DEFAULT_STATE,
             "c",
             (event) => {
-                const labelPanel = new LabelPanel();
-                this.labelToggleButton.click();
+                toggleButton.click();
+            }
+        );
+        document.addEventListener("keydown", (event) => {
+            if (actionManager.haveRegisteredDocumentEvent(event)) {
+                return;
+            }
+            const key = event.key.toLowerCase();
+            if (key === "c") {
+                actionManager.handleShortCut(key, event);
+                actionManager.addRegisteredDocumentEvent(event);
+            }
+        });
+    }
+
+    initPromptCategorySelector() {
+        const toggleButton = this.promptCategorySelector.getToggleButton();
+
+        // Register the shortcut for the label toggle button.
+        // We need ActionManager to handle the shortcut because
+        // different state will have different short cut operation.
+        const actionManager = new ActionManager();
+        actionManager.registerShortCut(
+            ActionManager.STATE_CREATE_MASK,
+            "c",
+            (event) => {
+                toggleButton.click();
             }
         );
         document.addEventListener("keydown", (event) => {
@@ -339,91 +395,15 @@ class ActionPanel {
     }
 
     updateCategoryButtons() {
-        this.clearCategoryButtons();
-        const categoryManager = new CategoryManager();
-
-        const labelPanel = new LabelPanel();
-        const currentType = labelPanel.getCurrentType();
-
-        // Get the category list based on the current type
-        let categoryList = [];
-        if (currentType === LabelPanel.TYPE_HEALTHY) {
-            categoryList = categoryManager.getCategoryListByStatus(
-                CategoryManager.STATUS_HEALTHY
-            );
-        } else if (currentType === LabelPanel.TYPE_BLEACHED) {
-            categoryList = categoryManager.getCategoryListByStatus(
-                CategoryManager.STATUS_BLEACHED
-            );
-        } else if (currentType === LabelPanel.TYPE_DEAD) {
-            categoryList = categoryManager.getCategoryListByStatus(
-                CategoryManager.STATUS_DEAD
-            );
-        } else {
-            console.error("Invalid category type: ", currentType);
-            return;
-        }
-
-        for (const category of categoryList) {
-            const button = this.createCategoryButton(category);
-            this.colorSelectionContainer.appendChild(button);
-        }
+        this.categorySelector.updateCategoryButtons();
+        this.promptCategorySelector.updateCategoryButtons([new Category(-1)]);
     }
 
-    clearCategoryButtons() {
-        this.colorSelectionContainer.innerHTML = "";
+    getCategorySelector() {
+        return this.categorySelector;
     }
 
-    /**
-     * Create a category button based on the given category
-     * @param {Category} category
-     * @returns {HTMLDivElement} labelSmallButton
-     */
-    createCategoryButton(category) {
-        const labelSmallButton = document.importNode(
-            this.labelSmallButtonTemplate.content,
-            true
-        );
-        const colorBoxSmallButton = labelSmallButton.querySelector(".colorBox");
-        const labelTextSmallButton =
-            labelSmallButton.querySelector(".labelText");
-
-        const maskColor = category.getMaskColor();
-        const borderColor = category.getBorderColor();
-        const textColor = category.getTextColor();
-        colorBoxSmallButton.style.backgroundColor = maskColor;
-        colorBoxSmallButton.style.borderColor = borderColor;
-        labelTextSmallButton.innerHTML = category.getIconName();
-        labelTextSmallButton.style.color = textColor;
-
-        colorBoxSmallButton.addEventListener("click", () => {
-            // Assign category to the selected masks
-            const maskSelector = new MaskSelector();
-            const selectedMasks = maskSelector.getSelectedMasks();
-
-            console.log(selectedMasks);
-            if (selectedMasks.size > 0) {
-                // Save record
-                console.log("Save record");
-                const core = new Core();
-                core.recordData();
-            }
-
-            for (const mask of selectedMasks) {
-                mask.setCategory(category);
-            }
-            maskSelector.clearSelection();
-
-            // Update canvas visualization
-            const canvas = new Canvas();
-            canvas.updateMasks();
-
-            const toggleFn = colorBoxSmallButton.closest(".toggle-fn");
-            if (toggleFn && toggleFn.ToggleInput) {
-                toggleFn.ToggleInput._hide();
-            }
-        });
-
-        return labelSmallButton;
+    getPromptCategorySelector() {
+        return this.promptCategorySelector;
     }
 }
