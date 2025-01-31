@@ -123,6 +123,18 @@ class Canvas {
                 canvasY
             );
 
+            const imageHeight = this.data.getImageHeight();
+            const imageWidth = this.data.getImageWidth();
+
+            if (
+                imageX < 0 ||
+                imageX >= imageWidth ||
+                imageY < 0 ||
+                imageY >= imageHeight
+            ) {
+                return;
+            }
+
             const actionManager = new ActionManager();
             actionManager.leftClickPixel(imageX, imageY);
         });
@@ -138,6 +150,18 @@ class Canvas {
                 canvasX,
                 canvasY
             );
+
+            const imageHeight = this.data.getImageHeight();
+            const imageWidth = this.data.getImageWidth();
+
+            if (
+                imageX < 0 ||
+                imageX >= imageWidth ||
+                imageY < 0 ||
+                imageY >= imageHeight
+            ) {
+                return;
+            }
 
             const actionManager = new ActionManager();
             actionManager.rightClickPixel(imageX, imageY);
