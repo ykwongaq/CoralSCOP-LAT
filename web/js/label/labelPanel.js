@@ -72,7 +72,7 @@ class LabelPanel {
         this.opacityInput.addEventListener("input", function (event) {
             // Ensure that the input value is a number between 0 and 100
             if (isNaN(this.value)) {
-                this.value = 60;
+                this.value = 40;
             }
 
             if (this.value > 100) {

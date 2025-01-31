@@ -29,7 +29,7 @@ class Canvas {
 
         // Mask Display
         this.showMask = true;
-        this.maskOpacity = 0.6;
+        this.maskOpacity = 0.4;
 
         // Image
         this.imageWidth = 0;
