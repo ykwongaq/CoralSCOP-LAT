@@ -78,26 +78,10 @@ css
 ```
 
 ## Todo
-
-1. Continue button from project creation page to labeling page
-2. Undo and Redo
-3. Shortcuts
-4. Quick Start
-5. Rearrange id after delete
-6. Smart exit alert
-7. Statistic Page - Project level statistic
-8. Create mask with category
-9. Prevent multiple click on the navigation bar
-10. Error handling
-11. Clearer shortcut
-12. Tutorial
-13. Pop up problem in mac
-14. Message in creating project
-15. Performance
-16. Add loading project pop up
-17. Solid Boarder
-18. User can set the name of the saved file
-19. Accelerate iou calculation
-20. Check why creat project is so slow
-21. Handle statistic graph when no internet
+1. Quick Start
+2. Rearrange id after delete
+3. Smart exit alert
+4. Statistic Page - Project level statistic
+5. Tutorial
+6. Pop up problem in mac
 ```
