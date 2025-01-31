@@ -18,7 +18,8 @@ class CategoryManager {
     static COLOR_LIST = [
         "#000000",
         "#F6C3CB",
-        "#EB361C",
+        // "#EB361C",
+        "#FFA500",
         "#225437",
         "#F7D941",
         "#73FBFE",

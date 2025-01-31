@@ -14,6 +14,7 @@ class Canvas {
         this.imageCache = new Image();
         this.maskCache = new Image();
         this.textCache = new Image();
+        this.borderCache = new Image();
         this.promptingMaskCache = new Image();
 
         // View control
@@ -227,6 +228,7 @@ class Canvas {
             this.ctx.globalAlpha = this.maskOpacity;
             this.ctx.drawImage(this.maskCache, 0, 0);
             this.ctx.globalAlpha = 1.0;
+            this.ctx.drawImage(this.borderCache, 0, 0);
             this.ctx.drawImage(this.textCache, 0, 0);
         }
 
@@ -241,6 +243,7 @@ class Canvas {
 
     updateMasks() {
         this.drawMasks();
+        this.drawBorderes();
         this.drawTexts();
     }
 
@@ -283,15 +286,29 @@ class Canvas {
 
         // Put the modified image data back to the canvas
         maskCtx.putImageData(imageData, 0, 0);
+        this.maskCache = new Image();
+        this.maskCache.src = maskCanvas.toDataURL();
+    }
 
-        const radius = Math.min(this.imageWidth, this.imageHeight) * 0.003;
+    drawBorderes() {
+        const borderCanvas = document.createElement("canvas");
+        const borderCtx = borderCanvas.getContext("2d");
+        borderCanvas.width = this.imageWidth;
+        borderCanvas.height = this.imageHeight;
+
+        const masks = this.data.getMasks();
+        const imageData = borderCtx.getImageData(
+            0,
+            0,
+            this.imageWidth,
+            this.imageHeight
+        );
+        const data = imageData.data; // This is a flat array of [r, g, b, a, r, g, b, a, ...]
+
+        const radius = Math.min(this.imageWidth, this.imageHeight) * 0.0015;
         // Draw the border
         for (const mask of masks) {
             if (!mask.shouldDisplay()) {
-                continue;
-            }
-
-            if (!mask.getCategory().isBleached()) {
                 continue;
             }
 
@@ -313,16 +330,18 @@ class Canvas {
                     );
 
                     if (isBorder) {
-                        maskCtx.beginPath();
-                        maskCtx.arc(x, y, radius, 0, 2 * Math.PI); // 2.5 radius for 5px diameter
-                        maskCtx.fillStyle = mask.getCategory().getBorderColor();
-                        maskCtx.fill();
+                        borderCtx.beginPath();
+                        borderCtx.arc(x, y, radius, 0, 2 * Math.PI); // 2.5 radius for 5px diameter
+                        borderCtx.fillStyle = mask
+                            .getCategory()
+                            .getBorderColor();
+                        borderCtx.fill();
                     }
                 }
             }
         }
-        this.maskCache = new Image();
-        this.maskCache.src = maskCanvas.toDataURL();
+        this.borderCache = new Image();
+        this.borderCache.src = borderCanvas.toDataURL();
     }
 
     drawTexts() {
