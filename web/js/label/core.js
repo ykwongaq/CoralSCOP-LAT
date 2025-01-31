@@ -166,6 +166,7 @@ class Core {
                 (filePath_) => {
                     if (filePath_ === null) {
                         navigationBar.enable();
+                        navigateTo("main_page.html");
                         return;
                     }
                     loadProject_(filePath_, callBack);
