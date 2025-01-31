@@ -176,14 +176,14 @@ class Server:
                     )
                     continue
 
-                if os.path.exists(file_path):
-                    confirm = messagebox.askyesno(
-                        "File Exists",
-                        f"The file '{os.path.basename(file_path)}' already exists. Do you want to overwrite it?",
-                    )
+                # if os.path.exists(file_path):
+                #     confirm = messagebox.askyesno(
+                #         "File Exists",
+                #         f"The file '{os.path.basename(file_path)}' already exists. Do you want to overwrite it?",
+                #     )
 
-                    if not confirm:
-                        continue
+                #     if not confirm:
+                #         continue
 
                 self.logger.info(f"Selected save file: {file_path}")
                 return file_path
