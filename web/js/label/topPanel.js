@@ -38,8 +38,13 @@ class TopPanel {
             ActionManager.DEFAULT_STATE,
             "d",
             (event) => {
-                const labelPanel = new LabelPanel();
-                // Check if the input is not in the search input or add category input
+                this.nextImageButton.click();
+            }
+        );
+        actionManager.registerShortCut(
+            ActionManager.STATE_CREATE_MASK,
+            "d",
+            (event) => {
                 this.nextImageButton.click();
             }
         );
@@ -72,8 +77,13 @@ class TopPanel {
             ActionManager.DEFAULT_STATE,
             "a",
             (event) => {
-                const labelPanel = new LabelPanel();
-                // Check if the input is not in the search input or add category input
+                this.prevImageButton.click();
+            }
+        );
+        actionManager.registerShortCut(
+            ActionManager.STATE_CREATE_MASK,
+            "a",
+            (event) => {
                 this.prevImageButton.click();
             }
         );
