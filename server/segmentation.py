@@ -5,7 +5,7 @@ import numpy as np
 import torch
 
 from .segment_anything import SamAutomaticMaskGenerator, sam_model_registry
-from .util.coco import encode_to_coco_mask, decode_coco_mask
+from .util.coco import numpy_mask_to_rle_mask, decode_rle_mask
 from multiprocessing import Pool
 
 from typing import List, Dict, Set
@@ -61,7 +61,7 @@ class CoralSegmentation:
         start_time = time.time()
         masks = self.mask_generator.generate(image)
         for idx, mask in enumerate(masks):
-            mask["segmentation"] = encode_to_coco_mask(mask["segmentation"] > 0)
+            mask["segmentation"] = numpy_mask_to_rle_mask(mask["segmentation"] > 0)
             mask["id"] = idx
             mask["iscrowd"] = 0
             mask["category_id"] = -1
@@ -136,7 +136,7 @@ class CoralSegmentation:
             return set()
 
         def decode_and_compute_area(annotation):
-            mask = decode_coco_mask(annotation["segmentation"])
+            mask = decode_rle_mask(annotation["segmentation"])
             area = np.sum(mask)
             return area
 
@@ -173,7 +173,7 @@ class CoralSegmentation:
         Filter out the masks which have iou lower than the iou limit
         """
         masks = [
-            decode_coco_mask(annotation["segmentation"]) for annotation in annotations
+            decode_rle_mask(annotation["segmentation"]) for annotation in annotations
         ]
         return set(self.filter_masks(masks, iou_limit))
 

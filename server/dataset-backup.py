@@ -10,7 +10,7 @@ from typing import Dict, List, Set, Type, Set
 import numpy as np
 from PIL import Image
 
-from .util.coco import decode_coco_mask
+from .util.coco import decode_rle_mask
 from .util.general import time_it
 from .util.json import load_json, save_json
 
@@ -87,7 +87,7 @@ class DataFilter:
             return set()
 
         def decode_and_compute_area(annotation):
-            mask = decode_coco_mask(annotation["segmentation"])
+            mask = decode_rle_mask(annotation["segmentation"])
             area = np.sum(mask)
             return area
 
@@ -142,7 +142,7 @@ class DataFilter:
         self, annotations: List, iou_limit: float, data: Type["Data"]
     ) -> Set:
         def decode_mask(annotation):
-            return decode_coco_mask(annotation["segmentation"])
+            return decode_rle_mask(annotation["segmentation"])
 
         # with ThreadPoolExecutor() as executor:
         #     masks = list(executor.map(decode_mask, annotations))
@@ -227,7 +227,7 @@ class Data:
     def update_iou_matrix(self):
         masks = []
         for annotation in self.json_item["annotations"]:
-            mask = decode_coco_mask(annotation["segmentation"])
+            mask = decode_rle_mask(annotation["segmentation"])
             masks.append(mask)
         self.iou_matrix = calculate_iou_matrix(masks)
 

@@ -4,7 +4,15 @@ from typing import Dict, List
 import cv2
 
 
-def coco_mask_to_rle(segmentation: Dict) -> List[int]:
+def is_rel_encoding(segmentation: Dict) -> bool:
+    return "counts" in segmentation and "size" in segmentation
+
+
+def is_polygon_encoding(segmentation: List) -> bool:
+    return type(segmentation) == list
+
+
+def rle_mask_to_rle_vis_encoding(segmentation: Dict) -> List[int]:
     arr = coco_mask.decode(segmentation)
 
     # Flatten the 2D array to a 1D array
@@ -28,7 +36,7 @@ def coco_mask_to_rle(segmentation: Dict) -> List[int]:
         return np.insert(run_lengths, 0, 0).tolist()
 
 
-def encode_to_coco_mask(mask: np.ndarray) -> Dict:
+def numpy_mask_to_rle_mask(mask: np.ndarray) -> Dict:
     mask = mask.astype(np.uint8)
     mask = np.asfortranarray(mask)
     rle = coco_mask.encode(mask)
@@ -38,7 +46,7 @@ def encode_to_coco_mask(mask: np.ndarray) -> Dict:
     return rle
 
 
-def decode_coco_mask(segmentation: Dict) -> np.ndarray:
+def decode_rle_mask(segmentation: Dict) -> np.ndarray:
     mask = coco_mask.decode(segmentation)
     return mask
 
@@ -86,8 +94,8 @@ def to_coco_annotation(mask: np.ndarray) -> Dict:
     return annotation
 
 
-def coco_rle_to_coco_poly(rle: Dict) -> List[int]:
-    mask = decode_coco_mask(rle)
+def rle_mask_to_poly_mask(rle: Dict) -> List[int]:
+    mask = decode_rle_mask(rle)
     # Find contours using OpenCV
     contours, _ = cv2.findContours(
         mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
@@ -103,3 +111,17 @@ def coco_rle_to_coco_poly(rle: Dict) -> List[int]:
             polygons.append(polygon)
 
     return polygons
+
+
+def poly_mask_to_rle_mask(polygons: List[List[int]], height: int, width: int) -> Dict:
+    mask = poly_mask_to_numpy_mask(polygons, height, width)
+    return numpy_mask_to_rle_mask(mask)
+
+
+def poly_mask_to_numpy_mask(
+    polygons: List[List[int]], height: int, width: int
+) -> np.ndarray:
+    mask = np.zeros((height, width), dtype=np.uint8)
+    for encoded_rle in coco_mask.frPyObjects(polygons, height, width):
+        mask = np.maximum(mask, coco_mask.decode(encoded_rle))
+    return mask

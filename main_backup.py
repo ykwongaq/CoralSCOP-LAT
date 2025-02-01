@@ -45,7 +45,11 @@ from server.dataset import Data, DataFilter, Dataset, calculate_iou_matrix
 from server.embedding import EmbeddingGenerator
 from server.maskEiditor import MaskEidtor
 from server.segmentation import CoralSegmentation
-from server.util.coco import coco_mask_to_rle, encode_to_coco_mask, decode_coco_mask
+from server.util.coco import (
+    rle_mask_to_rle_vis_encoding,
+    numpy_mask_to_rle_mask,
+    decode_rle_mask,
+)
 from server.util.general import (
     decode_image_url,
     get_resource_path,
@@ -154,7 +158,7 @@ class PreprocessServer:
         start_time = time.time()
         masks = []
         for annotation in annotations:
-            mask = decode_coco_mask(annotation["segmentation"])
+            mask = decode_rle_mask(annotation["segmentation"])
             masks.append(mask)
         iou_matrix = calculate_iou_matrix(masks)
         output_json["iou_matrix"] = iou_matrix.tolist()
@@ -204,7 +208,7 @@ class LabelServe:
         self.mask_editor.add_input(x, y, label)
         mask = self.mask_editor.infer_mask()
         annotation = gen_mask_json(mask)
-        rle = coco_mask_to_rle(annotation["segmentation"])
+        rle = rle_mask_to_rle_vis_encoding(annotation["segmentation"])
         annotation["segmentation"]["counts_number"] = rle
 
         return_item = {}
@@ -218,7 +222,7 @@ class LabelServe:
         self.mask_editor.undo_input()
         mask = self.mask_editor.infer_mask()
         annotation = gen_mask_json(mask)
-        rle = coco_mask_to_rle(annotation["segmentation"])
+        rle = rle_mask_to_rle_vis_encoding(annotation["segmentation"])
         annotation["segmentation"]["counts_number"] = rle
 
         return_item = {}
@@ -394,7 +398,7 @@ def get_data(idx: int):
     annotations = copied_json_item["annotations"]
     # Add the counts_number of the javaside
     for annotation in annotations:
-        mask = coco_mask_to_rle(annotation["segmentation"])
+        mask = rle_mask_to_rle_vis_encoding(annotation["segmentation"])
         annotation["segmentation"]["counts_number"] = mask
     copied_json_item["annotations"] = annotations
 

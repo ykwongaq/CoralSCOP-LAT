@@ -11,7 +11,7 @@ from .maskCreator import MaskCreator, Prompt
 from .util.general import get_resource_path
 from .project import ProjectCreator, ProjectLoader, ProjectExportor, ProjectSaver
 from .dataset import Dataset, Data
-from .util.coco import to_coco_annotation, coco_mask_to_rle
+from .util.coco import to_coco_annotation, rle_mask_to_rle_vis_encoding
 from .util.requests import FileDialogRequest, ProjectCreateRequest
 
 from typing import Dict, List, Tuple
@@ -401,7 +401,7 @@ class Server:
         mask = self.mask_creator.create_mask(prompts)
         annotation = to_coco_annotation(mask)
         annotation["category_id"] = -2  # Category id for prompted mask
-        annotation["rle"] = coco_mask_to_rle(annotation["segmentation"])
+        annotation["rle"] = rle_mask_to_rle_vis_encoding(annotation["segmentation"])
 
         return annotation
 

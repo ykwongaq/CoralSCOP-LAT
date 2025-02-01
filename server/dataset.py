@@ -2,7 +2,7 @@ import numpy as np
 import copy
 
 from typing import Dict, List
-from .util.coco import coco_mask_to_rle
+from .util.coco import rle_mask_to_rle_vis_encoding
 
 
 class Data:
@@ -69,7 +69,7 @@ class Data:
         # Convert the segmentation mask encoding to RLE for front end visualization
         segmentation = copy.deepcopy(self.segmentation)
         for annotation in segmentation["annotations"]:
-            annotation["rle"] = coco_mask_to_rle(annotation["segmentation"])
+            annotation["rle"] = rle_mask_to_rle_vis_encoding(annotation["segmentation"])
 
         return {
             "image_name": self.image_name,

@@ -2,7 +2,7 @@ from .imageJson import ImageJson
 from .annotationJson import AnnotationJson
 from .categoryJson import CategoryJson
 from typing import List
-from ..util.coco import coco_rle_to_coco_poly
+from ..util.coco import rle_mask_to_poly_mask
 
 
 class COCOJson:
@@ -32,7 +32,7 @@ class COCOJson:
 
         # Convert coco rle to coco poly
         for annotation in annotations:
-            annotation["segmentation"] = coco_rle_to_coco_poly(
+            annotation["segmentation"] = rle_mask_to_poly_mask(
                 annotation["segmentation"]
             )
 
