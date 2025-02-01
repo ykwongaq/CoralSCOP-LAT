@@ -22,6 +22,8 @@ class ActionState {
             return;
         }
 
+        event.preventDefault();
+
         if (key in this.shortCutsDict) {
             this.shortCutsDict[key](event);
         }
