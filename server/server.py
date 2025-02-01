@@ -9,10 +9,10 @@ from .segmentation import CoralSegmentation
 # from .maskEiditor import MaskEidtor
 from .maskCreator import MaskCreator, Prompt
 from .util.general import get_resource_path
-from .project import ProjectCreator, ProjectCreateRequest, ProjectLoader, ProjectExport
+from .project import ProjectCreator, ProjectLoader, ProjectExportor, ProjectSaver
 from .dataset import Dataset, Data
 from .util.coco import to_coco_annotation, coco_mask_to_rle
-from .util.requests import FileDialogRequest
+from .util.requests import FileDialogRequest, ProjectCreateRequest
 
 from typing import Dict, List, Tuple
 
@@ -361,10 +361,8 @@ class Server:
 
         self.logger.info(f"Saving the dataset to {output_path} ...")
 
-        project_creator = ProjectCreator(
-            self.embeddings_generator, self.coral_segmentation
-        )
-        project_creator.save_dataset(self.dataset, self.get_project_path(), output_path)
+        project_saver = ProjectSaver()
+        project_saver.save_dataset(self.dataset, self.get_project_path(), output_path)
 
     def get_project_path(self) -> str:
         return self.project_path
