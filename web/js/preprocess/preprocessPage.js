@@ -199,9 +199,13 @@ class PreprocessPage {
 
                 // Configure the loading pop up window
                 const loadingPopManager = new LoadingPopManager();
-                loadingPopManager.updateLargeText("Hold Tight!");
+                loadingPopManager.clear();
+                loadingPopManager.updateLargeText(
+                    LoadingPopManager.DEFAULT_TITLE
+                );
+                loadingPopManager.updateText(LoadingPopManager.DEFAULT_CONTENT);
                 loadingPopManager.show();
-                loadingPopManager.updateButtonFn(() => {
+                loadingPopManager.addButton("quit-button", "Quit", () => {
                     loadingPopManager.updateLargeText("Terminating...");
                     core.terminateCreateProjectProcess();
                 });
@@ -231,49 +235,6 @@ class PreprocessPage {
 
                 core.createProject(createProjectRequest);
             });
-            // eel.select_save_file(fileDialogRequest.toJson())((projectPath) => {
-            //     // If user does not select any folder, do nothing
-            //     if (projectPath === null) {
-            //         this.enableCreateProjectButton();
-            //         this.enableNavigationButton();
-            //         return;
-            //     }
-
-            //     // Configure the loading pop up window
-            //     const loadingPopManager = new LoadingPopManager();
-            //     loadingPopManager.updateLargeText("Hold Tight!");
-            //     loadingPopManager.show();
-            //     loadingPopManager.updateButtonFn(() => {
-            //         console.log("Quit button clicked.");
-            //         loadingPopManager.updateLargeText("Terminating...");
-            //         eel.terminate_create_project_process()();
-            //     });
-
-            //     /**
-            //      * Pass the selected images to the server side.
-            //      * From the server side, the following function will be called:
-            //      * 1. updateProgressPercentage
-            //      * 2. afterProjectCreation
-            //      */
-            //     const createProjectRequest = new CreateProjectRequest();
-            //     createProjectRequest.setOutputPath(projectPath);
-            //     const selectedImageNames =
-            //         this.imageSelector.getSelectedImageNames();
-            //     selectedImageNames.sort((a, b) => a.localeCompare(b));
-            //     for (const selectedImageName of selectedImageNames) {
-            //         const imageDom =
-            //             this.imageSelector.getImageDomByImageName(
-            //                 selectedImageName
-            //             );
-            //         const image_url = imageDom.src;
-            //         createProjectRequest.addInput(image_url, selectedImageName);
-            //     }
-
-            //     const config = this.configPage.getConfig();
-            //     createProjectRequest.setConfig(config);
-
-            //     eel.create_project(createProjectRequest.toJson())();
-            // });
         });
     }
 

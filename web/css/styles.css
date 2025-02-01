@@ -1555,9 +1555,9 @@ html:has(#confirm-button:not(.hidden)) #default-bar .float-bar__inner {
     color: var(--text-text-primary2);
     font-size: 48px;
 }
-.modal-pop:not(.is-count) .modal-pop__number {
+/* .modal-pop:not(.is-count) .modal-pop__number {
     display: none;
-}
+} */
 .modal-pop__lg-text {
     color: var(--text-text-primary2);
     font-size: 36px;
@@ -1598,11 +1598,11 @@ html:has(#confirm-button:not(.hidden)) #default-bar .float-bar__inner {
 .modal-pop__row {
     display: flex;
     justify-content: center;
-    margin-top: 40px;
+    margin-top: 20px;
 }
-.loading-pop:not(.is-count) .modal-pop__row {
+/* .loading-pop:not(.is-count) .modal-pop__row {
     display: none;
-}
+} */
 .modal-pop .button {
     width: 158px;
     margin: 5px;

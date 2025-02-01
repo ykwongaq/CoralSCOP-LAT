@@ -250,7 +250,7 @@
                 </div>
             </div>
 
-            <div id="loading-pop" class="loading-pop modal-pop is-count">
+            <div id="loading-pop" class="loading-pop modal-pop">
                 <div class="loading-pop__inner modal-pop__inner">
                     <img
                         class="loading-pop__loading modal-pop__loading"
@@ -262,21 +262,23 @@
                         class="loading-pop__number modal-pop__number"
                     ></p>
                     <p
-                        id="loading-pop-text"
+                        id="loading-pop-title"
                         class="loading-pop__lg-text modal-pop__lg-text"
                     >
                         Hold Tight!
                     </p>
-                    <p class="loading-pop__text modal-pop__text">
+                    <p
+                        class="loading-pop__text modal-pop__text"
+                        id="loading-pop-content"
+                    >
                         We're brewing up something amazing. It might take a few
                         minutes, so sit back and relax. Better not to leave this
                         page. Thanks for your patience! 😊
                     </p>
-                    <div class="loading-pop__row modal-pop__row">
-                        <button id="loading-pop-quit" class="button">
-                            Quit
-                        </button>
-                    </div>
+                    <div
+                        class="modal-pop__row"
+                        id="loading-pop-button-container"
+                    ></div>
                 </div>
             </div>
 
@@ -287,13 +289,22 @@
                         class="modal-pop__lg-text"
                     ></p>
                     <p id="general-pop-text" class="modal-pop__text"></p>
-                    <div id="button-container" class="modal-pop__row">
-                        <!-- <button id="general-pop-button" class="button">
-                            OK
-                        </button> -->
-                    </div>
+                    <div id="button-container" class="modal-pop__row"></div>
                 </div>
             </div>
+            <div id="error-pop" class="modal-pop">
+                <div class="modal-pop__inner">
+                    <p id="error-pop-large-text" class="modal-pop__lg-text"></p>
+                    <p id="error-pop-text" class="modal-pop__text"></p>
+                    <textarea
+                        id="error-pop-textarea"
+                        class="model-pop__textarea"
+                        readonly
+                    ></textarea>
+                    <div id="button-container" class="modal-pop__row"></div>
+                </div>
+            </div>
+
             <div id="loading-pop-backdrop" class="modal-pop-backdrop"></div>
         </div>
         <script src="./js/slider.js"></script>

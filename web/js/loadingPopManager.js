@@ -1,43 +1,62 @@
 class LoadingPopManager {
+    static DEFAULT_TITLE = "Hold Tight!";
+    static DEFAULT_CONTENT =
+        "We're brewing up something amazing. It might take a few minutes, so sit back and relax. Better not to leave this page. Thanks for your patience! 😊";
+
     constructor() {
         if (LoadingPopManager.instance) {
             return LoadingPopManager.instance;
         }
         LoadingPopManager.instance = this;
         this.loadingWindow = document.getElementById("loading-pop");
-        this.loadindPercentage = this.loadingWindow.querySelector(
+        this.loadingPercentage = this.loadingWindow.querySelector(
             "#loading-percentage"
         );
         this.loadingLargeText =
-            this.loadingWindow.querySelector("#loading-pop-text");
-        this.quitButton = this.loadingWindow.querySelector("#loading-pop-quit");
-        // this.loadingIcon = document.getElementById("loading-pop");
-        // this.loadindPercentage = document.getElementById("loading-percentage");
-        // this.loadingLargeText = document.getElementById("loading-pop-text");
-        // this.quitButton = document.getElementById("loading-pop-quit");
-        this.fn = null;
+            this.loadingWindow.querySelector("#loading-pop-title");
+        this.loadingText = this.loadingWindow.querySelector(
+            "#loading-pop-content"
+        );
 
-        // this.launchCount = 0;
-        this.loading;
+        this.buttonContainer = this.loadingWindow.querySelector(
+            "#loading-pop-button-container"
+        );
 
         return this;
     }
 
-    updateButtonFn(__fn) {
-        if (__fn && this.quitButton) {
-            this.quitButton.addEventListener("click", (event) => {
-                event.preventDefault();
-                __fn();
-            });
-        }
+    addButton(buttonId, buttonText, buttonFunction) {
+        const button = document.createElement("button");
+        button.id = buttonId;
+        button.textContent = buttonText;
+        button.addEventListener("click", buttonFunction);
+        button.classList.add("button");
+        this.buttonContainer.appendChild(button);
     }
 
     updateLargeText(__text) {
         this.loadingLargeText.textContent = __text;
     }
 
+    updateText(__text) {
+        this.loadingText.textContent = __text;
+    }
+
     updatePercentage(__text) {
-        this.loadindPercentage.textContent = `${__text}%`;
+        this.loadingPercentage.classList.remove("hidden");
+        this.loadingPercentage.textContent = `${__text}%`;
+    }
+
+    clearButtons() {
+        this.buttonContainer.innerHTML = "";
+    }
+
+    clear() {
+        this.updateText("");
+        this.updateLargeText("");
+        this.updatePercentage("");
+        this.clearButtons();
+        this.loadingPercentage.classList.add("hidden");
     }
 
     show() {

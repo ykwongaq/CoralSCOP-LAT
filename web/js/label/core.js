@@ -96,17 +96,17 @@ class Core {
         navigationBar.disable();
 
         const loadProject_ = (filePath_, callBack_) => {
-            const generalPopManager = new GeneralPopManager();
-            generalPopManager.clear();
-            generalPopManager.updateLargeText("Loading project...");
-            generalPopManager.updateText("Please wait...");
-            generalPopManager.show();
+            const loadingPopManager = new LoadingPopManager();
+            loadingPopManager.clear();
+            loadingPopManager.updateLargeText("Loading project...");
+            loadingPopManager.updateText("Please wait...");
+            loadingPopManager.show();
 
             eel.load_project(filePath_)()
                 .then((galleryDataList) => {
                     eel.get_current_data()()
                         .then((response) => {
-                            generalPopManager.hide();
+                            loadingPopManager.hide();
 
                             // Update the category information
                             const categoryManager = new CategoryManager();
@@ -147,7 +147,7 @@ class Core {
                         });
                 })
                 .catch((error) => {
-                    generalPopManager.hide();
+                    loadingPopManager.hide();
                     if (errorCallBack != null) {
                         errorCallBack(error);
                     } else {

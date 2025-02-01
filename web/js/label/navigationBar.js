@@ -90,16 +90,16 @@ class NavigationBar {
                         return;
                     }
 
-                    const generalPopManager = new GeneralPopManager();
-                    generalPopManager.clear();
-                    generalPopManager.updateLargeText("Exporting");
-                    generalPopManager.updateText(
+                    const loadingPopManager = new LoadingPopManager();
+                    loadingPopManager.clear();
+                    loadingPopManager.updateLargeText("Exporting");
+                    loadingPopManager.updateText(
                         "Exporting the images. Please wait."
                     );
-                    generalPopManager.show();
+                    loadingPopManager.show();
 
                     core.exportImages(fileFolder, () => {
-                        generalPopManager.hide();
+                        loadingPopManager.hide();
                         this.enable();
                     });
                 });
@@ -116,16 +116,16 @@ class NavigationBar {
                         return;
                     }
 
-                    const generalPopManager = new GeneralPopManager();
-                    generalPopManager.clear();
-                    generalPopManager.updateLargeText("Exporting");
-                    generalPopManager.updateText(
+                    const loadingPopManager = new LoadingPopManager();
+                    loadingPopManager.clear();
+                    loadingPopManager.updateLargeText("Exporting");
+                    loadingPopManager.updateText(
                         "Exporting the annotated images. Please wait."
                     );
-                    generalPopManager.show();
+                    loadingPopManager.show();
 
                     core.exportAnnotatedImages(fileFolder, () => {
-                        generalPopManager.hide();
+                        loadingPopManager.hide();
                         this.enable();
                     });
                 });
@@ -148,16 +148,16 @@ class NavigationBar {
                         return;
                     }
 
-                    const generalPopManager = new GeneralPopManager();
-                    generalPopManager.clear();
-                    generalPopManager.updateLargeText("Exporting");
-                    generalPopManager.updateText(
+                    const loadingPopManager = new LoadingPopManager();
+                    loadingPopManager.clear();
+                    loadingPopManager.updateLargeText("Exporting");
+                    loadingPopManager.updateText(
                         "Exporting the coco json. Please wait."
                     );
-                    generalPopManager.show();
+                    loadingPopManager.show();
 
                     core.exportCOCO(filePath, () => {
-                        generalPopManager.hide();
+                        loadingPopManager.hide();
                         this.enable();
                     });
                 });
@@ -174,16 +174,16 @@ class NavigationBar {
                         return;
                     }
 
-                    const generalPopManager = new GeneralPopManager();
-                    generalPopManager.clear();
-                    generalPopManager.updateLargeText("Exporting");
-                    generalPopManager.updateText(
+                    const loadingPopManager = new LoadingPopManager();
+                    loadingPopManager.clear();
+                    loadingPopManager.updateLargeText("Exporting");
+                    loadingPopManager.updateText(
                         "Exporting the excel files. Please wait."
                     );
-                    generalPopManager.show();
+                    loadingPopManager.show();
 
                     core.exportExcel(fileFolder, () => {
-                        generalPopManager.hide();
+                        loadingPopManager.hide();
                         this.enable();
                     });
                 });
@@ -200,16 +200,16 @@ class NavigationBar {
                         return;
                     }
 
-                    const generalPopManager = new GeneralPopManager();
-                    generalPopManager.clear();
-                    generalPopManager.updateLargeText("Exporting");
-                    generalPopManager.updateText(
+                    const loadingPopManager = new LoadingPopManager();
+                    loadingPopManager.clear();
+                    loadingPopManager.updateLargeText("Exporting");
+                    loadingPopManager.updateText(
                         "Exporting the charts. Please wait."
                     );
-                    generalPopManager.show();
+                    loadingPopManager.show();
 
                     core.exportCharts(fileFolder, () => {
-                        generalPopManager.hide();
+                        loadingPopManager.hide();
                         this.enable();
                     });
                 });
@@ -226,20 +226,20 @@ class NavigationBar {
                         return;
                     }
 
-                    const generalPopManager = new GeneralPopManager();
-                    generalPopManager.clear();
-                    generalPopManager.updateLargeText("Exporting");
-                    generalPopManager.updateText(
+                    const loadingPopManager = new LoadingPopManager();
+                    loadingPopManager.clear();
+                    loadingPopManager.updateLargeText("Exporting");
+                    loadingPopManager.updateText(
                         "Exporting all the files. Please wait."
                     );
-                    generalPopManager.show();
+                    loadingPopManager.show();
 
                     core.exportImages(fileFolder, () => {
                         core.exportAnnotatedImages(fileFolder, () => {
                             core.exportCOCO(fileFolder, () => {
                                 core.exportExcel(fileFolder, () => {
                                     core.exportCharts(fileFolder, () => {
-                                        generalPopManager.hide();
+                                        loadingPopManager.hide();
                                         this.enable();
                                     });
                                 });
@@ -268,19 +268,19 @@ class NavigationBar {
 
         this.saveButton.addEventListener("click", () => {
             this.disable();
-            const generalPopManager = new GeneralPopManager();
-            generalPopManager.clear();
-            generalPopManager.updateLargeText("Save");
-            generalPopManager.updateText(
+            const loadingPopManager = new LoadingPopManager();
+            loadingPopManager.clear();
+            loadingPopManager.updateLargeText("Save");
+            loadingPopManager.updateText(
                 "Saving the current project. Please wait."
             );
-            generalPopManager.show();
+            loadingPopManager.show();
 
             const core = new Core();
             // Save the current data first and then save the dataset
             core.save(() => {
                 core.saveDataset(null, () => {
-                    generalPopManager.hide();
+                    loadingPopManager.hide();
                     this.enable();
                 });
             });
@@ -304,16 +304,16 @@ class NavigationBar {
                         return;
                     }
 
-                    const generalPopManager = new GeneralPopManager();
-                    generalPopManager.clear();
-                    generalPopManager.updateLargeText("Save");
-                    generalPopManager.updateText(
+                    const loadingPopManager = new LoadingPopManager();
+                    loadingPopManager.clear();
+                    loadingPopManager.updateLargeText("Save");
+                    loadingPopManager.updateText(
                         "Saving the current project. Please wait."
                     );
-                    generalPopManager.show();
+                    loadingPopManager.show();
 
                     core.saveDataset(filePath, () => {
-                        generalPopManager.hide();
+                        loadingPopManager.hide();
                         this.enable();
                     });
                 });
