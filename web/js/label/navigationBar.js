@@ -98,10 +98,18 @@ class NavigationBar {
                     );
                     loadingPopManager.show();
 
-                    core.exportImages(fileFolder, () => {
-                        loadingPopManager.hide();
-                        this.enable();
-                    });
+                    core.exportImages(
+                        fileFolder,
+                        () => {
+                            loadingPopManager.hide();
+                            this.enable();
+                        },
+                        (error) => {
+                            console.error(error);
+                            loadingPopManager.hide();
+                            this.enable();
+                        }
+                    );
                 });
             });
         });
@@ -124,10 +132,18 @@ class NavigationBar {
                     );
                     loadingPopManager.show();
 
-                    core.exportAnnotatedImages(fileFolder, () => {
-                        loadingPopManager.hide();
-                        this.enable();
-                    });
+                    core.exportAnnotatedImages(
+                        fileFolder,
+                        () => {
+                            loadingPopManager.hide();
+                            this.enable();
+                        },
+                        (error) => {
+                            console.error(error);
+                            loadingPopManager.hide();
+                            this.enable();
+                        }
+                    );
                 });
             });
         });
@@ -156,10 +172,18 @@ class NavigationBar {
                     );
                     loadingPopManager.show();
 
-                    core.exportCOCO(filePath, () => {
-                        loadingPopManager.hide();
-                        this.enable();
-                    });
+                    core.exportCOCO(
+                        filePath,
+                        () => {
+                            loadingPopManager.hide();
+                            this.enable();
+                        },
+                        (error) => {
+                            console.error(error);
+                            loadingPopManager.hide();
+                            this.enable();
+                        }
+                    );
                 });
             });
         });
@@ -182,10 +206,18 @@ class NavigationBar {
                     );
                     loadingPopManager.show();
 
-                    core.exportExcel(fileFolder, () => {
-                        loadingPopManager.hide();
-                        this.enable();
-                    });
+                    core.exportExcel(
+                        fileFolder,
+                        () => {
+                            loadingPopManager.hide();
+                            this.enable();
+                        },
+                        (error) => {
+                            console.error(error);
+                            loadingPopManager.hide();
+                            this.enable();
+                        }
+                    );
                 });
             });
         });
@@ -208,10 +240,18 @@ class NavigationBar {
                     );
                     loadingPopManager.show();
 
-                    core.exportCharts(fileFolder, () => {
-                        loadingPopManager.hide();
-                        this.enable();
-                    });
+                    core.exportCharts(
+                        fileFolder,
+                        () => {
+                            loadingPopManager.hide();
+                            this.enable();
+                        },
+                        (error) => {
+                            console.error(error);
+                            loadingPopManager.hide();
+                            this.enable();
+                        }
+                    );
                 });
             });
         });
@@ -234,18 +274,60 @@ class NavigationBar {
                     );
                     loadingPopManager.show();
 
-                    core.exportImages(fileFolder, () => {
-                        core.exportAnnotatedImages(fileFolder, () => {
-                            core.exportCOCO(fileFolder, () => {
-                                core.exportExcel(fileFolder, () => {
-                                    core.exportCharts(fileFolder, () => {
-                                        loadingPopManager.hide();
-                                        this.enable();
-                                    });
-                                });
-                            });
-                        });
-                    });
+                    core.exportImages(
+                        fileFolder,
+                        () => {
+                            core.exportAnnotatedImages(
+                                fileFolder,
+                                () => {
+                                    core.exportCOCO(
+                                        fileFolder,
+                                        () => {
+                                            core.exportExcel(
+                                                fileFolder,
+                                                () => {
+                                                    core.exportCharts(
+                                                        fileFolder,
+                                                        () => {
+                                                            loadingPopManager.hide();
+                                                            this.enable();
+                                                        },
+                                                        (error) => {
+                                                            console.error(
+                                                                error
+                                                            );
+                                                            loadingPopManager.hide();
+                                                            this.enable();
+                                                        }
+                                                    );
+                                                },
+                                                (error) => {
+                                                    console.error(error);
+                                                    loadingPopManager.hide();
+                                                    this.enable();
+                                                }
+                                            );
+                                        },
+                                        (error) => {
+                                            console.error(error);
+                                            loadingPopManager.hide();
+                                            this.enable();
+                                        }
+                                    );
+                                },
+                                (error) => {
+                                    console.error(error);
+                                    loadingPopManager.hide();
+                                    this.enable();
+                                }
+                            );
+                        },
+                        (error) => {
+                            console.error(error);
+                            loadingPopManager.hide();
+                            this.enable();
+                        }
+                    );
                 });
             });
         });
@@ -278,46 +360,84 @@ class NavigationBar {
 
             const core = new Core();
             // Save the current data first and then save the dataset
-            core.save(() => {
-                core.saveDataset(null, () => {
+            core.save(
+                () => {
+                    core.saveDataset(
+                        null,
+                        () => {
+                            loadingPopManager.hide();
+                            this.enable();
+                        },
+                        (error) => {
+                            console.error(error);
+                            loadingPopManager.hide();
+                            this.enable();
+                        }
+                    );
+                },
+                (error) => {
+                    console.error(error);
                     loadingPopManager.hide();
                     this.enable();
-                });
-            });
+                }
+            );
         });
 
         this.saveToButton.addEventListener("click", () => {
             const core = new Core();
-            core.save(() => {
-                this.disable();
-                const fileDialogRequest = new FileDialogRequest();
-                fileDialogRequest.setTitle("Save CoralSCOP-LAT Project File");
-                fileDialogRequest.addFileType(
-                    "CoralSCOP-LAT Project File",
-                    "*.coral"
-                );
-                fileDialogRequest.setDefaultExt(".coral");
-
-                core.selectSaveFile(fileDialogRequest, (filePath) => {
-                    if (filePath === null) {
-                        this.enable();
-                        return;
-                    }
-
-                    const loadingPopManager = new LoadingPopManager();
-                    loadingPopManager.clear();
-                    loadingPopManager.updateLargeText("Save");
-                    loadingPopManager.updateText(
-                        "Saving the current project. Please wait."
+            core.save(
+                () => {
+                    this.disable();
+                    const fileDialogRequest = new FileDialogRequest();
+                    fileDialogRequest.setTitle(
+                        "Save CoralSCOP-LAT Project File"
                     );
-                    loadingPopManager.show();
+                    fileDialogRequest.addFileType(
+                        "CoralSCOP-LAT Project File",
+                        "*.coral"
+                    );
+                    fileDialogRequest.setDefaultExt(".coral");
 
-                    core.saveDataset(filePath, () => {
-                        loadingPopManager.hide();
-                        this.enable();
-                    });
-                });
-            });
+                    core.selectSaveFile(
+                        fileDialogRequest,
+                        (filePath) => {
+                            if (filePath === null) {
+                                this.enable();
+                                return;
+                            }
+
+                            const loadingPopManager = new LoadingPopManager();
+                            loadingPopManager.clear();
+                            loadingPopManager.updateLargeText("Save");
+                            loadingPopManager.updateText(
+                                "Saving the current project. Please wait."
+                            );
+                            loadingPopManager.show();
+
+                            core.saveDataset(
+                                filePath,
+                                () => {
+                                    loadingPopManager.hide();
+                                    this.enable();
+                                },
+                                (error) => {
+                                    console.error(error);
+                                    loadingPopManager.hide();
+                                    this.enable();
+                                }
+                            );
+                        },
+                        (error) => {
+                            console.error(error);
+                            this.enable();
+                        }
+                    );
+                },
+                (error) => {
+                    console.error(error);
+                    this.enable();
+                }
+            );
         });
 
         window.addEventListener("click", (event) => {

@@ -139,20 +139,19 @@ class Core {
                             }
                         })
                         .catch((error) => {
+                            loadingPopManager.hide();
                             if (errorCallBack != null) {
                                 errorCallBack(error);
-                            } else {
-                                this.popUpError(error);
                             }
+                            this.popUpError(error);
                         });
                 })
                 .catch((error) => {
                     loadingPopManager.hide();
                     if (errorCallBack != null) {
                         errorCallBack(error);
-                    } else {
-                        this.popUpError(error);
                     }
+                    this.popUpError(error);
                 });
         };
 
@@ -269,9 +268,8 @@ class Core {
             .catch((error) => {
                 if (errorCallBack != null) {
                     errorCallBack(error);
-                } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -306,9 +304,8 @@ class Core {
                 .catch((error) => {
                     if (errorCallBack != null) {
                         errorCallBack(error);
-                    } else {
-                        this.popUpError(error);
                     }
+                    this.popUpError(error);
                 });
         });
     }
@@ -343,9 +340,8 @@ class Core {
                 .catch((error) => {
                     if (errorCallBack != null) {
                         errorCallBack(error);
-                    } else {
-                        this.popUpError(error);
                     }
+                    this.popUpError(error);
                 });
         });
     }
@@ -380,9 +376,8 @@ class Core {
                 .catch((error) => {
                     if (errorCallBack != null) {
                         errorCallBack(error);
-                    } else {
-                        this.popUpError(error);
                     }
+                    this.popUpError(error);
                 });
         });
     }
@@ -411,9 +406,8 @@ class Core {
             .catch((error) => {
                 if (errorCallBack != null) {
                     errorCallBack(error);
-                } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -427,9 +421,8 @@ class Core {
             .catch((error) => {
                 if (errorCallBack != null) {
                     errorCallBack(error);
-                } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -475,7 +468,7 @@ class Core {
         return imageIds;
     }
 
-    exportImages(outputDir, callBack = null, callBackError = null) {
+    exportImages(outputDir, callBack = null, errorCallBack = null) {
         eel.export_images(outputDir)()
             .then(() => {
                 if (callBack != null) {
@@ -483,11 +476,10 @@ class Core {
                 }
             })
             .catch((error) => {
-                if (callBackError != null) {
-                    callBackError(error);
-                } else {
-                    this.popUpError(error);
+                if (errorCallBack != null) {
+                    errorCallBack(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -522,9 +514,8 @@ class Core {
                 .catch((error) => {
                     if (errorCallBack != null) {
                         errorCallBack(error);
-                    } else {
-                        this.popUpError(error);
                     }
+                    this.popUpError(error);
                 });
         });
     }
@@ -539,9 +530,8 @@ class Core {
             .catch((error) => {
                 if (errorCallBack != null) {
                     errorCallBack(error);
-                } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -555,9 +545,8 @@ class Core {
             .catch((error) => {
                 if (errorCallBack != null) {
                     errorCallBack(error);
-                } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -597,9 +586,8 @@ class Core {
             .catch((error) => {
                 if (errorCallBack != null) {
                     errorCallBack(error);
-                } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -618,9 +606,8 @@ class Core {
             .catch((error) => {
                 if (errorCallBack != null) {
                     errorCallBack(error);
-                } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
