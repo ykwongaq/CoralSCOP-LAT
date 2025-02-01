@@ -949,12 +949,12 @@ class ProjectExport:
             "encoded_image": str,
         }
         """
-        output_annoted_image_folder = os.path.join(output_dir, "annoted_images")
-        os.makedirs(output_annoted_image_folder, exist_ok=True)
+        output_annotated_image_folder = os.path.join(output_dir, "annotated_images")
+        os.makedirs(output_annotated_image_folder, exist_ok=True)
         for data in data_list:
             image = decode_image_url(data["encoded_image"])
             image = Image.fromarray(image)
-            image.save(os.path.join(output_annoted_image_folder, data["image_name"]))
+            image.save(os.path.join(output_annotated_image_folder, data["image_name"]))
 
     def is_file_path(self, path):
         # Check if the path looks like a file (e.g., has an extension)
