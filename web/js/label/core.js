@@ -533,18 +533,6 @@ class Core {
             if (callBack != null) {
                 callBack();
             }
-            // eel.export_annotated_images(outputDir, annotatedDataInfoList)()
-            //     .then(() => {
-            //         if (callBack != null) {
-            //             callBack();
-            //         }
-            //     })
-            //     .catch((error) => {
-            //         if (errorCallBack != null) {
-            //             errorCallBack(error);
-            //         }
-            //         this.popUpError(error);
-            //     });
         });
     }
 
