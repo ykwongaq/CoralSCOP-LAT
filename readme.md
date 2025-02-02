@@ -84,7 +84,6 @@ css
 4. Statistic Page - Project level statistic
 5. Tutorial
 6. Pop up problem in mac
-7. Error hanlding
-8. Reformat
 9: Image json filename -> file_name
+10: Export annotated image take too long time
 ```

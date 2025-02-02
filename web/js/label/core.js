@@ -485,9 +485,14 @@ class Core {
 
     exportAnnotatedImages(outputDir, callBack = null, errorCallBack = null) {
         this.getDataList(async (dataList) => {
-            const annotatedDataInfoList = [];
+            const loadingPopManager = new LoadingPopManager();
+
+            let idx = 0;
+            const dataLen = dataList.length;
+
             for (const data of dataList) {
                 try {
+                    const annotatedDataInfoList = [];
                     const annotationRenderer = new AnnotationRenderer();
                     await annotationRenderer.render(data);
                     const encodedImage = annotationRenderer.getEncodedImage();
@@ -497,26 +502,49 @@ class Core {
                         encoded_image: encodedImage,
                     };
                     annotatedDataInfoList.push(annotatedDataInfo);
+
+                    await eel
+                        .export_annotated_images(
+                            outputDir,
+                            annotatedDataInfoList
+                        )()
+                        .catch((error) => {
+                            if (errorCallBack != null) {
+                                errorCallBack(error);
+                            }
+                            this.popUpError(error);
+                            return;
+                        });
+
+                    idx += 1;
+                    if (loadingPopManager.isShowing()) {
+                        loadingPopManager.updatePercentage(
+                            ((idx / dataLen) * 100).toFixed(2)
+                        );
+                    }
                 } catch (error) {
-                    if (errorCallBack != null) {
-                        errorCallBack(error);
-                    } else {
-                        this.popUpError(error);
-                    }
-                }
-            }
-            eel.export_annotated_images(outputDir, annotatedDataInfoList)()
-                .then(() => {
-                    if (callBack != null) {
-                        callBack();
-                    }
-                })
-                .catch((error) => {
                     if (errorCallBack != null) {
                         errorCallBack(error);
                     }
                     this.popUpError(error);
-                });
+                }
+            }
+
+            if (callBack != null) {
+                callBack();
+            }
+            // eel.export_annotated_images(outputDir, annotatedDataInfoList)()
+            //     .then(() => {
+            //         if (callBack != null) {
+            //             callBack();
+            //         }
+            //     })
+            //     .catch((error) => {
+            //         if (errorCallBack != null) {
+            //             errorCallBack(error);
+            //         }
+            //         this.popUpError(error);
+            //     });
         });
     }
 

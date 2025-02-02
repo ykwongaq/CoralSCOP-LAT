@@ -66,4 +66,8 @@ class LoadingPopManager {
     hide() {
         this.loadingWindow.classList.remove("active");
     }
+
+    isShowing() {
+        return this.loadingWindow.classList.contains("active");
+    }
 }
