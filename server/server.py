@@ -408,29 +408,29 @@ class Server:
     @time_it
     def export_images(self, output_dir: str):
         self.logger.info(f"Exporting images to {output_dir} ...")
-        project_export = ProjectExport(self.project_path)
+        project_export = ProjectExportor(self.project_path)
         project_export.export_images(output_dir)
 
     @time_it
     def export_annotated_images(self, output_dir: str, data_list: List[Dict]):
         self.logger.info(f"Exporting annotated images to {output_dir} ...")
-        project_export = ProjectExport(self.project_path)
+        project_export = ProjectExportor(self.project_path)
         project_export.export_annotated_images(output_dir, data_list)
 
     @time_it
     def export_coco(self, output_path: str):
         self.logger.info(f"Exporting COCO dataset to {output_path} ...")
-        project_export = ProjectExport(self.project_path)
+        project_export = ProjectExportor(self.project_path)
         project_export.export_coco(output_path, self.get_dataset())
 
     @time_it
     def export_excel(self, output_dir: str):
         self.logger.info(f"Exporting Excel dataset to {output_dir} ...")
-        project_export = ProjectExport(self.project_path)
+        project_export = ProjectExportor(self.project_path)
         project_export.export_excel(output_dir, self.get_dataset())
 
     @time_it
     def export_charts(self, output_dir: str, requests: List[Dict]):
         self.logger.info(f"Exporting charts to {output_dir} ...")
-        project_export = ProjectExport(self.project_path)
+        project_export = ProjectExportor(self.project_path)
         project_export.export_charts(output_dir, requests)
