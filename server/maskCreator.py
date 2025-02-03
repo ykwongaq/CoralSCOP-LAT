@@ -29,9 +29,9 @@ class MaskCreator:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info(f"Loading ONNX model from {onnx_path}")
 
-        self.ort_session = ort.InferenceSession(
-            onnx_path, providers=["CPUExecutionProvider"]
-        )
+        providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        self.logger.info(f"Available providers: {providers}")
+        self.ort_session = ort.InferenceSession(onnx_path, providers=providers)
         self.image: np.ndarray = None
         self.image_embedding: np.ndarray = None
         self.image_size = None
