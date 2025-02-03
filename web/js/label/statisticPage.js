@@ -120,6 +120,7 @@ class StatisticPage {
                     generalPopUpManager.hide();
                 });
                 generalPopUpManager.show();
+                return;
             }
         }
 
@@ -541,6 +542,10 @@ class StatisticPage {
             ) {
                 bleachedArea += area;
             }
+        }
+
+        if (healthyArea === 0 && bleachedArea === 0) {
+            return;
         }
 
         const dataTable = [];
