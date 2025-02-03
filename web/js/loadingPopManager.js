@@ -22,6 +22,7 @@ class LoadingPopManager {
             "#loading-pop-button-container"
         );
 
+        this.property = {};
         return this;
     }
 
@@ -57,6 +58,7 @@ class LoadingPopManager {
         this.updatePercentage("");
         this.clearButtons();
         this.loadingPercentage.classList.add("hidden");
+        this.clearProperty();
     }
 
     show() {
@@ -69,5 +71,20 @@ class LoadingPopManager {
 
     isShowing() {
         return this.loadingWindow.classList.contains("active");
+    }
+
+    addProperty(key, value) {
+        this.property[key] = value;
+    }
+
+    getProperty(key) {
+        if (key in this.property) {
+            return this.property[key];
+        }
+        return null;
+    }
+
+    clearProperty() {
+        this.property = {};
     }
 }

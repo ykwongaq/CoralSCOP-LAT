@@ -130,6 +130,13 @@ class NavigationBar {
                     loadingPopManager.updateText(
                         "Exporting the annotated images. Please wait."
                     );
+                    loadingPopManager.addButton("quit-button", "Quit", () => {
+                        loadingPopManager.updateLargeText("Terminating");
+                        loadingPopManager.updateText(
+                            "Terminating the process. Please wait."
+                        );
+                        loadingPopManager.addProperty("terminate", true);
+                    });
                     loadingPopManager.show();
 
                     core.exportAnnotatedImages(

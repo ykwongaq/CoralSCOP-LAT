@@ -522,6 +522,13 @@ class Core {
                             ((idx / dataLen) * 100).toFixed(2)
                         );
                     }
+
+                    const terminate =
+                        loadingPopManager.getProperty("terminate");
+                    if (terminate) {
+                        loadingPopManager.hide();
+                        return;
+                    }
                 } catch (error) {
                     if (errorCallBack != null) {
                         errorCallBack(error);
