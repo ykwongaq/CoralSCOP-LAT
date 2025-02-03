@@ -175,9 +175,9 @@ class CoralSegmentation:
         masks = [
             decode_rle_mask(annotation["segmentation"]) for annotation in annotations
         ]
-        return set(self.filter_masks(masks, iou_limit))
+        return set(self.filter_by_iou_(masks, iou_limit))
 
-    def filter_masks(
+    def filter_by_iou_(
         self, masks: List[np.ndarray], iou_threshold: float = 0.5
     ) -> List[int]:
         """

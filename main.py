@@ -138,7 +138,7 @@ def export_charts(output_dir: str, requests: List[Dict]):
 
 @eel.expose
 def detect_coral(request: Dict) -> Dict:
-    server.detect_coral(request)
+    return server.detect_coral(request).to_json()
 
 
 if __name__ == "__main__":

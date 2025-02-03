@@ -2,6 +2,9 @@ import logging
 import time
 import os
 import numpy as np
+import copy
+import shutil
+
 from tkinter import Tk, filedialog, messagebox
 from .embedding import EmbeddingGenerator
 from .segmentation import CoralSegmentation
@@ -19,6 +22,7 @@ from .jsonFormat import AnnotationJson
 from .dataset import Dataset, Data
 from .util.coco import to_coco_annotation, rle_mask_to_rle_vis_encoding
 from .util.requests import FileDialogRequest, ProjectCreateRequest
+from .util.data import unzip_file
 from PIL import Image
 from typing import Dict, List, Tuple
 
@@ -445,57 +449,70 @@ class Server:
         project_export.export_charts(output_dir, requests)
 
     @time_it
-    def detect_coral(self, request: Dict) -> Dict:
+    def detect_coral(self, request: Dict) -> Data:
         self.logger.info(f"Detecting coral ...")
 
-        # # Reuse create project to store the configuration
-        # create_project_request = ProjectCreateRequest(request)
+        # Reuse create project to store the configuration
+        create_project_request = ProjectCreateRequest(request)
 
-        # data = self.get_data(self.get_current_image_idx())
-        # image_path = data.get_image_path()
-        # image = Image.open(image_path)
-        # image = np.array(image)
+        data = self.get_data(self.get_current_image_idx())
 
-        # masks = self.coral_segmentation.generate_masks_json(image)
-        # if len(masks) == 0:
-        #     self.logger.info(f"No coral detected")
-        #     return
+        # Unzip the project folder to get the image
+        temp_folder = os.path.join(os.path.dirname(self.project_path), "temp")
+        if os.path.exists(temp_folder):
+            shutil.rmtree(temp_folder)
+        os.makedirs(temp_folder, exist_ok=True)
+        unzip_file(self.project_path, temp_folder)
 
-        # # We assume this function will be called in quick start mode
-        # # So there should only be one data
-        # data = self.get_data(self.get_current_image_idx())
-        # data_idx = data.get_idx()
-        # segmentation = data.get_segmentation()
-        # annotation_json_list: List[Dict] = segmentation["annotations"]
+        image_folder = os.path.join(temp_folder, "images")
+        image_paths = []
+        for file in os.listdir(image_folder):
+            image_paths.append(os.path.join(image_folder, file))
 
-        # def find_avaiable_id(annotation_json_list):
-        #     ids = set([annotation["id"] for annotation in annotation_json_list])
-        #     for i in range(len(annotation_json_list) + 1):
-        #         if i not in ids:
-        #             return i
+        assert len(image_paths) == 1, "Only one image is expected"
+        image_path = image_paths[0]
 
-        # # Add detected coral into the annotation list
-        # min_area = create_project_request.get_min_area()
-        # min_confidence = create_project_request.get_min_confidence()
-        # max_iou = create_project_request.get_max_iou()
+        image = Image.open(image_path)
+        image = np.array(image)
 
-        # masks = self.coral_segmentation.filter_masks(
-        #     masks, min_area, min_confidence, max_iou
-        # )
-        # self.logger.info(f"Finalized masks: {len(masks)}")
-        # for mask in masks:
-        #     mask["image_id"] = data_idx
+        # Remove the temporary folder
+        shutil.rmtree(temp_folder)
 
-        # for mask in masks:
-        #     annotation_json = AnnotationJson()
-        #     annotation_json.set_segmentation(mask["segmentation"])
-        #     annotation_json.set_bbox(mask["bbox"])
-        #     annotation_json.set_area(mask["area"])
-        #     annotation_json.set_category_id(mask["category_id"])
-        #     annotation_json.set_id(find_avaiable_id(annotation_json_list))
-        #     annotation_json.set_image_id(data_idx)
-        #     annotation_json.set_iscrowd(mask["iscrowd"])
-        #     annotation_json.set_predicted_iou(mask["predicted_iou"])
-        #     annotation_json_list.append(annotation_json.to_json())
+        masks = self.coral_segmentation.generate_masks_json(image)
+        if len(masks) == 0:
+            self.logger.info(f"No coral detected")
+            return
 
-        # data.set_segmentation(segmentation)
+        # Add detected coral into the annotation list
+        min_area = create_project_request.get_min_area()
+        min_confidence = create_project_request.get_min_confidence()
+        max_iou = create_project_request.get_max_iou()
+
+        masks = self.coral_segmentation.filter(masks, min_area, min_confidence, max_iou)
+
+        data_idx = data.get_idx()
+        annotation_list = []
+        for idx, mask in enumerate(masks):
+            annotation_json = AnnotationJson()
+            annotation_json.set_segmentation(mask["segmentation"])
+            annotation_json.set_bbox(mask["bbox"])
+            annotation_json.set_area(mask["area"])
+            annotation_json.set_category_id(mask["category_id"])
+            annotation_json.set_id(idx)
+            annotation_json.set_image_id(data_idx)
+            annotation_json.set_iscrowd(mask["iscrowd"])
+            annotation_json.set_predicted_iou(mask["predicted_iou"])
+            annotation_list.append(annotation_json.to_json())
+
+        segmentation = data.get_segmentation()
+        segmentation = copy.deepcopy(segmentation)
+        segmentation["annotations"] = annotation_list
+
+        new_data = Data()
+        new_data.set_idx(data_idx)
+        new_data.set_image_name(data.get_image_name())
+        new_data.set_image_path(data.get_image_path())
+        new_data.set_segmentation(segmentation)
+        new_data.set_embedding(data.get_embedding())
+
+        return new_data

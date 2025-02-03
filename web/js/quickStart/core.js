@@ -547,9 +547,20 @@ class Core {
     detectCoral(request, callBack = null, errorCallBack = null) {
         console.log(request.toJson());
         eel.detect_coral(request.toJson())()
-            .then(() => {
+            .then((response) => {
+                this.recordData();
+
+                const importedData = Data.parseResponse(response);
+                const data = this.getData();
+                for (const mask of importedData.getMasks()) {
+                    data.addMask(mask);
+                }
+
+                const canvas = new Canvas();
+                canvas.updateMasks();
+
                 if (callBack != null) {
-                    callBack();
+                    callBack(importedData);
                 }
             })
             .catch((error) => {
