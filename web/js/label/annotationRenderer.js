@@ -163,82 +163,67 @@ class AnnotationRenderer {
         maskCanvas.width = this.imageWidth;
         maskCanvas.height = this.imageHeight;
 
-        const masks = this.data.getMasks();
-        const imageData = maskCtx.getImageData(
-            0,
-            0,
-            this.imageWidth,
-            this.imageHeight
+        // Step 1: Create a buffer to track which mask is currently “winning” for each pixel.
+        // If your mask IDs can be large, store them in a larger typed array. Here we assume
+        // an integer up to the number of masks. 0 → no mask.
+        const pixelMaskIndex = new Uint16Array(
+            this.imageWidth * this.imageHeight
         );
-        const data_ = imageData.data; // This is a flat array of [r, g, b, a, r, g, b, a, ...]
 
+        // We’ll keep track of each visible mask’s integer ID and color.
+        // (In practice, you might store them in an array or a map).
+        const masks = this.data.getMasks().filter((m) => m.shouldDisplay());
+        // For example, assign each mask an ID from 1..N:
+        // (You could also store them in a dictionary if needed.)
+        masks.forEach((mask, idx) => {
+            mask._maskId = idx + 1; // or any unique number you like
+        });
+
+        // Step 2: Fill pixelMaskIndex by iterating over each mask’s data.
+        // If a mask pixel is set to 1, we overwrite that pixel’s index with the mask’s ID.
+        // This effectively means “the last mask drawn wins” if multiple overlap.
         for (const mask of masks) {
-            if (!mask.shouldDisplay()) {
-                continue;
-            }
-            const color = mask.getMaskColor();
-            const [r, g, b] = this.hexToRGB(color);
-            const maskData = mask.getDecodedMask();
+            const maskData = mask.getDecodedMask(); // Uint8Array of 0/1
+            const maskId = mask._maskId;
 
-            let count = 0;
             for (let i = 0; i < maskData.length; i++) {
                 if (maskData[i] === 1) {
-                    count++;
-                    const x = i % this.imageWidth;
-                    const y = Math.floor(i / this.imageWidth);
-                    const index = (y * this.imageWidth + x) * 4;
-                    // Set pixel color with alpha transparency
-                    data_[index] = r; // Red
-                    data_[index + 1] = g; // Green
-                    data_[index + 2] = b; // Blue
-                    data_[index + 3] = 255; // Alpha (0.5 transparency -> 128)
+                    pixelMaskIndex[i] = maskId;
                 }
             }
         }
 
-        // Put the modified image data back to the canvas
+        // Step 3: We now have, for every pixel, a nonzero mask ID if it’s covered by some mask.
+        // Create an ImageData for the entire image:
+        const imageData = maskCtx.createImageData(
+            this.imageWidth,
+            this.imageHeight
+        );
+        const data = imageData.data; // Uint8ClampedArray
+
+        // Precompute the colors for each mask’s ID (so we don’t parse hex repeatedly).
+        // e.g., user “maskId => [R, G, B]” mapping:
+        const maskColors = {};
+        for (const mask of masks) {
+            const [r, g, b] = this.hexToRGB(mask.getMaskColor());
+            maskColors[mask._maskId] = [r, g, b];
+        }
+
+        // Step 4: Single pass: fill RGBA for each pixel based on which mask ID is stored.
+        for (let i = 0; i < pixelMaskIndex.length; i++) {
+            const id = pixelMaskIndex[i];
+            if (id !== 0) {
+                const color = maskColors[id];
+                const index = i * 4;
+                data[index] = color[0];
+                data[index + 1] = color[1];
+                data[index + 2] = color[2];
+                data[index + 3] = 255; // fully opaque
+            }
+        }
+
         maskCtx.putImageData(imageData, 0, 0);
         return maskCanvas.toDataURL();
-
-        // const radius = Math.min(this.imageWidth, this.imageHeight) * 0.003;
-        // // Draw the border
-        // for (const mask of masks) {
-        //     if (!mask.shouldDisplay()) {
-        //         continue;
-        //     }
-
-        //     if (!mask.getCategory().isBleached()) {
-        //         continue;
-        //     }
-
-        //     const maskData = mask.getDecodedMask();
-
-        //     for (let i = 0; i < maskData.length; i++) {
-        //         if (maskData[i] === 1) {
-        //             const x = i % this.imageWidth;
-        //             const y = Math.floor(i / this.imageWidth);
-
-        //             // Check if this pixel is on the border by checking its neighbors
-        //             const isBorder = [
-        //                 maskData[i - 1], // Left
-        //                 maskData[i + 1], // Right
-        //                 maskData[i - this.imageWidth], // Top
-        //                 maskData[i + this.imageWidth], // Bottom
-        //             ].some(
-        //                 (neighbor) => neighbor === 0 || neighbor === undefined
-        //             );
-
-        //             if (isBorder) {
-        //                 maskCtx.beginPath();
-        //                 maskCtx.arc(x, y, radius, 0, 2 * Math.PI); // 2.5 radius for 5px diameter
-        //                 maskCtx.fillStyle = mask.getCategory().getBorderColor();
-        //                 maskCtx.fill();
-        //             }
-        //         }
-        //     }
-        // }
-
-        // return maskCanvas.toDataURL();
     }
 
     drawsBorder() {
@@ -248,44 +233,39 @@ class AnnotationRenderer {
         borderCanvas.height = this.imageHeight;
 
         const masks = this.data.getMasks();
-        const imageData = borderCtx.getImageData(
-            0,
-            0,
-            this.imageWidth,
-            this.imageHeight
-        );
-
+        // We’ll use the native drawing on canvas, but reduce overhead by drawing small “dots” only at borders.
         const radius = Math.min(this.imageWidth, this.imageHeight) * 0.0015;
-        // Draw the border
+
         for (const mask of masks) {
-            if (!mask.shouldDisplay()) {
-                continue;
-            }
+            if (!mask.shouldDisplay()) continue;
 
             const maskData = mask.getDecodedMask();
+            const borderColor = mask.getCategory().getBorderColor();
 
+            // We check neighbors only in four directions: left, right, up, down
+            const width = this.imageWidth;
             for (let i = 0; i < maskData.length; i++) {
                 if (maskData[i] === 1) {
-                    const x = i % this.imageWidth;
-                    const y = Math.floor(i / this.imageWidth);
+                    // Compute x,y
+                    const x = i % width;
+                    const y = (i / width) | 0; // integer division
 
-                    // Check if this pixel is on the border by checking its neighbors
-                    const isBorder = [
-                        maskData[i - 1], // Left
-                        maskData[i + 1], // Right
-                        maskData[i - this.imageWidth], // Top
-                        maskData[i + this.imageWidth], // Bottom
-                    ].some(
-                        (neighbor) => neighbor === 0 || neighbor === undefined
-                    );
-
-                    if (isBorder) {
-                        borderCtx.beginPath();
-                        borderCtx.arc(x, y, radius, 0, 2 * Math.PI); // 2.5 radius for 5px diameter
-                        borderCtx.fillStyle = mask
-                            .getCategory()
-                            .getBorderColor();
-                        borderCtx.fill();
+                    // Compare neighbors
+                    // left
+                    if (x > 0 && maskData[i - 1] === 0) {
+                        this._drawDot(borderCtx, x, y, radius, borderColor);
+                    }
+                    // right
+                    if (x < width - 1 && maskData[i + 1] === 0) {
+                        this._drawDot(borderCtx, x, y, radius, borderColor);
+                    }
+                    // up
+                    if (y > 0 && maskData[i - width] === 0) {
+                        this._drawDot(borderCtx, x, y, radius, borderColor);
+                    }
+                    // down
+                    if (y < this.imageHeight - 1 && maskData[i + width] === 0) {
+                        this._drawDot(borderCtx, x, y, radius, borderColor);
                     }
                 }
             }
@@ -294,8 +274,18 @@ class AnnotationRenderer {
         return borderCanvas.toDataURL();
     }
 
+    /**
+     * Simple helper for drawing a small circle (dot) on the border canvas.
+     */
+    _drawDot(ctx, x, y, radius, color) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.closePath();
+    }
+
     drawTexts() {
-        // Draw the text labels after the masks are applied
         const textCanvas = document.createElement("canvas");
         const textCtx = textCanvas.getContext("2d");
         textCanvas.width = this.imageWidth;
@@ -311,9 +301,7 @@ class AnnotationRenderer {
             const category = mask.getCategory();
             const label_id = category.getCategoryId();
             const color = category.getMaskColor();
-            // const color = CategoryManager.getColorByCategoryId(label_id);
             const fontColor = category.getTextColor();
-            // CategoryManager.getTextColorByCategoryId(label_id);
 
             if (label_id !== -1) {
                 const fontSize = Math.min(
@@ -336,20 +324,19 @@ class AnnotationRenderer {
                 );
                 textCtx.strokeStyle = "#fff";
                 textCtx.lineWidth = 1;
-                textCtx.fillStyle = color; // Fill color
-                textCtx.fill(); // Fills the circle
+                textCtx.fillStyle = color;
+                textCtx.fill();
                 textCtx.stroke();
                 textCtx.closePath();
 
-                textCtx.font = `${fontSize / display_id.length}px Arial`;
-                // maskCtx.fillStyle = `rgba(255, 0, 0, ${this.maskOpacity})`;
+                // Adjust font size based on string length
+                textCtx.font = `${
+                    fontSize / Math.max(display_id.length, 1)
+                }px Arial`;
                 textCtx.fillStyle = fontColor;
                 textCtx.fillText(display_id, middle_pixel[0], middle_pixel[1]);
             }
         }
-
-        // this.textCache = new Image();
-        // this.textCache.src = textCanvas.toDataURL();
 
         return textCanvas.toDataURL();
     }
