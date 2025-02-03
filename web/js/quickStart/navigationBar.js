@@ -29,7 +29,6 @@ class NavigationBar {
         this.saveDropdownButton = this.dom.querySelector(
             "#save-drop-down-button"
         );
-        this.saveButton = this.dom.querySelector("#save-button");
         this.saveToButton = this.dom.querySelector("#save-to-button");
         this.saveDropDownMenu = this.dom.querySelector(
             "#file-dropdown-menu-save"
@@ -347,41 +346,6 @@ class NavigationBar {
                     : "block";
         });
 
-        this.saveButton.addEventListener("click", () => {
-            this.disable();
-            const loadingPopManager = new LoadingPopManager();
-            loadingPopManager.clear();
-            loadingPopManager.updateLargeText("Save");
-            loadingPopManager.updateText(
-                "Saving the current project. Please wait."
-            );
-            loadingPopManager.show();
-
-            const core = new Core();
-            // Save the current data first and then save the dataset
-            core.save(
-                () => {
-                    core.saveDataset(
-                        null,
-                        () => {
-                            loadingPopManager.hide();
-                            this.enable();
-                        },
-                        (error) => {
-                            console.error(error);
-                            loadingPopManager.hide();
-                            this.enable();
-                        }
-                    );
-                },
-                (error) => {
-                    console.error(error);
-                    loadingPopManager.hide();
-                    this.enable();
-                }
-            );
-        });
-
         this.saveToButton.addEventListener("click", () => {
             const core = new Core();
             core.save(
@@ -512,12 +476,10 @@ class NavigationBar {
     }
 
     disableSave() {
-        this.saveButton.disabled = true;
         this.saveToButton.disabled = true;
     }
 
     enableSave() {
-        this.saveButton.disabled = false;
         this.saveToButton.disabled = false;
     }
 }

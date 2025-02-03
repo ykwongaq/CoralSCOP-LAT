@@ -204,9 +204,9 @@ class Server:
     @time_it
     def load_project(self, project_path: str):
         if project_path is None:
-            self.logger.info("Loading project from default path ...")
-        else:
-            self.logger.info(f"Loading project from {project_path} ...")
+            project_path = ProjectCreator.TEMP_PROJECT_FILE
+
+        self.logger.info(f"Loading project from {project_path} ...")
         project_loader = ProjectLoader()
 
         dataset, last_image_idx = project_loader.load(project_path)
