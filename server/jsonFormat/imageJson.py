@@ -29,7 +29,7 @@ class ImageJson:
         assert self.height is not None, "height is not set"
         return {
             "id": self.id,
-            "filename": self.filename,
+            "file_name": self.filename,
             "width": self.width,
             "height": self.height,
         }
