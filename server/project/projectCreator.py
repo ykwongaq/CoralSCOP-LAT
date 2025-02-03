@@ -6,6 +6,7 @@ import eel
 import numpy as np
 import zipfile
 import shutil
+import tempfile
 
 from ..util.general import decode_image_url
 from ..util.json import save_json
@@ -32,6 +33,10 @@ class ProjectCreator:
     SAM_ENCODER_PATH = "models/vit_h_encoder_quantized.onnx"
     SAM_MODEL_TYPE = "vit_b"
     CORALSCOP_PATH = "models/vit_b_coralscop.pth"
+
+    TEMP_PROJECT_FILE = os.path.join(
+        tempfile.gettempdir(), "CoralSCOP-LAT", "temp_project.coral"
+    )
 
     # Singleton
     _instance = None
@@ -69,15 +74,18 @@ class ProjectCreator:
         inputs = request.get_inputs()
         inputs = sorted(inputs, key=lambda x: x["image_file_name"])
 
+        need_segmentation = request.need_segmentation()
+
         output_file = request.get_output_file()
+
+        if output_file is None:
+            output_file = ProjectCreator.TEMP_PROJECT_FILE
+        self.logger.info(f"Creating project at {output_file}")
+
         if os.path.exists(output_file):
             os.remove(output_file)
 
         output_dir = os.path.dirname(output_file)
-
-        min_area = request.get_min_area()
-        min_confidence = request.get_min_confidence()
-        max_iou = request.get_max_iou()
 
         # Temporary folders for storing images, embeddings, annotations, and project info
         output_temp_dir = os.path.join(output_dir, TEMP_CREATE_NAME)
@@ -109,10 +117,6 @@ class ProjectCreator:
             self.logger.info(f"Processing input {idx + 1} of {len(inputs)}")
             self.logger.info(f"Processing image: {image_filename}")
 
-            # image, embedding, annotations = self.process_one_input(
-            #     image_url, image_filename, min_area, min_confidence, max_iou
-            # )
-
             start_time = time.time()
             self.logger.info(f"Processing image {image_filename} ...")
 
@@ -139,7 +143,10 @@ class ProjectCreator:
 
             # Detect coral
             annotation_file_json = AnnotationFileJson()
-            masks = self.segmentation.generate_masks_json(image)
+            if need_segmentation:
+                masks = self.segmentation.generate_masks_json(image)
+            else:
+                masks = []
 
             image_json = ImageJson()
             image_json.set_id(idx)
@@ -151,6 +158,10 @@ class ProjectCreator:
             if len(masks) == 0:
                 pass
             else:
+                min_area = request.get_min_area()
+                min_confidence = request.get_min_confidence()
+                max_iou = request.get_max_iou()
+
                 masks = self.segmentation.filter(
                     masks, min_area, min_confidence, max_iou
                 )

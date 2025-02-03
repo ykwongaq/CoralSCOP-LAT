@@ -19,6 +19,7 @@ class ProjectCreateRequest:
                 "maxIOU": 0.5
             },
             "output_file": "/path/to/output"
+            "need_segmentation": true
         }
 
         If the image_path is provided, the image_url will be ignored.
@@ -28,20 +29,28 @@ class ProjectCreateRequest:
         assert "output_file" in request, "Missing 'output_dir' in request"
         assert "config" in request, "Missing 'config' in request"
 
+        self.inputs = request["inputs"]
+        self.output_file = request["output_file"]
+
+        self.need_segmentation_ = request.get("need_segmentation", True)
+
     def get_inputs(self) -> List[Dict]:
-        return self.request["inputs"]
+        return self.inputs
 
     def get_output_file(self) -> str:
-        return self.request["output_file"]
+        return self.output_file
 
     def get_min_area(self) -> float:
-        return self.request["config"]["minArea"]
+        return float(self.request["config"]["minArea"])
 
     def get_min_confidence(self) -> float:
-        return self.request["config"]["minConfidence"]
+        return float(self.request["config"]["minConfidence"])
 
     def get_max_iou(self) -> float:
-        return self.request["config"]["maxIOU"]
+        return float(self.request["config"]["maxIOU"])
+
+    def need_segmentation(self) -> bool:
+        return self.need_segmentation_
 
 
 class FileDialogRequest:
@@ -70,3 +79,19 @@ class FileDialogRequest:
 
     def get_filetypes(self) -> List[tuple]:
         return self.filetypes
+
+
+class QuickStartRequest:
+    def __init__(self, request: Dict):
+        self.request = request
+        assert "image_url" in request, "Missing 'image_url' in request"
+        assert "image_file_name" in request, "Missing 'image_file_name' in request"
+
+        self.image_url = request["image_url"]
+        self.image_file_name = request["image_file_name"]
+
+    def get_image_url(self) -> str:
+        return self.image_url
+
+    def get_image_file_name(self) -> str:
+        return self.image_file_name

@@ -1,5 +1,7 @@
 class LabelPage {
-    constructor() {}
+    constructor() {
+        this.core = new Core();
+    }
 
     init() {
         // Canvas
@@ -52,12 +54,6 @@ class LabelPage {
         // Action Manager
         const actionManager = new ActionManager();
     }
-}
-
-async function saveProject() {
-    const core = new Core();
-    await core.save()();
-    await eel.on_close()();
 }
 
 function main() {

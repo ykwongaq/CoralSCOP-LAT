@@ -7,6 +7,8 @@ import numpy as np
 import zipfile
 import shutil
 
+from .projectCreator import ProjectCreator
+
 from ..util.json import load_json
 from ..dataset import Dataset, Data
 from PIL import Image
@@ -33,6 +35,15 @@ class ProjectLoader:
         - Dataset: The loaded dataset
         - int: Last image index
         """
+        if project_path is None:
+            project_path = ProjectCreator.TEMP_PROJECT_FILE
+
+        assert os.path.exists(
+            project_path
+        ), f"Project file {project_path} does not exist"
+
+        self.logger.info(f"Loading project from {project_path}")
+
         # Unzip the project file
         start_time = time.time()
         temp_output_dir = os.path.join(os.path.dirname(project_path), TEMP_LOAD_NAME)

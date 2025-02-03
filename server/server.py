@@ -9,7 +9,12 @@ from .segmentation import CoralSegmentation
 # from .maskEiditor import MaskEidtor
 from .maskCreator import MaskCreator, Prompt
 from .util.general import get_resource_path
-from .project import ProjectCreator, ProjectLoader, ProjectExportor, ProjectSaver
+from .project import (
+    ProjectCreator,
+    ProjectLoader,
+    ProjectExportor,
+    ProjectSaver,
+)
 from .dataset import Dataset, Data
 from .util.coco import to_coco_annotation, rle_mask_to_rle_vis_encoding
 from .util.requests import FileDialogRequest, ProjectCreateRequest
@@ -198,7 +203,10 @@ class Server:
 
     @time_it
     def load_project(self, project_path: str):
-        self.logger.info(f"Loading project from {project_path} ...")
+        if project_path is None:
+            self.logger.info("Loading project from default path ...")
+        else:
+            self.logger.info(f"Loading project from {project_path} ...")
         project_loader = ProjectLoader()
 
         dataset, last_image_idx = project_loader.load(project_path)
