@@ -42,17 +42,7 @@ Download the `CoralSCOP` Model weight from `https://github.com/zhengziqiang/Cora
 
 ### Download SAM model
 
-Download the `vit-h` model from SAM `https://github.com/facebookresearch/segment-anything`
-
-### Convert SAM model to Onnx
-
-Run the following program
-
-```bash
-python gen_sam_onnx.py --checkpoint [path to sam model] --output_dir [output_dir] --model-type vit_h
-```
-
-The above command will generate the onnx model to `output_dir`, extract the `vit_h_decoder_quantized.onnx` and `vit_h_encoder_quantized.onnx` to `models` folder
+Download two models, `vit_h_decoder_quantized.onnx` and `vit_h_encoder_quantized.onnx`, from [OneDrive](https://hkustconnect-my.sharepoint.com/:f:/g/personal/ykwongaq_connect_ust_hk/EhRCvPn3zYRHjaGm43XYOz8ByFFJr6n9l75Gi7KkoEuVVA?e=PXGTcO), and save them into the models folder.
 
 At the end, the `models` folder should have the following structure:
 
@@ -70,6 +60,3 @@ models
 4. Statistic Page - Project level statistic
 5. Tutorial
 6. Pop up problem in mac
-9: Image json filename -> file_name
-10: Export annotated image take too long time
-```
