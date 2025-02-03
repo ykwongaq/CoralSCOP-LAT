@@ -261,7 +261,7 @@ class PreprocessPage {
                 navigateTo("main_page.html");
             });
             generalPopup.addButton("continue-button", "Continue", () => {
-                const projectPath = status["project_path"];
+                const projectPath = encodeURIComponent(status["project_path"]);
                 navigateTo(
                     "label.html?askLoadProject=false&project_path=" +
                         projectPath
