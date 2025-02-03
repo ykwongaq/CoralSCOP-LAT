@@ -63,20 +63,6 @@ models
 |- vit_h_encoder_quantized.onnx
 ```
 
-# 5. Download Font Awesome 6
-
-Download `Font Awesome 6` `Free For Web` here `https://fontawesome.com/download` and extract the folder to `web/css`
-
-The structure for `css` folder should be
-
-css
-|- fontawesome-free-6.6.0-web
-|- labelPage
-|- preprocessPage
-|- ...
-
-```
-
 ## Todo
 1. Quick Start
 2. Rearrange id after delete
