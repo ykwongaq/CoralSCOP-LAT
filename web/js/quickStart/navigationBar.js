@@ -2,6 +2,7 @@ class NavigationBar {
     static GALLERY_PAGE = "galleryPage";
     static ANNOTATION_PAGE = "annotationPage";
     static STATISTIC_PAGE = "statisticPage";
+    static SETTING_PAGE = "settingPage";
 
     constructor(dom) {
         if (NavigationBar.instance) {
@@ -13,6 +14,7 @@ class NavigationBar {
         this.importImageButton = this.dom.querySelector("#import-image-button");
         this.labelButton = this.dom.querySelector("#label-button");
         this.statisticButton = this.dom.querySelector("#statistic-button");
+        this.settingButton = this.dom.querySelector("#setting-button");
 
         this.exportButton = this.dom.querySelector("#file-button");
         this.exportDropDownMenu = this.dom.querySelector("#file-dropdown-menu");
@@ -43,6 +45,7 @@ class NavigationBar {
         this.initImportImageButton();
         this.initLabelButton();
         this.initStatisticButton();
+        this.initSettingButton();
         this.initExportButton();
         this.initSave();
     }
@@ -60,9 +63,9 @@ class NavigationBar {
                 generalPopManager.hide();
             });
             generalPopManager.addButton("import-button", "Import", () => {
-                generalPopManager.hide();
                 const quickStartPage = new QuickStartPage();
                 quickStartPage.getImageInput().click();
+                generalPopManager.hide();
             });
             generalPopManager.show();
         });
@@ -82,6 +85,12 @@ class NavigationBar {
 
             const statisticPage = new StatisticPage();
             statisticPage.update();
+        });
+    }
+
+    initSettingButton() {
+        this.settingButton.addEventListener("click", () => {
+            this.showPage(NavigationBar.SETTING_PAGE);
         });
     }
 
@@ -444,6 +453,10 @@ class NavigationBar {
                 break;
             case NavigationBar.STATISTIC_PAGE:
                 // TODO: Handle leaving the annotation page
+                break;
+            case NavigationBar.SETTING_PAGE:
+                const configPage = new ConfigPage();
+                configPage.displayConfig();
                 break;
             default:
                 break;

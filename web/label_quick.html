@@ -76,6 +76,15 @@
                             </li>
                             <li class="nav-list__item">
                                 <button
+                                    id="setting-button"
+                                    class="nav-list__button"
+                                >
+                                    <span class="ico-gear"></span
+                                    ><span class="arrow-tooltip">Setting</span>
+                                </button>
+                            </li>
+                            <li class="nav-list__item">
+                                <button
                                     id="save-drop-down-button"
                                     class="nav-list__button"
                                 >
@@ -331,6 +340,15 @@
                     <div class="float-bar" id="action-panel">
                         <div class="float-bar__inner">
                             <div class="float-bar__item">
+                                <button
+                                    id="detect-coral-button"
+                                    class="float-bar__button"
+                                >
+                                    <span class="ico-search icon"></span>Detect
+                                    Coral
+                                </button>
+                            </div>
+                            <div class="float-bar__item">
                                 <div
                                     class="toggle-color-plate-popup toggle-fn"
                                     id="category-selector"
@@ -573,7 +591,7 @@
 
                         <div class="main-section__content">
                             <div class="settings-group">
-                                <div class="setting-item">
+                                <div class="setting-item" id="min-area-block">
                                     <label
                                         id="min-area-text"
                                         for="min-area-slider"
@@ -586,7 +604,11 @@
                                         (0-20)
                                     </p>
                                     <div class="slider-blk">
-                                        <input type="text" value="20" />
+                                        <input
+                                            id="min-area-input"
+                                            type="text"
+                                            value="20"
+                                        />
                                         <div class="slider-blk__inner">
                                             <input
                                                 type="range"
@@ -594,6 +616,7 @@
                                                 name="min-area"
                                                 min="0"
                                                 max="20"
+                                                data-suffix="%"
                                                 step="0.1"
                                             />
                                         </div>
@@ -611,8 +634,15 @@
                                         confidence. It can increase the
                                         reliability of the annotation. (in %).
                                     </p>
-                                    <div class="slider-blk">
-                                        <input type="text" value="100" />
+                                    <div
+                                        class="slider-blk"
+                                        id="min-confidence-block"
+                                    >
+                                        <input
+                                            id="min-confidence-input"
+                                            type="text"
+                                            value="100"
+                                        />
                                         <div class="slider-blk__inner">
                                             <input
                                                 type="range"
@@ -627,7 +657,10 @@
                                     </div>
                                 </div>
 
-                                <div class="setting-item">
+                                <div
+                                    class="setting-item"
+                                    id="max-overlap-block"
+                                >
                                     <label
                                         id="max-overlap-text"
                                         for="max-overlap-slider"
@@ -640,15 +673,23 @@
                                         measured using Intersection over Union
                                         (IoU). (in %).
                                     </p>
-                                    <div class="slider-blk">
-                                        <input type="text" value="100" />
+                                    <div
+                                        class="slider-blk"
+                                        id="max-overlap-block"
+                                    >
+                                        <input
+                                            id="max-overlap-input"
+                                            type="text"
+                                            value="100"
+                                        />
                                         <div class="slider-blk__inner">
                                             <input
                                                 type="range"
                                                 id="max-overlap-slider"
                                                 name="max-overlap"
                                                 min="0"
-                                                max="100"
+                                                max="50"
+                                                step="0.1"
                                                 data-suffix="%"
                                             />
                                         </div>
@@ -757,8 +798,10 @@
         <script src="js/label/viewPanel.js"></script>
         <script src="js/quickStart/topPanel.js"></script>
         <script src="js/label/categorySelector.js"></script>
-        <script src="js/label/actionPanel.js"></script>
+        <script src="js/quickStart/actionPanel.js"></script>
         <script src="js/label/statisticPage.js"></script>
+        <script src="js/preprocess/config.js"></script>
+        <script src="js/preprocess/configPage.js"></script>
         <script src="js/quickStart/quickStartPage.js"></script>
     </body>
 </html>

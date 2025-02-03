@@ -35,6 +35,11 @@ class Slider {
         return this;
     }
 
+    updateValue(value) {
+        this.slider.value = value;
+        this.input.value = `${value}${this.suffix}`;
+    }
+
     _updateShadow() {
         console.log("f");
     }

@@ -27,6 +27,9 @@ class NavigationBar {
             page.classList.remove("active-page");
         });
 
+        const configPage = new ConfigPage();
+        configPage.displayConfig();
+
         const page = document.getElementById(pageId);
         page.classList.add("active-page");
     }

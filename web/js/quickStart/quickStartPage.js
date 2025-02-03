@@ -53,6 +53,11 @@ class QuickStartPage {
         // Action Manager
         const actionManager = new ActionManager();
 
+        // Setting Page
+        const settingPageDom = document.getElementById("settingPage");
+        const settingPage = new ConfigPage(settingPageDom);
+        settingPage.init();
+
         this.imageInput.addEventListener("change", (event) => {
             const file = event.target.files[0];
             if (file) {

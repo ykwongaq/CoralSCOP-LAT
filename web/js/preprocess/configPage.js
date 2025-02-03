@@ -13,11 +13,13 @@ class ConfigPage {
         this.pageDom = pageDom;
 
         this.minArea = ConfigPage.DEFAULT_MIN_AREA;
+        this.minAreaTemp = this.minArea;
         this.minAreaText = pageDom.querySelector("#min-area-text");
         this.minAreaSlider = pageDom.querySelector("#min-area-slider");
         this.minAreaInput = pageDom.querySelector("#min-area-input");
 
         this.minConfidence = ConfigPage.DEFAULT_MIN_CONFIDENCE;
+        this.minConfidenceTemp = this.minConfidence;
         this.minConfidenceText = pageDom.querySelector("#min-confidence-text");
         this.minConfidenceSlider = pageDom.querySelector(
             "#min-confidence-slider"
@@ -27,6 +29,7 @@ class ConfigPage {
         );
 
         this.maxIOU = ConfigPage.DEFAULT_MAX_IOU;
+        this.maxIOUTemp = this.maxIOU;
         this.maxOverlapText = pageDom.querySelector("#max-overlap-text");
         this.maxOverlapSlider = pageDom.querySelector("#max-overlap-slider");
         this.maxOverlapInput = pageDom.querySelector("#max-overlap-input");
@@ -34,28 +37,30 @@ class ConfigPage {
         this.saveButton = pageDom.querySelector("#save-setting-button");
         this.cancelButton = pageDom.querySelector("#cancel-setting-button");
 
+        this.minAreaBlock = pageDom.querySelector("#min-area-block");
+        this.minConfidenceBlock = pageDom.querySelector(
+            "#min-confidence-block"
+        );
+        this.maxOverlapBlock = pageDom.querySelector("#max-overlap-block");
+
         return this;
     }
 
     init() {
         // Place displayConfig() before initSliders() to ensure that the sliders are initialized with the correct values
-        this.displayConfig();
         this.initSliders();
+        this.displayConfig();
         this.initSaveButton();
     }
 
     initSliders() {
-        const minAreaBlock = this.pageDom.querySelector("#min-area-block");
-        minAreaBlock.Slider = new Slider(minAreaBlock, 0, 20);
-
-        const minConfidenceBlock = this.pageDom.querySelector(
-            "#min-confidence-block"
+        this.minAreaBlock.Slider = new Slider(this.minAreaBlock, 0, 20);
+        this.minConfidenceBlock.Slider = new Slider(
+            this.minConfidenceBlock,
+            0,
+            100
         );
-        minConfidenceBlock.Slider = new Slider(minConfidenceBlock, 0, 100);
-
-        const maxOverlapBlock =
-            this.pageDom.querySelector("#max-overlap-block");
-        maxOverlapBlock.Slider = new Slider(maxOverlapBlock, 0, 50);
+        this.maxOverlapBlock.Slider = new Slider(this.maxOverlapBlock, 0, 50);
     }
 
     initSaveButton() {
@@ -94,8 +99,8 @@ class ConfigPage {
     }
 
     displayConfig() {
-        this.minAreaSlider.value = this.minArea * 100;
-        this.minConfidenceSlider.value = this.minConfidence * 100;
-        this.maxOverlapSlider.value = this.maxIOU * 100;
+        this.minAreaBlock.Slider.updateValue(this.minArea * 100);
+        this.minConfidenceBlock.Slider.updateValue(this.minConfidence * 100);
+        this.maxOverlapBlock.Slider.updateValue(this.maxIOU * 100);
     }
 }

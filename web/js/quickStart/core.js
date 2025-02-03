@@ -543,6 +543,33 @@ class Core {
 
         loadProject_(filePath, callBack);
     }
+
+    detectCoral(request, callBack = null, errorCallBack = null) {
+        console.log(request.toJson());
+        eel.detect_coral(request.toJson())()
+            .then(() => {
+                if (callBack != null) {
+                    callBack();
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                }
+                this.popUpError(error);
+            });
+    }
+
+    setCurrentDataFromServer(callback = null, errorCallback = null) {
+        eel.get_current_data()()
+            .then((response) => {})
+            .catch((error) => {
+                if (errorCallback) {
+                    errorCallback(error);
+                }
+                this.popUpError();
+            });
+    }
 }
 
 /**

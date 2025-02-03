@@ -136,6 +136,11 @@ def export_charts(output_dir: str, requests: List[Dict]):
     server.export_charts(output_dir, requests)
 
 
+@eel.expose
+def detect_coral(request: Dict) -> Dict:
+    server.detect_coral(request)
+
+
 if __name__ == "__main__":
     setup_logging()
     print("Please wait for the tool to be ready ...")
