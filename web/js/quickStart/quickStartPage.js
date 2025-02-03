@@ -1,7 +1,12 @@
 class QuickStartPage {
     constructor() {
+        if (QuickStartPage.instance) {
+            return QuickStartPage.instance;
+        }
+        QuickStartPage.instance = this;
         const core = new Core();
         this.imageInput = document.getElementById("image-input");
+        return this;
     }
 
     init() {
@@ -82,6 +87,10 @@ class QuickStartPage {
             }
         });
     }
+
+    getImageInput() {
+        return this.imageInput;
+    }
 }
 
 function main() {
@@ -97,9 +106,13 @@ function main() {
     });
     generalPopManager.addButton("select-image-button", "Select Image", () => {
         generalPopManager.hide();
-        quickStartPage.imageInput.click();
+        quickStartPage.getImageInput().click();
     });
     generalPopManager.show();
+
+    window.onbeforeunload = function (event) {
+        return true;
+    };
 }
 
 document.addEventListener("DOMContentLoaded", main, { once: true });

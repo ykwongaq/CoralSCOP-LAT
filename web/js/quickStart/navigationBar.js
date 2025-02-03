@@ -10,6 +10,7 @@ class NavigationBar {
         NavigationBar.instance = this;
         this.dom = dom;
 
+        this.importImageButton = this.dom.querySelector("#import-image-button");
         this.labelButton = this.dom.querySelector("#label-button");
         this.statisticButton = this.dom.querySelector("#statistic-button");
 
@@ -39,10 +40,32 @@ class NavigationBar {
     }
 
     init() {
+        this.initImportImageButton();
         this.initLabelButton();
         this.initStatisticButton();
         this.initExportButton();
         this.initSave();
+    }
+
+    initImportImageButton() {
+        this.importImageButton.addEventListener("click", () => {
+            // First confirm with user that they want to import image
+            const generalPopManager = new GeneralPopManager();
+            generalPopManager.clear();
+            generalPopManager.updateLargeText("Import Image");
+            generalPopManager.updateText(
+                "Are you sure you want to import an image? This will clear the current image. Please make sure to save or export your work."
+            );
+            generalPopManager.addButton("back-button", "Back", () => {
+                generalPopManager.hide();
+            });
+            generalPopManager.addButton("import-button", "Import", () => {
+                generalPopManager.hide();
+                const quickStartPage = new QuickStartPage();
+                quickStartPage.getImageInput().click();
+            });
+            generalPopManager.show();
+        });
     }
 
     initLabelButton() {
