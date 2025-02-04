@@ -3,9 +3,12 @@ import { MaskSelector } from "../maskSelector.js";
 import { Canvas } from "../canvas.js";
 import { Core } from "../core.js";
 import { ActionManager } from "../action/actionManager.js";
-import { MaskCreator } from "../maskCreator.js";
-import { LabelPanel } from "./labelPanel.js";
-import { Category } from "../data/category.js";
+import { LabelPanel } from "../panels/index.js";
+
+import { CreateProjectRequest } from "../../requests/index.js";
+import { LoadingPopManager } from "../../util/index.js";
+import { ConfigPage } from "../../preprocess/panels/index.js";
+import { AddMaskPanel } from "./addMaskPanel.js";
 
 export class ActionPanel {
     constructor(actionPanel, actionContainerDom) {
@@ -15,7 +18,6 @@ export class ActionPanel {
         ActionPanel.instance = this;
 
         this.actionPanelDom = actionPanel;
-        this.actionContainerDom = actionContainerDom;
 
         this.categorySelectorDom =
             this.actionPanelDom.querySelector("#category-selector");
@@ -29,24 +31,9 @@ export class ActionPanel {
 
         this.removeButton = this.actionPanelDom.querySelector("#remove-button");
 
-        this.promptCategorySelectorDom = this.actionContainerDom.querySelector(
-            "#category-selector-prompt"
-        );
-        this.promptCategorySelector = new CategorySelector(
-            this.promptCategorySelectorDom,
-            this.labelSmallButtonTemplate
-        );
-
-        this.addMaskButton =
-            this.actionPanelDom.querySelector("#add-mask-button");
-        this.confirmPromptButton =
-            this.actionContainerDom.querySelector("#confirm-button");
-        this.undoPromptButton =
-            this.actionContainerDom.querySelector("#undo-button");
-        this.resetPromptButton =
-            this.actionContainerDom.querySelector("#reset-button");
-        this.backButton = this.actionContainerDom.querySelector(
-            "#back-to-edit-mode-btn"
+        this.addMaskPanel = new AddMaskPanel(
+            this.actionPanelDom,
+            actionContainerDom
         );
 
         this.undoButton = this.actionPanelDom.querySelector("#undo-button");
@@ -56,12 +43,9 @@ export class ActionPanel {
     }
 
     init() {
-        // this.initLabelToggleButton();
         this.initCategorySelector();
-        this.initPromptCategorySelector();
         this.initRemoveButton();
-        this.initAddMask();
-        this.initBackButton();
+        this.addMaskPanel.init();
         this.initUndoButton();
         this.initRedoButton();
     }
@@ -96,32 +80,6 @@ export class ActionPanel {
         const actionManager = new ActionManager();
         actionManager.registerShortCut(
             ActionManager.DEFAULT_STATE,
-            "c",
-            (event) => {
-                toggleButton.click();
-            }
-        );
-        document.addEventListener("keydown", (event) => {
-            if (actionManager.haveRegisteredDocumentEvent(event)) {
-                return;
-            }
-            const key = event.key.toLowerCase();
-            if (key === "c") {
-                actionManager.handleShortCut(key, event);
-                actionManager.addRegisteredDocumentEvent(event);
-            }
-        });
-    }
-
-    initPromptCategorySelector() {
-        const toggleButton = this.promptCategorySelector.getToggleButton();
-
-        // Register the shortcut for the label toggle button.
-        // We need ActionManager to handle the shortcut because
-        // different state will have different short cut operation.
-        const actionManager = new ActionManager();
-        actionManager.registerShortCut(
-            ActionManager.STATE_CREATE_MASK,
             "c",
             (event) => {
                 toggleButton.click();
@@ -191,140 +149,6 @@ export class ActionPanel {
         });
     }
 
-    initAddMask() {
-        this.addMaskButton.addEventListener("click", () => {
-            this.showAddMaskActionButtons();
-
-            const actionManager = new ActionManager();
-            actionManager.setState(ActionManager.STATE_CREATE_MASK);
-
-            const maskSelector = new MaskSelector();
-            maskSelector.clearSelection();
-
-            const canvas = new Canvas();
-            canvas.updateMasks();
-
-            this.hide();
-        });
-
-        this.undoPromptButton.addEventListener("click", () => {
-            const maskCreator = new MaskCreator();
-            maskCreator.undoPrompt();
-        });
-
-        this.resetPromptButton.addEventListener("click", () => {
-            const maskCreator = new MaskCreator();
-            maskCreator.clearPrompts();
-        });
-
-        this.confirmPromptButton.addEventListener("click", () => {
-            const maskCreator = new MaskCreator();
-            maskCreator.confirmPrompt();
-        });
-
-        // Register the shortcut for the label toggle button.
-        // We need ActionManager to handle the shortcut because
-        // different state will have different short cut operation.
-        const actionManager = new ActionManager();
-        actionManager.registerShortCut(
-            ActionManager.STATE_CREATE_MASK,
-            "control+z",
-            (event) => {
-                const labelPanel = new LabelPanel();
-                this.undoPromptButton.click();
-            }
-        );
-        actionManager.registerShortCut(
-            ActionManager.STATE_CREATE_MASK,
-            "r",
-            (event) => {
-                const labelPanel = new LabelPanel();
-                this.resetPromptButton.click();
-            }
-        );
-        actionManager.registerShortCut(
-            ActionManager.STATE_CREATE_MASK,
-            " ",
-            (event) => {
-                this.confirmPromptButton.click();
-            }
-        );
-        actionManager.registerShortCut(
-            ActionManager.DEFAULT_STATE,
-            "w",
-            (event) => {
-                this.addMaskButton.click();
-            }
-        );
-        actionManager.registerShortCut(
-            ActionManager.STATE_CREATE_MASK,
-            "w",
-            (event) => {
-                this.backButton.click();
-            }
-        );
-
-        document.addEventListener("keydown", (event) => {
-            if (actionManager.haveRegisteredDocumentEvent(event)) {
-                return;
-            }
-            const key = event.key.toLowerCase();
-            if (key === "z" && event.ctrlKey) {
-                actionManager.handleShortCut("control+z", event);
-                actionManager.addRegisteredDocumentEvent(event);
-            }
-        });
-
-        document.addEventListener("keydown", (event) => {
-            if (actionManager.haveRegisteredDocumentEvent(event)) {
-                return;
-            }
-            const key = event.key.toLowerCase();
-            if (key === "r") {
-                actionManager.handleShortCut("r", event);
-                actionManager.addRegisteredDocumentEvent(event);
-            }
-        });
-
-        document.addEventListener("keydown", (event) => {
-            if (actionManager.haveRegisteredDocumentEvent(event)) {
-                return;
-            }
-            const key = event.key.toLowerCase();
-            if (key === " ") {
-                actionManager.handleShortCut(" ", event);
-                actionManager.addRegisteredDocumentEvent(event);
-            }
-        });
-        document.addEventListener("keydown", (event) => {
-            if (actionManager.haveRegisteredDocumentEvent(event)) {
-                return;
-            }
-            const key = event.key.toLowerCase();
-            if (key === "w") {
-                actionManager.handleShortCut("e", event);
-                actionManager.addRegisteredDocumentEvent(event);
-            }
-        });
-    }
-
-    initBackButton() {
-        this.backButton.addEventListener("click", () => {
-            // Clear the mask creation prompts
-            const maskCreator = new MaskCreator();
-            maskCreator.clearPrompts();
-
-            this.hideAddMaskActionButtons();
-            this.show();
-
-            const actionManager = new ActionManager();
-            actionManager.setState(ActionManager.STATE_SELECT_MASK);
-
-            const maskSelector = new MaskSelector();
-            maskSelector.clearSelection();
-        });
-    }
-
     initUndoButton() {
         this.undoButton.addEventListener("click", () => {
             const core = new Core();
@@ -391,21 +215,9 @@ export class ActionPanel {
         this.actionPanelDom.classList.remove("hidden");
     }
 
-    showAddMaskActionButtons() {
-        this.undoPromptButton.classList.remove("hidden");
-        this.resetPromptButton.classList.remove("hidden");
-        this.confirmPromptButton.classList.remove("hidden");
-    }
-
-    hideAddMaskActionButtons() {
-        this.undoPromptButton.classList.add("hidden");
-        this.resetPromptButton.classList.add("hidden");
-        this.confirmPromptButton.classList.add("hidden");
-    }
-
     updateCategoryButtons() {
         this.categorySelector.updateCategoryButtons();
-        this.promptCategorySelector.updateCategoryButtons([new Category(-1)]);
+        this.addMaskPanel.updateCategoryButtons();
     }
 
     getCategorySelector() {
@@ -413,6 +225,6 @@ export class ActionPanel {
     }
 
     getPromptCategorySelector() {
-        return this.promptCategorySelector;
+        return this.addMaskPanel.getPromptCategorySelector();
     }
 }

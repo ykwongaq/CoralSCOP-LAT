@@ -65,9 +65,9 @@ export class ActionPanel {
         this.initRedoButton();
     }
 
-    initQuadratButton() {
-        this.quadratButton.addEventListener("click", () => {});
-    }
+    // initQuadratButton() {
+    //     this.quadratButton.addEventListener("click", () => {});
+    // }
 
     initDetectCoralButton() {
         this.detectCoralButton.addEventListener("click", () => {
@@ -150,32 +150,6 @@ export class ActionPanel {
         });
     }
 
-    // initPromptCategorySelector() {
-    //     const toggleButton = this.promptCategorySelector.getToggleButton();
-
-    //     // Register the shortcut for the label toggle button.
-    //     // We need ActionManager to handle the shortcut because
-    //     // different state will have different short cut operation.
-    //     const actionManager = new ActionManager();
-    //     actionManager.registerShortCut(
-    //         ActionManager.STATE_CREATE_MASK,
-    //         "c",
-    //         (event) => {
-    //             toggleButton.click();
-    //         }
-    //     );
-    //     document.addEventListener("keydown", (event) => {
-    //         if (actionManager.haveRegisteredDocumentEvent(event)) {
-    //             return;
-    //         }
-    //         const key = event.key.toLowerCase();
-    //         if (key === "c") {
-    //             actionManager.handleShortCut(key, event);
-    //             actionManager.addRegisteredDocumentEvent(event);
-    //         }
-    //     });
-    // }
-
     initRemoveButton() {
         this.removeButton.addEventListener("click", () => {
             // Get the selected masks
@@ -227,138 +201,6 @@ export class ActionPanel {
             }
         });
     }
-
-    // initAddMask() {
-    //     this.addMaskButton.addEventListener("click", () => {
-    //         this.showAddMaskActionButtons();
-
-    //         const actionManager = new ActionManager();
-    //         actionManager.setState(ActionManager.STATE_CREATE_MASK);
-
-    //         const maskSelector = new MaskSelector();
-    //         maskSelector.clearSelection();
-
-    //         const canvas = new Canvas();
-    //         canvas.updateMasks();
-
-    //         this.hide();
-    //     });
-
-    //     this.undoPromptButton.addEventListener("click", () => {
-    //         const maskCreator = new MaskCreator();
-    //         maskCreator.undoPrompt();
-    //     });
-
-    //     this.resetPromptButton.addEventListener("click", () => {
-    //         const maskCreator = new MaskCreator();
-    //         maskCreator.clearPrompts();
-    //     });
-
-    //     this.confirmPromptButton.addEventListener("click", () => {
-    //         const maskCreator = new MaskCreator();
-    //         maskCreator.confirmPrompt();
-    //     });
-
-    //     this.exitAddMaskButton.addEventListener("click", () => {
-    //         // Clear the mask creation prompts
-    //         const maskCreator = new MaskCreator();
-    //         maskCreator.clearPrompts();
-
-    //         this.hideAddMaskActionButtons();
-    //         this.show();
-
-    //         const actionManager = new ActionManager();
-    //         actionManager.setState(ActionManager.STATE_SELECT_MASK);
-
-    //         const maskSelector = new MaskSelector();
-    //         maskSelector.clearSelection();
-    //     });
-
-    //     // Register the shortcut for the label toggle button.
-    //     // We need ActionManager to handle the shortcut because
-    //     // different state will have different short cut operation.
-    //     const actionManager = new ActionManager();
-    //     actionManager.registerShortCut(
-    //         ActionManager.STATE_CREATE_MASK,
-    //         "control+z",
-    //         (event) => {
-    //             const labelPanel = new LabelPanel();
-    //             this.undoPromptButton.click();
-    //         }
-    //     );
-    //     actionManager.registerShortCut(
-    //         ActionManager.STATE_CREATE_MASK,
-    //         "r",
-    //         (event) => {
-    //             const labelPanel = new LabelPanel();
-    //             this.resetPromptButton.click();
-    //         }
-    //     );
-    //     actionManager.registerShortCut(
-    //         ActionManager.STATE_CREATE_MASK,
-    //         " ",
-    //         (event) => {
-    //             this.confirmPromptButton.click();
-    //         }
-    //     );
-    //     actionManager.registerShortCut(
-    //         ActionManager.DEFAULT_STATE,
-    //         "w",
-    //         (event) => {
-    //             this.addMaskButton.click();
-    //         }
-    //     );
-    //     actionManager.registerShortCut(
-    //         ActionManager.STATE_CREATE_MASK,
-    //         "w",
-    //         (event) => {
-    //             this.exitAddMaskButton.click();
-    //         }
-    //     );
-
-    //     document.addEventListener("keydown", (event) => {
-    //         if (actionManager.haveRegisteredDocumentEvent(event)) {
-    //             return;
-    //         }
-    //         const key = event.key.toLowerCase();
-    //         if (key === "z" && event.ctrlKey) {
-    //             actionManager.handleShortCut("control+z", event);
-    //             actionManager.addRegisteredDocumentEvent(event);
-    //         }
-    //     });
-
-    //     document.addEventListener("keydown", (event) => {
-    //         if (actionManager.haveRegisteredDocumentEvent(event)) {
-    //             return;
-    //         }
-    //         const key = event.key.toLowerCase();
-    //         if (key === "r") {
-    //             actionManager.handleShortCut("r", event);
-    //             actionManager.addRegisteredDocumentEvent(event);
-    //         }
-    //     });
-
-    //     document.addEventListener("keydown", (event) => {
-    //         if (actionManager.haveRegisteredDocumentEvent(event)) {
-    //             return;
-    //         }
-    //         const key = event.key.toLowerCase();
-    //         if (key === " ") {
-    //             actionManager.handleShortCut(" ", event);
-    //             actionManager.addRegisteredDocumentEvent(event);
-    //         }
-    //     });
-    //     document.addEventListener("keydown", (event) => {
-    //         if (actionManager.haveRegisteredDocumentEvent(event)) {
-    //             return;
-    //         }
-    //         const key = event.key.toLowerCase();
-    //         if (key === "w") {
-    //             actionManager.handleShortCut("w", event);
-    //             actionManager.addRegisteredDocumentEvent(event);
-    //         }
-    //     });
-    // }
 
     initUndoButton() {
         this.undoButton.addEventListener("click", () => {
@@ -425,18 +267,6 @@ export class ActionPanel {
     show() {
         this.actionPanelDom.classList.remove("hidden");
     }
-
-    // showAddMaskActionButtons() {
-    //     this.undoPromptButton.classList.remove("hidden");
-    //     this.resetPromptButton.classList.remove("hidden");
-    //     this.confirmPromptButton.classList.remove("hidden");
-    // }
-
-    // hideAddMaskActionButtons() {
-    //     this.undoPromptButton.classList.add("hidden");
-    //     this.resetPromptButton.classList.add("hidden");
-    //     this.confirmPromptButton.classList.add("hidden");
-    // }
 
     updateCategoryButtons() {
         this.categorySelector.updateCategoryButtons();
