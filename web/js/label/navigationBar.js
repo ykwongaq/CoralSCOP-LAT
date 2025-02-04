@@ -1,4 +1,10 @@
-class NavigationBar {
+import { Core } from "./core.js";
+import { Canvas } from "./canvas.js";
+import { StatisticPage } from "./statisticPage.js";
+import { LoadingPopManager } from "../loadingPopManager.js";
+import { FileDialogRequest } from "../request.js";
+
+export class NavigationBar {
     static GALLERY_PAGE = "galleryPage";
     static ANNOTATION_PAGE = "annotationPage";
     static STATISTIC_PAGE = "statisticPage";

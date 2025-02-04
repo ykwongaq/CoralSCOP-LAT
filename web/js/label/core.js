@@ -1,7 +1,25 @@
+import { Data } from "./data.js";
+import { Record, HistoryManager } from "./historyManager.js";
+import { NavigationBar } from "./navigationBar.js";
+import { Canvas } from "./canvas.js";
+import { LabelPanel } from "./labelPanel.js";
+import { ActionPanel } from "./actionPanel.js";
+import { TopPanel } from "./topPanel.js";
+import { MaskSelector } from "./maskSelector.js";
+import { MaskCreator } from "./maskCreator.js";
+import { LoadingPopManager } from "../loadingPopManager.js";
+import { ErrorPopManager } from "../errorPopManager.js";
+import { CategoryManager } from "./data.js";
+import { Test } from "./test.js";
+import { GalleryPage } from "./galleryPage.js";
+import { FileDialogRequest } from "../request.js";
+import { AnnotationRenderer } from "./annotationRenderer.js";
+import { StatisticPage } from "./statisticPage.js";
+
 /**
  * Core of the frontend. It is used to communicate with the backend.
  */
-class Core {
+export class Core {
     static DEFAULT_HISTORY_SIZE = 10;
     static ISSUE_URL = "https://github.com/ykwongaq/CoralSCOP-LAT/issues";
 

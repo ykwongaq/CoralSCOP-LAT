@@ -1,4 +1,4 @@
-class GalleryPage {
+export class GalleryPage {
     constructor(dom) {
         if (GalleryPage.instance) {
             return GalleryPage.instance;

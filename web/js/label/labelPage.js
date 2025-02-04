@@ -1,4 +1,16 @@
-class LabelPage {
+import { Core } from "./core.js";
+import { Canvas } from "./canvas.js";
+import { LabelPanel } from "./labelPanel.js";
+import { TopPanel } from "./topPanel.js";
+import { ActionPanel } from "./actionPanel.js";
+import { ViewPanel } from "./viewPanel.js";
+import { NavigationBar } from "./navigationBar.js";
+import { GalleryPage } from "./galleryPage.js";
+import { StatisticPage } from "./statisticPage.js";
+import { ActionManager } from "./actionManager.js";
+import { GeneralPopManager } from "../generalPopManager.js";
+
+export class LabelPage {
     constructor() {
         this.core = new Core();
     }

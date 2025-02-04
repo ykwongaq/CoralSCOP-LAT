@@ -1,4 +1,4 @@
-class LoadingPopManager {
+export class LoadingPopManager {
     static DEFAULT_TITLE = "Hold Tight!";
     static DEFAULT_CONTENT =
         "We're brewing up something amazing. It might take a few minutes, so sit back and relax. Better not to leave this page. Thanks for your patience! 😊";

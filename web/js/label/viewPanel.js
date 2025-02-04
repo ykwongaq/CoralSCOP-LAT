@@ -1,4 +1,7 @@
-class ViewPanel {
+import { Canvas } from "./canvas.js";
+import { ActionManager } from "./actionManager.js";
+
+export class ViewPanel {
     constructor(dom) {
         this.dom = dom;
 

@@ -1,4 +1,6 @@
-class CategoryManager {
+import { MaskSelector } from "./maskSelector.js";
+
+export class CategoryManager {
     static FOCUS_COLOR = "#0000FF"; // blue
     static REMOVE_COLOR = "#00FF00"; // green
     static DEFAULT_COLOR = "#FF0000"; // red
@@ -592,7 +594,7 @@ class CategoryManager {
     }
 }
 
-class Category {
+export class Category {
     static DEAD_CORAL_ID = 0;
     static PREDICTED_CORAL_ID = -1;
     static PROMPT_COLOR_ID = -2;
@@ -709,7 +711,7 @@ class Category {
     }
 }
 
-class Mask {
+export class Mask {
     constructor(annotation) {
         this.annotation = annotation;
         this.maskId = annotation["id"];
@@ -856,7 +858,7 @@ class Mask {
     }
 }
 
-class Data {
+export class Data {
     constructor() {
         this.imageName = null;
         this.imagePath = null;

@@ -1,4 +1,4 @@
-class Request {
+export class Request {
     constructor() {}
 
     toJson() {
@@ -13,7 +13,7 @@ class Request {
  * 2. Path to the output directory
  * 3. Coral segmentation configuration
  */
-class CreateProjectRequest extends Request {
+export class CreateProjectRequest extends Request {
     static INPUTS = "inputs";
     static OUTPUT_FILE = "output_file";
     static CONFIG = "config";
@@ -56,7 +56,7 @@ class CreateProjectRequest extends Request {
     }
 }
 
-class FileDialogRequest extends Request {
+export class FileDialogRequest extends Request {
     static DEFAULT_EXT = "defaultextension";
     static FILE_TYPES = "fileTypes";
     static DESCRIPTION = "description";

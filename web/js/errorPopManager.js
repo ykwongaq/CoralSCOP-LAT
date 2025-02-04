@@ -1,4 +1,4 @@
-class ErrorPopManager {
+export class ErrorPopManager {
     constructor() {
         if (ErrorPopManager.instance) {
             return ErrorPopManager.instance;

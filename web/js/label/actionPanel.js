@@ -1,4 +1,13 @@
-class ActionPanel {
+import { CategorySelector } from "./categorySelector.js";
+import { MaskSelector } from "./maskSelector.js";
+import { Canvas } from "./canvas.js";
+import { Core } from "./core.js";
+import { ActionManager } from "./actionManager.js";
+import { MaskCreator } from "./maskCreator.js";
+import { LabelPanel } from "./labelPanel.js";
+import { Category } from "./data.js";
+
+export class ActionPanel {
     constructor(actionPanel, actionContainerDom) {
         if (ActionPanel.instance) {
             return ActionPanel.instance;

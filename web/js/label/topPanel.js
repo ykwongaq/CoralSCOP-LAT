@@ -1,4 +1,8 @@
-class TopPanel {
+import { Core } from "./core.js";
+import { ActionManager } from "./actionManager.js";
+import { NavigationBar } from "./navigationBar.js";
+
+export class TopPanel {
     constructor(dom) {
         if (TopPanel.instance) {
             return TopPanel.instance;

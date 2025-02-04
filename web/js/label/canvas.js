@@ -1,4 +1,8 @@
-class Canvas {
+import { ActionManager } from "./actionManager.js";
+import { Mask } from "./data.js";
+import { Prompt } from "./maskCreator.js";
+
+export class Canvas {
     constructor(dom) {
         if (Canvas.instance) {
             return Canvas.instance;

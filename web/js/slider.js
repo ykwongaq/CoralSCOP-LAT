@@ -1,4 +1,4 @@
-class Slider {
+export class Slider {
     constructor(_dom, min = 0, max = 100) {
         this.eventHandlers = {};
 

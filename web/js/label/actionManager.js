@@ -1,3 +1,8 @@
+import { Core } from "./core.js";
+import { MaskSelector } from "./maskSelector.js";
+import { MaskCreator, Prompt } from "./maskCreator.js";
+import { Canvas } from "./canvas.js";
+
 class ActionState {
     constructor(context) {
         this.context = context;
@@ -90,7 +95,7 @@ class MaskCreationState extends ActionState {
  * such as canvas click, short cut, etc.
  * ActionManage is a finte state machine.
  */
-class ActionManager {
+export class ActionManager {
     static STATE_SELECT_MASK = 0;
     static STATE_CREATE_MASK = 1;
 

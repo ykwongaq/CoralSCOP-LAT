@@ -1,4 +1,8 @@
-class StatisticPage {
+import { Core } from "./core.js";
+import { Category } from "./data.js";
+import { GeneralPopManager } from "../generalPopManager.js";
+
+export class StatisticPage {
     static SHALLOW_GRAY_COLOR = "#D3D3D3";
     static DEEP_GRAY_COLOR = "#7A7A7A";
     static GREEN_COLOR = "#28A745";

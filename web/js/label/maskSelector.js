@@ -1,4 +1,4 @@
-class MaskSelector {
+export class MaskSelector {
     constructor() {
         if (MaskSelector.instance) {
             return MaskSelector.instance;

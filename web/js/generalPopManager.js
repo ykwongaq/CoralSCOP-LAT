@@ -1,4 +1,4 @@
-class GeneralPopManager {
+export class GeneralPopManager {
     constructor() {
         if (GeneralPopManager.instance) {
             return GeneralPopManager.instance;

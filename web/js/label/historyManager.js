@@ -1,4 +1,4 @@
-class Record {
+export class Record {
     constructor(data, categoryInfo) {
         this.data = data;
         this.categoryInfo = categoryInfo;
@@ -20,7 +20,7 @@ class Record {
     }
 }
 
-class HistoryManager {
+export class HistoryManager {
     constructor(maxMemory = 10) {
         this.history = []; // Stack to store old states for undo
         this.redoStack = []; // Stack to store states for redo

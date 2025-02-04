@@ -1,4 +1,12 @@
-class LabelPanel {
+import { Canvas } from "./canvas.js";
+import { CategoryManager } from "./data.js";
+import { ActionPanel } from "./actionPanel.js";
+import { Slider } from "../slider.js";
+import { ActionManager } from "./actionManager.js";
+import { GeneralPopManager } from "../generalPopManager.js";
+import { Core } from "./core.js";
+
+export class LabelPanel {
     static TYPE_HEALTHY = 0;
     static TYPE_BLEACHED = 1;
     static TYPE_DEAD = 2;

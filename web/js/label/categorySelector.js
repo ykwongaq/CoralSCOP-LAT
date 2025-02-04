@@ -1,4 +1,7 @@
-class CategorySelector {
+import { Category, CategoryManager } from "./data.js";
+import { LabelPanel } from "./labelPanel.js";
+
+export class CategorySelector {
     static UNDEFINED_COLOR = "#dedede";
 
     constructor(selectorDom, categoryButtonTemplate) {

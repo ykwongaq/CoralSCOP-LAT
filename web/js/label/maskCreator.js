@@ -1,4 +1,9 @@
-class Prompt {
+import { Canvas } from "./canvas.js";
+import { Core } from "./core.js";
+import { ActionPanel } from "./actionPanel.js";
+import { Mask } from "./data.js";
+
+export class Prompt {
     static POSITIVE = 1;
     static NEGATIVE = 0;
 
@@ -37,7 +42,7 @@ class Prompt {
     }
 }
 
-class MaskCreator {
+export class MaskCreator {
     constructor() {
         if (MaskCreator.instance) {
             return MaskCreator.instance;
