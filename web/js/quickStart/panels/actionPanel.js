@@ -60,14 +60,9 @@ export class ActionPanel {
         this.initRemoveButton();
         this.addMaskPanel.init();
         this.quadratPanel.init();
-        this.initQuadratButton();
         this.initUndoButton();
         this.initRedoButton();
     }
-
-    // initQuadratButton() {
-    //     this.quadratButton.addEventListener("click", () => {});
-    // }
 
     initDetectCoralButton() {
         this.detectCoralButton.addEventListener("click", () => {
