@@ -1,6 +1,9 @@
 import { ActionManager } from "./action/actionManager.js";
 import { Mask } from "./data/index.js";
 import { Prompt } from "./maskCreator.js";
+import { Core } from "./core.js";
+import { Quadrat } from "./complexity/quadrat.js";
+
 export class Canvas {
     constructor(dom) {
         if (Canvas.instance) {
@@ -45,6 +48,7 @@ export class Canvas {
         this.promptedMask = null;
 
         // Retangle
+        this.showQuadrat = false;
         this.isSelectingRectangle = false;
         this.rectStartImagePixel = null;
         this.rectEndImagePixel = null;
@@ -176,6 +180,11 @@ export class Canvas {
         this.canvas.addEventListener("mousedown", (event) => {
             event.preventDefault();
 
+            // Only left click is allowed
+            if (event.button !== 0) {
+                return;
+            }
+
             let [canvasX, canvasY] = this.getMousePos(event);
             canvasX = Math.floor(canvasX);
             canvasY = Math.floor(canvasY);
@@ -199,6 +208,11 @@ export class Canvas {
         this.canvas.addEventListener("mouseup", (event) => {
             event.preventDefault();
 
+            // Only left click is allowed
+            if (event.button !== 0) {
+                return;
+            }
+
             let [canvasX, canvasY] = this.getMousePos(event);
             canvasX = Math.floor(canvasX);
             canvasY = Math.floor(canvasY);
@@ -221,6 +235,11 @@ export class Canvas {
 
         this.canvas.addEventListener("mousemove", (event) => {
             event.preventDefault();
+
+            // Only left click is allowed
+            if (event.button !== 0) {
+                return;
+            }
 
             let [canvasX, canvasY] = this.getMousePos(event);
             canvasX = Math.floor(canvasX);
@@ -312,32 +331,49 @@ export class Canvas {
             this.ctx.globalAlpha = 1.0;
         }
 
-        if (this.isSelectingRectangle) {
+        const core = new Core();
+        const quadrat = core.getQuadrat();
+        if (
+            this.isSelectingRectangle &&
+            this.rectStartImagePixel &&
+            this.rectEndImagePixel
+        ) {
             this.drawRectangle(
                 this.rectStartImagePixel[0],
                 this.rectStartImagePixel[1],
                 this.rectEndImagePixel[0],
-                this.rectEndImagePixel[1]
+                this.rectEndImagePixel[1],
+                {
+                    r: 255,
+                    g: 0,
+                    b: 0,
+                }
             );
+        } else if (this.showQuadrat && quadrat) {
+            const x1 = quadrat.getX1();
+            const y1 = quadrat.getY1();
+            const x2 = quadrat.getX2();
+            const y2 = quadrat.getY2();
+            this.drawRectangle(x1, y1, x2, y2, { r: 20, g: 145, b: 255 });
         }
 
         window.requestAnimationFrame(this.draw);
     };
 
-    drawRectangle(imageX1, imageY1, imageX2, imageY2) {
-        const startCanvas = this.imagePixelToCanvasPixel(imageX1, imageY1);
-        const endCanvas = this.imagePixelToCanvasPixel(imageX2, imageY2);
-
-        const x = Math.min(startCanvas[0], endCanvas[0]);
-        const y = Math.min(startCanvas[1], endCanvas[1]);
-        const width = Math.abs(startCanvas[0] - endCanvas[0]);
-        const height = Math.abs(startCanvas[1] - endCanvas[1]);
+    drawRectangle(imageX1, imageY1, imageX2, imageY2, rgb) {
+        const x = Math.min(imageX1, imageX2);
+        const y = Math.min(imageY1, imageY2);
+        const width = Math.abs(imageX1 - imageX2);
+        const height = Math.abs(imageY1 - imageY2);
 
         this.ctx.save();
         this.ctx.beginPath();
         this.ctx.rect(x, y, width, height);
-        this.ctx.fillStyle = "rgba(20, 145, 255, 0.2)"; // semi-transparent
-        this.ctx.strokeStyle = "#1491ff"; // solid red border
+        // this.ctx.fillStyle = "rgba(20, 145, 255, 0.3)"; // semi-transparent
+        // this.ctx.strokeStyle = "#1491ff"; // solid red border
+        this.ctx.fillStyle =
+            "rgba(" + rgb.r + "," + rgb.g + "," + rgb.b + ", 0.3)";
+        this.ctx.strokeStyle = "rgb(" + rgb.r + "," + rgb.g + "," + rgb.b + ")";
         this.ctx.lineWidth = 2;
         this.ctx.fill();
         this.ctx.stroke();
@@ -347,6 +383,7 @@ export class Canvas {
 
     setIsSelectingRectangle(isSelectingRectangle) {
         this.isSelectingRectangle = isSelectingRectangle;
+        console.log("isSelectingRectangle: ", this.isSelectingRectangle);
     }
 
     getIsSelectingRectangle() {
@@ -742,5 +779,9 @@ export class Canvas {
 
     getEndRectPixel() {
         return this.rectEndImagePixel;
+    }
+
+    setShowQuadrat(showQuadrat) {
+        this.showQuadrat = showQuadrat;
     }
 }

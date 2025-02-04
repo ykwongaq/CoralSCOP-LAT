@@ -3,16 +3,15 @@ import { MaskSelector } from "../maskSelector.js";
 import { Canvas } from "../canvas.js";
 import { Core } from "../core.js";
 import { ActionManager } from "../action/actionManager.js";
-import { MaskCreator } from "../maskCreator.js";
 import { LabelPanel } from "../panels/index.js";
-import { Category } from "../data/index.js";
 import { CreateProjectRequest } from "../../requests/index.js";
 import { LoadingPopManager } from "../../util/index.js";
 import { ConfigPage } from "../../preprocess/panels/index.js";
 import { AddMaskPanel } from "./addMaskPanel.js";
+import { QuadratPanel } from "./quadratPanel.js";
 
 export class ActionPanel {
-    constructor(actionPanel, actionContainerDom) {
+    constructor(actionPanel, actionContainerDom, quadratBarDom) {
         if (ActionPanel.instance) {
             return ActionPanel.instance;
         }
@@ -39,29 +38,14 @@ export class ActionPanel {
         this.quadratButton =
             this.actionPanelDom.querySelector("#quadrat-button");
 
-        // this.promptCategorySelectorDom = this.actionContainerDom.querySelector(
-        //     "#category-selector-prompt"
-        // );
-        // this.promptCategorySelector = new CategorySelector(
-        //     this.promptCategorySelectorDom,
-        //     this.labelSmallButtonTemplate
-        // );
-
-        // this.addMaskButton =
-        //     this.actionPanelDom.querySelector("#add-mask-button");
-        // this.confirmPromptButton =
-        //     this.actionContainerDom.querySelector("#confirm-button");
-        // this.undoPromptButton =
-        //     this.actionContainerDom.querySelector("#undo-button");
-        // this.resetPromptButton =
-        //     this.actionContainerDom.querySelector("#reset-button");
-        // this.exitAddMaskButton = this.actionContainerDom.querySelector(
-        //     "#back-to-edit-mode-btn"
-        // );
-
         this.addMaskPanel = new AddMaskPanel(
             this.actionPanelDom,
             actionContainerDom
+        );
+
+        this.quadratPanel = new QuadratPanel(
+            this.actionPanelDom,
+            quadratBarDom
         );
 
         this.undoButton = this.actionPanelDom.querySelector("#undo-button");
@@ -73,10 +57,9 @@ export class ActionPanel {
     init() {
         this.initDetectCoralButton();
         this.initCategorySelector();
-        // this.initPromptCategorySelector();
         this.initRemoveButton();
-        // this.initAddMask();
         this.addMaskPanel.init();
+        this.quadratPanel.init();
         this.initQuadratButton();
         this.initUndoButton();
         this.initRedoButton();

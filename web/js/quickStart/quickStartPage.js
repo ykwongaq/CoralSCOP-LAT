@@ -39,7 +39,12 @@ export class QuickStartPage {
         const actionContainerDom = document.getElementById(
             "actionContainer-bar"
         );
-        const actionPanel = new ActionPanel(actionPanelDom, actionContainerDom);
+        const quadratBarDom = document.getElementById("quadrat-bar");
+        const actionPanel = new ActionPanel(
+            actionPanelDom,
+            actionContainerDom,
+            quadratBarDom
+        );
         actionPanel.init();
 
         // View Control Panel

@@ -15,7 +15,7 @@ export class QuadratCreationState extends ActionState {
         this.canvas.setEndRectPixel(imageX, imageY);
     }
 
-    mosueDownPixel(imageX, imageY) {
+    mouseMovePixel(imageX, imageY) {
         if (!this.canvas.getIsSelectingRectangle()) {
             return;
         }
