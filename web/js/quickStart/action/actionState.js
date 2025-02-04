@@ -13,6 +13,18 @@ export class ActionState {
         // Do nothing by default
     }
 
+    mouseDownPixel(imageX, imageY) {
+        // Do nothing by default
+    }
+
+    mouseUpPixel(imageX, imageY) {
+        // Do nothing by default
+    }
+
+    mouseMovePixel(imageX, imageY) {
+        // Do nothing by default
+    }
+
     registerShortCut(key, callback) {
         this.shortCutsDict[key] = callback;
     }

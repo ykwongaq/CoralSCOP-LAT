@@ -1,10 +1,10 @@
 @font-face {
   font-family: "icomoon";
-  src: url("fonts/icomoon.eot?zfo9cu");
-  src: url("fonts/icomoon.eot?zfo9cu#iefix") format("embedded-opentype"),
-    url("fonts/icomoon.ttf?zfo9cu") format("truetype"),
-    url("fonts/icomoon.woff?zfo9cu") format("woff"),
-    url("fonts/icomoon.svg?zfo9cu#icomoon") format("svg");
+  src: url("fonts/icomoon.eot?m5vbs8");
+  src: url("fonts/icomoon.eot?m5vbs8#iefix") format("embedded-opentype"),
+    url("fonts/icomoon.ttf?m5vbs8") format("truetype"),
+    url("fonts/icomoon.woff?m5vbs8") format("woff"),
+    url("fonts/icomoon.svg?m5vbs8#icomoon") format("svg");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -115,6 +115,9 @@
 }
 .ico-save:before {
   content: "\e900";
+}
+.ico-rectangle:before {
+  content: "\ea53";
 }
 .ico-basecamp:before {
   content: "\eab2";

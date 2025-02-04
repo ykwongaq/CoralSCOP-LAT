@@ -43,6 +43,11 @@ export class Canvas {
             255 / 255
         }, 0.6)`;
         this.promptedMask = null;
+
+        // Retangle
+        this.isSelectingRectangle = false;
+        this.rectStartImagePixel = null;
+        this.rectEndImagePixel = null;
     }
 
     init() {
@@ -50,7 +55,6 @@ export class Canvas {
         this.enableDrag();
         this.enableEditting();
         this.enableWindowResize();
-        this.enableMaskSelection();
     }
 
     enableZoom() {
@@ -106,15 +110,13 @@ export class Canvas {
         });
     }
 
-    enableEditting() {}
-
     enableWindowResize() {
         window.addEventListener("resize", () => {
             this.resetViewpoint();
         });
     }
 
-    enableMaskSelection() {
+    enableEditting() {
         this.canvas.addEventListener("click", (event) => {
             event.preventDefault();
 
@@ -169,6 +171,75 @@ export class Canvas {
 
             const actionManager = new ActionManager();
             actionManager.rightClickPixel(imageX, imageY);
+        });
+
+        this.canvas.addEventListener("mousedown", (event) => {
+            event.preventDefault();
+
+            let [canvasX, canvasY] = this.getMousePos(event);
+            canvasX = Math.floor(canvasX);
+            canvasY = Math.floor(canvasY);
+
+            let [imageX, imageY] = this.canvasPixelToImagePixel(
+                canvasX,
+                canvasY
+            );
+
+            const imageHeight = this.data.getImageHeight();
+            const imageWidth = this.data.getImageWidth();
+
+            // Clip the value of imageX and imageY to the image boundary
+            imageX = Math.max(0, Math.min(imageX, imageWidth - 1));
+            imageY = Math.max(0, Math.min(imageY, imageHeight - 1));
+
+            const actionManager = new ActionManager();
+            actionManager.mouseDownPixel(imageX, imageY);
+        });
+
+        this.canvas.addEventListener("mouseup", (event) => {
+            event.preventDefault();
+
+            let [canvasX, canvasY] = this.getMousePos(event);
+            canvasX = Math.floor(canvasX);
+            canvasY = Math.floor(canvasY);
+
+            let [imageX, imageY] = this.canvasPixelToImagePixel(
+                canvasX,
+                canvasY
+            );
+
+            const imageHeight = this.data.getImageHeight();
+            const imageWidth = this.data.getImageWidth();
+
+            // Clip the value of imageX and imageY to the image boundary
+            imageX = Math.max(0, Math.min(imageX, imageWidth - 1));
+            imageY = Math.max(0, Math.min(imageY, imageHeight - 1));
+
+            const actionManager = new ActionManager();
+            actionManager.mouseUpPixel(imageX, imageY);
+        });
+
+        this.canvas.addEventListener("mousemove", (event) => {
+            event.preventDefault();
+
+            let [canvasX, canvasY] = this.getMousePos(event);
+            canvasX = Math.floor(canvasX);
+            canvasY = Math.floor(canvasY);
+
+            let [imageX, imageY] = this.canvasPixelToImagePixel(
+                canvasX,
+                canvasY
+            );
+
+            const imageHeight = this.data.getImageHeight();
+            const imageWidth = this.data.getImageWidth();
+
+            // Clip the value of imageX and imageY to the image boundary
+            imageX = Math.max(0, Math.min(imageX, imageWidth - 1));
+            imageY = Math.max(0, Math.min(imageY, imageHeight - 1));
+
+            const actionManager = new ActionManager();
+            actionManager.mouseMovePixel(imageX, imageY);
         });
     }
 
@@ -241,8 +312,46 @@ export class Canvas {
             this.ctx.globalAlpha = 1.0;
         }
 
+        if (this.isSelectingRectangle) {
+            this.drawRectangle(
+                this.rectStartImagePixel[0],
+                this.rectStartImagePixel[1],
+                this.rectEndImagePixel[0],
+                this.rectEndImagePixel[1]
+            );
+        }
+
         window.requestAnimationFrame(this.draw);
     };
+
+    drawRectangle(imageX1, imageY1, imageX2, imageY2) {
+        const startCanvas = this.imagePixelToCanvasPixel(imageX1, imageY1);
+        const endCanvas = this.imagePixelToCanvasPixel(imageX2, imageY2);
+
+        const x = Math.min(startCanvas[0], endCanvas[0]);
+        const y = Math.min(startCanvas[1], endCanvas[1]);
+        const width = Math.abs(startCanvas[0] - endCanvas[0]);
+        const height = Math.abs(startCanvas[1] - endCanvas[1]);
+
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.rect(x, y, width, height);
+        this.ctx.fillStyle = "rgba(20, 145, 255, 0.2)"; // semi-transparent
+        this.ctx.strokeStyle = "#1491ff"; // solid red border
+        this.ctx.lineWidth = 2;
+        this.ctx.fill();
+        this.ctx.stroke();
+        this.ctx.closePath();
+        this.ctx.restore();
+    }
+
+    setIsSelectingRectangle(isSelectingRectangle) {
+        this.isSelectingRectangle = isSelectingRectangle;
+    }
+
+    getIsSelectingRectangle() {
+        return this.isSelectingRectangle;
+    }
 
     updateMasks() {
         this.drawMasks();
@@ -541,6 +650,16 @@ export class Canvas {
     }
 
     /**
+     * Inverse of canvasPixelToImagePixel: given an image pixel (x, y),
+     * return its coordinate in the current canvas space (after scale & origin).
+     */
+    imagePixelToCanvasPixel(imageX, imageY) {
+        const canvasX = (imageX - this.origin.x) * this.scale;
+        const canvasY = (imageY - this.origin.y) * this.scale;
+        return [canvasX, canvasY];
+    }
+
+    /**
      * Show the given promted mask.
      * If the given mask is null, then do not show anything.
      * @param {Mask} mask
@@ -607,5 +726,21 @@ export class Canvas {
 
     getMaskOpacity() {
         return this.maskOpacity;
+    }
+
+    setStartRectPixel(imageX, imageY) {
+        this.rectStartImagePixel = [imageX, imageY];
+    }
+
+    setEndRectPixel(imageX, imageY) {
+        this.rectEndImagePixel = [imageX, imageY];
+    }
+
+    getStartRectPixel() {
+        return this.rectStartImagePixel;
+    }
+
+    getEndRectPixel() {
+        return this.rectEndImagePixel;
     }
 }

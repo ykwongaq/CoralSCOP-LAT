@@ -28,6 +28,7 @@ export class Core {
         this.dataHistoryManager = null;
 
         this.dataModified = false;
+        this.quadrat = null;
 
         return this;
     }
@@ -523,8 +524,6 @@ export class Core {
                             const data = Data.parseResponse(response);
                             this.setData(data);
 
-                            console.log("Data", this.data);
-
                             this.dataHistoryManager = new HistoryManager(
                                 Core.DEFAULT_HISTORY_SIZE
                             );
@@ -596,6 +595,14 @@ export class Core {
                 this.popUpError();
             });
     }
+
+    getQuadrat() {
+        return this.quadrat;
+    }
+
+    setQuadrat(quadrat) {
+        this.quadrat = quadrat;
+    }
 }
 
 /**
@@ -617,8 +624,6 @@ eel.expose(afterProjectCreation);
 function afterProjectCreation(status) {
     const loadingPopManager = new LoadingPopManager();
     loadingPopManager.hide();
-
-    console.log("status", status);
 
     if (status["finished"]) {
         const core = new Core();

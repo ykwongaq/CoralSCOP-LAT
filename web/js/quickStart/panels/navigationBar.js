@@ -24,6 +24,7 @@ export class NavigationBar {
         this.labelButton = this.dom.querySelector("#label-button");
         this.statisticButton = this.dom.querySelector("#statistic-button");
         this.settingButton = this.dom.querySelector("#setting-button");
+        this.complexityButton = this.dom.querySelector("#complexity-button");
 
         this.exportButton = this.dom.querySelector("#file-button");
         this.exportDropDownMenu = this.dom.querySelector("#file-dropdown-menu");
@@ -54,6 +55,7 @@ export class NavigationBar {
         this.initImportImageButton();
         this.initLabelButton();
         this.initStatisticButton();
+        this.initComplexityButton();
         this.initSettingButton();
         this.initExportButton();
         this.initSave();
@@ -100,6 +102,12 @@ export class NavigationBar {
     initSettingButton() {
         this.settingButton.addEventListener("click", () => {
             this.showPage(NavigationBar.SETTING_PAGE);
+        });
+    }
+
+    initComplexityButton() {
+        this.complexityButton.addEventListener("click", () => {
+            console.log();
         });
     }
 

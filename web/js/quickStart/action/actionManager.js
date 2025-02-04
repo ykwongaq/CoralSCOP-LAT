@@ -1,5 +1,6 @@
 import { MaskCreationState } from "./maskCreationState.js";
 import { MaskSelectionState } from "./maskSelectionState.js";
+import { QuadratCreationState } from "./quadratCreationState.js";
 
 /**
  * ActionManager is used to manage the user actions.
@@ -10,6 +11,7 @@ import { MaskSelectionState } from "./maskSelectionState.js";
 export class ActionManager {
     static STATE_SELECT_MASK = 0;
     static STATE_CREATE_MASK = 1;
+    static STATE_CREATE_QUADRAT = 2;
 
     static DEFAULT_STATE = ActionManager.STATE_SELECT_MASK;
 
@@ -23,6 +25,7 @@ export class ActionManager {
 
         this.maskCreationState = new MaskCreationState(this);
         this.maskSelectionState = new MaskSelectionState(this);
+        this.quadratCreationState = new QuadratCreationState(this);
 
         this.setState(ActionManager.DEFAULT_STATE);
 
@@ -37,6 +40,18 @@ export class ActionManager {
         this.state.leftClickPixel(imageX, imageY);
     }
 
+    mouseDownPixel(imageX, imageY) {
+        this.state.mouseDownPixel(imageX, imageY);
+    }
+
+    mouseMovePixel(imageX, imageY) {
+        this.state.mouseMovePixel(imageX, imageY);
+    }
+
+    mouseUpPixel(imageX, imageY) {
+        this.state.mouseUpPixel(imageX, imageY);
+    }
+
     setState(stateId) {
         switch (stateId) {
             case ActionManager.STATE_SELECT_MASK:
@@ -44,6 +59,9 @@ export class ActionManager {
                 break;
             case ActionManager.STATE_CREATE_MASK:
                 this.state = this.maskCreationState;
+                break;
+            case ActionManager.STATE_CREATE_QUADRAT:
+                this.state = this.quadratCreationState;
                 break;
             default:
                 throw new Error("Invalid state");
@@ -60,6 +78,9 @@ export class ActionManager {
                 break;
             case ActionManager.STATE_CREATE_MASK:
                 this.maskCreationState.registerShortCut(keyCombo, callback);
+                break;
+            case ActionManager.STATE_CREATE_QUADRAT:
+                this.quadratCreationState.registerShortCut(keyCombo, callback);
                 break;
         }
     }
