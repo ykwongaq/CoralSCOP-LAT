@@ -1,7 +1,13 @@
+import { Core } from "./core.js";
+import { ImageSelector } from "./imageSelector.js";
+import { FileDialogRequest, CreateProjectRequest } from "../requests/index.js";
+import { GeneralPopManager, LoadingPopManager } from "../util/index.js";
+import { NavigationBar, ConfigPage, DropArea } from "./panels/index.js";
+
 /**
  * PreprocessPage class
  */
-class PreprocessPage {
+export class PreprocessPage {
     constructor() {
         // Home Button
         this.backMainPageButton = document.getElementById(

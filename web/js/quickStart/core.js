@@ -1,7 +1,21 @@
+import { Record, HistoryManager } from "./historyManager.js";
+import { Canvas } from "./canvas.js";
+import { MaskSelector } from "./maskSelector.js";
+import { MaskCreator } from "./maskCreator.js";
+import { FileDialogRequest, CreateProjectRequest } from "../requests/index.js";
+import { AnnotationRenderer } from "./annotationRenderer.js";
+
+import { Data, CategoryManager } from "./data/index.js";
+
+import { LabelPanel } from "./panels/index.js";
+import { ActionPanel, TopPanel, NavigationBar } from "./panels/index.js";
+
+import { ErrorPopManager, LoadingPopManager } from "../util/index.js";
+
 /**
  * Core of the frontend. It is used to communicate with the backend.
  */
-class Core {
+export class Core {
     static DEFAULT_HISTORY_SIZE = 10;
     static ISSUE_URL = "https://github.com/ykwongaq/CoralSCOP-LAT/issues";
 
@@ -509,6 +523,8 @@ class Core {
                             const data = Data.parseResponse(response);
                             this.setData(data);
 
+                            console.log("Data", this.data);
+
                             this.dataHistoryManager = new HistoryManager(
                                 Core.DEFAULT_HISTORY_SIZE
                             );
@@ -545,7 +561,6 @@ class Core {
     }
 
     detectCoral(request, callBack = null, errorCallBack = null) {
-        console.log(request.toJson());
         eel.detect_coral(request.toJson())()
             .then((response) => {
                 this.recordData();
@@ -560,7 +575,7 @@ class Core {
                 canvas.updateMasks();
 
                 if (callBack != null) {
-                    callBack(importedData);
+                    callBack();
                 }
             })
             .catch((error) => {
@@ -602,6 +617,8 @@ eel.expose(afterProjectCreation);
 function afterProjectCreation(status) {
     const loadingPopManager = new LoadingPopManager();
     loadingPopManager.hide();
+
+    console.log("status", status);
 
     if (status["finished"]) {
         const core = new Core();

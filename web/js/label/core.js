@@ -1,20 +1,22 @@
-import { Data } from "./data.js";
 import { Record, HistoryManager } from "./historyManager.js";
-import { NavigationBar } from "./navigationBar.js";
 import { Canvas } from "./canvas.js";
-import { LabelPanel } from "./labelPanel.js";
-import { ActionPanel } from "./actionPanel.js";
-import { TopPanel } from "./topPanel.js";
 import { MaskSelector } from "./maskSelector.js";
 import { MaskCreator } from "./maskCreator.js";
-import { LoadingPopManager } from "../loadingPopManager.js";
-import { ErrorPopManager } from "../errorPopManager.js";
-import { CategoryManager } from "./data.js";
-import { Test } from "./test.js";
-import { GalleryPage } from "./galleryPage.js";
-import { FileDialogRequest } from "../request.js";
+import { FileDialogRequest } from "../requests/index.js";
 import { AnnotationRenderer } from "./annotationRenderer.js";
-import { StatisticPage } from "./statisticPage.js";
+
+import { Data, CategoryManager } from "./data/index.js";
+
+import {
+    ActionPanel,
+    LabelPanel,
+    TopPanel,
+    GalleryPage,
+    StatisticPage,
+    NavigationBar,
+} from "./panels/index.js";
+
+import { ErrorPopManager, LoadingPopManager } from "../util/index.js";
 
 /**
  * Core of the frontend. It is used to communicate with the backend.

@@ -1,4 +1,4 @@
-class PreprocessConfig {
+export class PreprocessConfig {
     static DEFAULT_OUTPUT_DIR = ".";
     constructor() {
         if (PreprocessConfig.instance) {

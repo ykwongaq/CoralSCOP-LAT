@@ -1,14 +1,17 @@
 import { Core } from "./core.js";
 import { Canvas } from "./canvas.js";
-import { LabelPanel } from "./labelPanel.js";
-import { TopPanel } from "./topPanel.js";
-import { ActionPanel } from "./actionPanel.js";
-import { ViewPanel } from "./viewPanel.js";
-import { NavigationBar } from "./navigationBar.js";
-import { GalleryPage } from "./galleryPage.js";
-import { StatisticPage } from "./statisticPage.js";
-import { ActionManager } from "./actionManager.js";
-import { GeneralPopManager } from "../generalPopManager.js";
+import { ActionManager } from "./action/actionManager.js";
+import { GeneralPopManager } from "../util/index.js";
+
+import {
+    LabelPanel,
+    TopPanel,
+    ActionPanel,
+    ViewPanel,
+    NavigationBar,
+    GalleryPage,
+    StatisticPage,
+} from "./panels/index.js";
 
 export class LabelPage {
     constructor() {

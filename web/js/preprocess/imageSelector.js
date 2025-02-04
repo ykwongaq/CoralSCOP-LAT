@@ -1,4 +1,4 @@
-class ImageSelector {
+export class ImageSelector {
     constructor() {
         this.imageNames = [];
         this.selectedImageNames = [];

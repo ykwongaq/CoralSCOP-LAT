@@ -1,4 +1,8 @@
-class Core {
+import { FileDialogRequest } from "../requests/index.js";
+import { ErrorPopManager, LoadingPopManager } from "../util/index.js";
+import { PreprocessPage } from "./preprocessPage.js";
+
+export class Core {
     static ISSUE_URL = "https://github.com/ykwongaq/CoralSCOP-LAT/issues";
 
     constructor() {

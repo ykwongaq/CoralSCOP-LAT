@@ -1,4 +1,13 @@
-class QuickStartPage {
+import { Core } from "./core.js";
+import { Canvas } from "./canvas.js";
+import { ActionManager } from "./action/actionManager.js";
+import { GeneralPopManager, LoadingPopManager } from "../util/index.js";
+
+import { LabelPanel, ViewPanel, StatisticPage } from "./panels/index.js";
+import { ConfigPage } from "../preprocess/panels/index.js";
+import { ActionPanel, TopPanel, NavigationBar } from "./panels/index.js";
+
+export class QuickStartPage {
     constructor() {
         if (QuickStartPage.instance) {
             return QuickStartPage.instance;
