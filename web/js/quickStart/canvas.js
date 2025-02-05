@@ -383,7 +383,6 @@ export class Canvas {
 
     setIsSelectingRectangle(isSelectingRectangle) {
         this.isSelectingRectangle = isSelectingRectangle;
-        console.log("isSelectingRectangle: ", this.isSelectingRectangle);
     }
 
     getIsSelectingRectangle() {
