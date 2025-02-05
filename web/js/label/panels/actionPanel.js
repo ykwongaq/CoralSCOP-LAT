@@ -4,10 +4,6 @@ import { Canvas } from "../canvas.js";
 import { Core } from "../core.js";
 import { ActionManager } from "../action/actionManager.js";
 import { LabelPanel } from "../panels/index.js";
-
-import { CreateProjectRequest } from "../../requests/index.js";
-import { LoadingPopManager } from "../../util/index.js";
-import { ConfigPage } from "../../preprocess/panels/index.js";
 import { AddMaskPanel } from "./addMaskPanel.js";
 
 export class ActionPanel {
