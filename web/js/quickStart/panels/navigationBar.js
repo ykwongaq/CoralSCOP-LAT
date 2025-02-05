@@ -453,7 +453,7 @@ export class NavigationBar {
 
     showPage(pageId) {
         this.clearActiveState();
-        switch (this.currentPageId) {
+        switch (pageid) {
             case NavigationBar.GALLERY_PAGE:
                 // TODO: Handle leaving the gallery page
                 break;
