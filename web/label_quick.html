@@ -762,18 +762,57 @@
                 <div id="complexityPage" class="main-section page">
                     <div class="main-section__inner">
                         <h2 class="main-section__title">Complexity Report</h2>
-                        <div id="no-quadrat-content">
-                            <p class="main-section__desc">
-                                Please define the qaudrat in the
-                                <button
-                                    id="complexity-label-button"
-                                    class="save-button button"
-                                >
-                                    Label Page
-                                </button>
-                            </p>
+                        <div class="main-section__content">
+                            <div id="no-quadrat-content">
+                                <p class="main-section__desc">
+                                    Please define the qaudrat in the
+                                    <button
+                                        id="complexity-label-button"
+                                        class="save-button button"
+                                    >
+                                        Label Page
+                                    </button>
+                                </p>
+                            </div>
+                            <div id="have-quadrat-content">
+                                <div class="complexity-group">
+                                    <div class="complexity-item">
+                                        <label class="complexity-item__title"
+                                            >Quadrat</label
+                                        >
+                                        <div>
+                                            <img
+                                                src="assets/complexity/example.jpg"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div class="complexity-item">
+                                        <label class="complexity-item__title"
+                                            >Depth Map</label
+                                        >
+                                        <div>
+                                            <img
+                                                src="assets/complexity/example.jpg"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="complexity-item full-width"
+                                        id="max-overlap-block"
+                                    >
+                                        <label class="complexity-item__title"
+                                            >Point Cloud</label
+                                        >
+                                        <div class="convas-container">
+                                            <canvas
+                                                id="point-cloud-canvas"
+                                            ></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="have-quadrat-content"></div>
                     </div>
                 </div>
                 <div id="defaultPage" class="main-section page"></div>

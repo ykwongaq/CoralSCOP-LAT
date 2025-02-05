@@ -2804,3 +2804,54 @@ html:has(#confirm-button:not(.hidden)) #default-bar .float-bar__inner {
 }
 
 /*# sourceMappingURL=styles.css.map */
+.complexity-group {
+    display: grid;
+    gap: 25px 44px;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 1%;
+    margin-top: 1%;
+    margin-bottom: 30px;
+}
+
+.complexity-group .full-width {
+    grid-column: span 2;
+}
+
+.complexity-item {
+    box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.1);
+    padding: 25px 5%;
+}
+.complexity-item__title {
+    font-weight: 600;
+    color: var(--text-text-page-heading);
+    font-size: 20px;
+}
+.complexity-item__desc {
+    font-family: Roboto;
+    font-size: 16px;
+    margin-top: 14px;
+    margin-bottom: 8px;
+}
+
+.complexity-item img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    margin: 2% auto;
+    max-height: 450px;
+}
+
+.complexity-item canvas {
+    height: 100%; /* Make the canvas fill the parent's height */
+    width: 100%; /* Make the canvas fill the parent's width */
+    display: block;
+    object-fit: contain; /* Ensure the canvas respects the parent's dimensions */
+    max-height: 100%; /* Prevent canvas from growing beyond parent */
+    max-width: 100%; /* Prevent canvas from growing beyond parent */
+    margin: 2% auto;
+}
+
+/* .complexity-item .convas-container {
+    min-height: 400px;
+} */

@@ -1,5 +1,6 @@
 import { NavigationBar } from "./navigationBar.js";
 import { Core } from "../core.js";
+import { PointCloudCanvas } from "./pointCloudCanvas.js";
 
 export class ComplexityPage {
     constructor(dom) {
@@ -12,10 +13,15 @@ export class ComplexityPage {
         this.backLabelButton = document.getElementById(
             "complexity-label-button"
         );
+
+        this.pointCloudCanvasDom =
+            document.getElementById("point-cloud-canvas");
+        this.pointCloudCanvas = new PointCloudCanvas(this.pointCloudCanvasDom);
     }
 
     init() {
         this.initBackLabelButton();
+        this.pointCloudCanvas.init();
     }
 
     initBackLabelButton() {
@@ -32,9 +38,9 @@ export class ComplexityPage {
 
         const core = new Core();
         const quadrat = core.getQuadrat();
-        console.log("page quadrat", quadrat);
         if (quadrat) {
             this.haveQuadratContent.style.display = "block";
+            this.pointCloudCanvas.startRender();
         } else {
             this.noQuadratContent.style.display = "block";
         }
