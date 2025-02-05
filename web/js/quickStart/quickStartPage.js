@@ -3,9 +3,16 @@ import { Canvas } from "./canvas.js";
 import { ActionManager } from "./action/actionManager.js";
 import { GeneralPopManager, LoadingPopManager } from "../util/index.js";
 
-import { LabelPanel, ViewPanel, StatisticPage } from "./panels/index.js";
+import {
+    LabelPanel,
+    ViewPanel,
+    StatisticPage,
+    ActionPanel,
+    TopPanel,
+    NavigationBar,
+    ComplexityPage,
+} from "./panels/index.js";
 import { ConfigPage } from "../preprocess/panels/index.js";
-import { ActionPanel, TopPanel, NavigationBar } from "./panels/index.js";
 
 export class QuickStartPage {
     constructor() {
@@ -71,6 +78,11 @@ export class QuickStartPage {
         const settingPageDom = document.getElementById("settingPage");
         const settingPage = new ConfigPage(settingPageDom);
         settingPage.init();
+
+        // Complexity Page
+        const complexityPageDom = document.getElementById("complexityPage");
+        const complexityPage = new ComplexityPage(complexityPageDom);
+        complexityPage.init();
 
         this.imageInput.addEventListener("change", (event) => {
             const file = event.target.files[0];

@@ -5,3 +5,4 @@ export { TopPanel } from "./topPanel.js";
 export { ViewPanel } from "./viewPanel.js";
 export { NavigationBar } from "./navigationBar.js";
 export { StatisticPage } from "./statisticPage.js";
+export { ComplexityPage } from "./complexityPage.js";

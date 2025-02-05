@@ -197,9 +197,14 @@ export class Canvas {
             const imageHeight = this.data.getImageHeight();
             const imageWidth = this.data.getImageWidth();
 
-            // Clip the value of imageX and imageY to the image boundary
-            imageX = Math.max(0, Math.min(imageX, imageWidth - 1));
-            imageY = Math.max(0, Math.min(imageY, imageHeight - 1));
+            if (
+                imageX < 0 ||
+                imageX >= imageWidth ||
+                imageY < 0 ||
+                imageY >= imageHeight
+            ) {
+                return;
+            }
 
             const actionManager = new ActionManager();
             actionManager.mouseDownPixel(imageX, imageY);
@@ -210,6 +215,10 @@ export class Canvas {
 
             // Only left click is allowed
             if (event.button !== 0) {
+                return;
+            }
+
+            if (!this.isSelectingRectangle) {
                 return;
             }
 

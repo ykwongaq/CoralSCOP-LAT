@@ -6,12 +6,14 @@ import { FileDialogRequest } from "../../requests/filedialogRequest.js";
 import { ConfigPage } from "../../preprocess/panels/configPage.js";
 import { GeneralPopManager } from "../../util/generalPopManager.js";
 import { QuickStartPage } from "../quickStartPage.js";
+import { ComplexityPage } from "./complexityPage.js";
 
 export class NavigationBar {
     static GALLERY_PAGE = "galleryPage";
     static ANNOTATION_PAGE = "annotationPage";
     static STATISTIC_PAGE = "statisticPage";
     static SETTING_PAGE = "settingPage";
+    static COMPLEXITY_PAGE = "complexityPage";
 
     constructor(dom) {
         if (NavigationBar.instance) {
@@ -24,6 +26,7 @@ export class NavigationBar {
         this.labelButton = this.dom.querySelector("#label-button");
         this.statisticButton = this.dom.querySelector("#statistic-button");
         this.settingButton = this.dom.querySelector("#setting-button");
+        this.complexityButton = this.dom.querySelector("#complexity-button");
 
         this.exportButton = this.dom.querySelector("#file-button");
         this.exportDropDownMenu = this.dom.querySelector("#file-dropdown-menu");
@@ -54,6 +57,7 @@ export class NavigationBar {
         this.initImportImageButton();
         this.initLabelButton();
         this.initStatisticButton();
+        this.initComplexityButton();
         this.initSettingButton();
         this.initExportButton();
         this.initSave();
@@ -100,6 +104,12 @@ export class NavigationBar {
     initSettingButton() {
         this.settingButton.addEventListener("click", () => {
             this.showPage(NavigationBar.SETTING_PAGE);
+        });
+    }
+
+    initComplexityButton() {
+        this.complexityButton.addEventListener("click", () => {
+            this.showPage(NavigationBar.COMPLEXITY_PAGE);
         });
     }
 
@@ -459,6 +469,8 @@ export class NavigationBar {
                 break;
             case NavigationBar.ANNOTATION_PAGE:
                 // TODO: Handle leaving the annotation page
+                const canvas = new Canvas();
+                canvas.resetViewpoint();
                 break;
             case NavigationBar.STATISTIC_PAGE:
                 // TODO: Handle leaving the annotation page
@@ -467,7 +479,12 @@ export class NavigationBar {
                 const configPage = new ConfigPage();
                 configPage.displayConfig();
                 break;
+            case NavigationBar.COMPLEXITY_PAGE:
+                const complexityPage = new ComplexityPage();
+                complexityPage.update();
+                break;
             default:
+                console.log("Unknown page id", this.currentPageId);
                 break;
         }
 
