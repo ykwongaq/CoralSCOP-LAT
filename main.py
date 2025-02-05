@@ -3,7 +3,7 @@ import eel
 
 from server.server import Server
 from typing import List, Dict, Tuple
-from server.util.requests import FileDialogRequest
+from server.util.requests import FileDialogRequest, QuadratDepthRequest
 
 
 # Initialize logging
@@ -139,6 +139,18 @@ def export_charts(output_dir: str, requests: List[Dict]):
 @eel.expose
 def detect_coral(request: Dict) -> Dict:
     return server.detect_coral(request).to_json()
+
+
+@eel.expose
+def get_quadrat_depth(request: Dict) -> Dict:
+    quadrat_depth_request = QuadratDepthRequest(request)
+    return server.get_quadrat_depth(quadrat_depth_request)
+
+
+@eel.expose
+def analyze_complexity(request: Dict) -> Dict:
+    quadrat_depth_request = QuadratDepthRequest(request)
+    return server.analyze_complexity(quadrat_depth_request)
 
 
 if __name__ == "__main__":

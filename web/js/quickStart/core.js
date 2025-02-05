@@ -2,7 +2,11 @@ import { Record, HistoryManager } from "./historyManager.js";
 import { Canvas } from "./canvas.js";
 import { MaskSelector } from "./maskSelector.js";
 import { MaskCreator } from "./maskCreator.js";
-import { FileDialogRequest, CreateProjectRequest } from "../requests/index.js";
+import {
+    FileDialogRequest,
+    CreateProjectRequest,
+    QuadratDepthRequest,
+} from "../requests/index.js";
 import { AnnotationRenderer } from "./annotationRenderer.js";
 
 import { Data, CategoryManager } from "./data/index.js";
@@ -603,6 +607,66 @@ export class Core {
     setQuadrat(quadrat) {
         this.quadrat = quadrat;
         console.log("setting quadrat", quadrat);
+    }
+
+    getQuadratDepth(quadrat, callBack = null, errorCallBack = null) {
+        const quadratDepthRequest = new QuadratDepthRequest();
+        quadratDepthRequest.setX1(quadrat.getX1());
+        quadratDepthRequest.setY1(quadrat.getY1());
+        quadratDepthRequest.setX2(quadrat.getX2());
+        quadratDepthRequest.setY2(quadrat.getY2());
+
+        const loadingPopManager = new LoadingPopManager();
+        loadingPopManager.clear();
+        loadingPopManager.updateLargeText("Estimating Depth...");
+        loadingPopManager.updateText("Please wait...");
+        loadingPopManager.show();
+
+        eel.get_quadrat_depth(quadratDepthRequest.toJson())().then(
+            (response) => {
+                loadingPopManager.hide();
+                if (callBack) {
+                    callBack(response);
+                }
+            },
+            (error) => {
+                loadingPopManager.hide();
+                if (errorCallBack) {
+                    errorCallBack(error);
+                }
+                this.popUpError(error);
+            }
+        );
+    }
+
+    analyzeComplexity(quadrat, callBack = null, errorCallBack = null) {
+        const quadratDepthRequest = new QuadratDepthRequest();
+        quadratDepthRequest.setX1(quadrat.getX1());
+        quadratDepthRequest.setY1(quadrat.getY1());
+        quadratDepthRequest.setX2(quadrat.getX2());
+        quadratDepthRequest.setY2(quadrat.getY2());
+
+        const loadingPopManager = new LoadingPopManager();
+        loadingPopManager.clear();
+        loadingPopManager.updateLargeText("Estimating Depth...");
+        loadingPopManager.updateText("Please wait...");
+        loadingPopManager.show();
+
+        eel.analyze_complexity(quadratDepthRequest.toJson())().then(
+            (response) => {
+                loadingPopManager.hide();
+                if (callBack) {
+                    callBack(response);
+                }
+            },
+            (error) => {
+                loadingPopManager.hide();
+                if (errorCallBack) {
+                    errorCallBack(error);
+                }
+                this.popUpError(error);
+            }
+        );
     }
 }
 

@@ -1,6 +1,7 @@
 import { NavigationBar } from "./navigationBar.js";
 import { Core } from "../core.js";
-import { PointCloudCanvas } from "./pointCloudCanvas.js";
+import { PointCloudCanvas, ImageBlock, ComplexityTable } from "./index.js";
+import { QuadratDepthResponse } from "../../responses/quadratDepthResponse.js";
 
 export class ComplexityPage {
     constructor(dom) {
@@ -17,6 +18,15 @@ export class ComplexityPage {
         this.pointCloudCanvasDom =
             document.getElementById("point-cloud-canvas");
         this.pointCloudCanvas = new PointCloudCanvas(this.pointCloudCanvasDom);
+
+        const quadratImageBlockDom = document.getElementById("quadrat-block");
+        this.quadratImageBlock = new ImageBlock(quadratImageBlockDom);
+
+        const depthBlockDom = document.getElementById("depth-block");
+        this.depthImageBlock = new ImageBlock(depthBlockDom);
+
+        const complexityTableDom = document.getElementById("complexity-table");
+        this.complexityTable = new ComplexityTable(complexityTableDom);
     }
 
     init() {
@@ -33,16 +43,62 @@ export class ComplexityPage {
 
     update() {
         // Hide all content
-        this.noQuadratContent.style.display = "none";
-        this.haveQuadratContent.style.display = "none";
+        this.noQuadratContent.classList.add("hidden");
+        this.haveQuadratContent.classList.add("hidden");
 
         const core = new Core();
         const quadrat = core.getQuadrat();
         if (quadrat) {
-            this.haveQuadratContent.style.display = "block";
-            this.pointCloudCanvas.startRender();
+            this.haveQuadratContent.classList.remove("hidden");
+            core.getQuadratDepth(quadrat, (response) => {
+                const quadratDepthResponse = new QuadratDepthResponse(response);
+
+                this.quadratImageBlock.updateImage(
+                    core.getData().getImagePath(),
+                    quadrat.getX1(),
+                    quadrat.getY1(),
+                    quadrat.getX2(),
+                    quadrat.getY2()
+                );
+
+                this.depthImageBlock.updateImage(
+                    quadratDepthResponse.getDepthVisPath(),
+                    quadrat.getX1(),
+                    quadrat.getY1(),
+                    quadrat.getX2(),
+                    quadrat.getY2()
+                );
+
+                const depthList = quadratDepthResponse.getDepthList();
+                const cols = quadratDepthResponse.getCols();
+                const rows = quadratDepthResponse.getRows();
+
+                this.pointCloudCanvas
+                    .extractColorList(
+                        core.getData().getImagePath(),
+                        quadrat.getX1(),
+                        quadrat.getY1(),
+                        quadrat.getX2(),
+                        quadrat.getY2()
+                    )
+                    .then((colorList) => {
+                        this.pointCloudCanvas.renderPointCloud(
+                            colorList,
+                            depthList,
+                            rows,
+                            cols
+                        );
+                    })
+                    .catch((error) => {
+                        core.popUpError(error);
+                    });
+
+                core.analyzeComplexity(quadrat, (reportDict) => {
+                    this.complexityTable.update(reportDict);
+                });
+            });
         } else {
-            this.noQuadratContent.style.display = "block";
+            this.noQuadratContent.classList.remove("hidden");
         }
     }
 }

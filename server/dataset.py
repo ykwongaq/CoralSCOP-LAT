@@ -18,6 +18,8 @@ class Data:
         self.idx = -1
         self.embedding = None
         self.segmentation = None
+        self.depth = None
+        self.depth_vis_path = None
 
     def set_image_name(self, image_name: str):
         self.image_name = image_name
@@ -54,6 +56,18 @@ class Data:
 
     def get_image_height(self) -> int:
         return self.segmentation["images"][0]["height"]
+
+    def set_depth(self, depth: np.ndarray):
+        self.depth = depth
+
+    def get_depth(self) -> np.ndarray:
+        return self.depth
+
+    def set_depth_vis_path(self, depth_vis_path: str):
+        self.depth_vis_path = depth_vis_path
+
+    def get_depth_vis_path(self) -> str:
+        return self.depth_vis_path
 
     def to_json(self) -> Dict:
         """

@@ -2804,6 +2804,11 @@ html:has(#confirm-button:not(.hidden)) #default-bar .float-bar__inner {
 }
 
 /*# sourceMappingURL=styles.css.map */
+.complexity-content {
+    display: flex;
+    justify-content: center;
+}
+
 .complexity-group {
     display: grid;
     gap: 25px 44px;
@@ -2811,6 +2816,7 @@ html:has(#confirm-button:not(.hidden)) #default-bar .float-bar__inner {
     padding: 0 1%;
     margin-top: 1%;
     margin-bottom: 30px;
+    max-width: 1400px;
 }
 
 .complexity-group .full-width {
@@ -2852,6 +2858,35 @@ html:has(#confirm-button:not(.hidden)) #default-bar .float-bar__inner {
     margin: 2% auto;
 }
 
-/* .complexity-item .convas-container {
-    min-height: 400px;
-} */
+.complexity-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 18px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.complexity-table th {
+    font-size: 24px;
+    background: var(--blue-blue500) url(../images/logo-bg.png);
+    background-size: cover;
+    height: 100%;
+    width: var(--logo-blk-width);
+    border: 1px solid #ddd;
+    color: white;
+    padding: 20px 10px;
+}
+
+.complexity-table td {
+    border: 1px solid #ddd;
+    padding: 20px 20px;
+}
+
+.complexity-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+.complexity-table tr:hover {
+    background-color: #f1f1f1;
+}

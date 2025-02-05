@@ -1,5 +1,12 @@
 export class Quadrat {
     constructor(x1, y1, x2, y2) {
+        // Ensure that x1, y1 refer to the top-left corner and x2, y2 refer to the bottom-right corner
+        if (x1 > x2) {
+            [x1, x2] = [x2, x1];
+        }
+        if (y1 > y2) {
+            [y1, y2] = [y2, y1];
+        }
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;

@@ -6,3 +6,7 @@ export { ViewPanel } from "./viewPanel.js";
 export { NavigationBar } from "./navigationBar.js";
 export { StatisticPage } from "./statisticPage.js";
 export { ComplexityPage } from "./complexityPage.js";
+export { QuadratPanel } from "./quadratPanel.js";
+export { ImageBlock } from "./imageBlock.js";
+export { PointCloudCanvas } from "./pointCloudCanvas.js";
+export { ComplexityTable } from "./complexityTable.js";

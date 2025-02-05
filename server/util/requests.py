@@ -81,17 +81,25 @@ class FileDialogRequest:
         return self.filetypes
 
 
-class QuickStartRequest:
+class QuadratDepthRequest:
+
     def __init__(self, request: Dict):
         self.request = request
-        assert "image_url" in request, "Missing 'image_url' in request"
-        assert "image_file_name" in request, "Missing 'image_file_name' in request"
+        assert "coordinates" in request, "Missing 'coordinates' in request"
 
-        self.image_url = request["image_url"]
-        self.image_file_name = request["image_file_name"]
+        self.x1 = int(request["coordinates"][0])
+        self.y1 = int(request["coordinates"][1])
+        self.x2 = int(request["coordinates"][2])
+        self.y2 = int(request["coordinates"][3])
 
-    def get_image_url(self) -> str:
-        return self.image_url
+    def get_x1(self) -> int:
+        return self.x1
 
-    def get_image_file_name(self) -> str:
-        return self.image_file_name
+    def get_y1(self) -> int:
+        return self.y1
+
+    def get_x2(self) -> int:
+        return self.x2
+
+    def get_y2(self) -> int:
+        return self.y2

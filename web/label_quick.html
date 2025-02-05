@@ -761,9 +761,12 @@
                 </div>
                 <div id="complexityPage" class="main-section page">
                     <div class="main-section__inner">
-                        <h2 class="main-section__title">Complexity Report</h2>
+                        <!-- <h2 class="main-section__title">Complexity Report</h2> -->
                         <div class="main-section__content">
-                            <div id="no-quadrat-content">
+                            <div
+                                id="no-quadrat-content"
+                                class="complexity-content"
+                            >
                                 <p class="main-section__desc">
                                     Please define the qaudrat in the
                                     <button
@@ -774,33 +777,35 @@
                                     </button>
                                 </p>
                             </div>
-                            <div id="have-quadrat-content">
+                            <div
+                                id="have-quadrat-content"
+                                class="complexity-content"
+                            >
                                 <div class="complexity-group">
-                                    <div class="complexity-item">
+                                    <div
+                                        class="complexity-item"
+                                        id="quadrat-block"
+                                    >
                                         <label class="complexity-item__title"
                                             >Quadrat</label
                                         >
                                         <div>
-                                            <img
-                                                src="assets/complexity/example.jpg"
-                                            />
+                                            <img />
                                         </div>
                                     </div>
-                                    <div class="complexity-item">
+                                    <div
+                                        class="complexity-item"
+                                        id="depth-block"
+                                    >
                                         <label class="complexity-item__title"
                                             >Depth Map</label
                                         >
                                         <div>
-                                            <img
-                                                src="assets/complexity/example.jpg"
-                                            />
+                                            <img />
                                         </div>
                                     </div>
 
-                                    <div
-                                        class="complexity-item full-width"
-                                        id="max-overlap-block"
-                                    >
+                                    <div class="complexity-item full-width">
                                         <label class="complexity-item__title"
                                             >Point Cloud</label
                                         >
@@ -809,6 +814,24 @@
                                                 id="point-cloud-canvas"
                                             ></canvas>
                                         </div>
+                                    </div>
+
+                                    <div class="complexity-item full-width">
+                                        <label class="complexity-item__title"
+                                            >Complexity Report</label
+                                        >
+                                        <table
+                                            id="complexity-table"
+                                            class="complexity-table"
+                                        >
+                                            <thead>
+                                                <tr>
+                                                    <th>Metric</th>
+                                                    <th>Measurement</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>

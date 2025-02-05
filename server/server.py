@@ -4,10 +4,12 @@ import os
 import numpy as np
 import copy
 import shutil
+import base64
 
 from tkinter import Tk, filedialog, messagebox
 from .embedding import EmbeddingGenerator
 from .segmentation import CoralSegmentation
+from .depth import DepthEstimation
 
 # from .maskEiditor import MaskEidtor
 from .maskCreator import MaskCreator, Prompt
@@ -21,8 +23,17 @@ from .project import (
 from .jsonFormat import AnnotationJson
 from .dataset import Dataset, Data
 from .util.coco import to_coco_annotation, rle_mask_to_rle_vis_encoding
-from .util.requests import FileDialogRequest, ProjectCreateRequest
+from .util.requests import FileDialogRequest, ProjectCreateRequest, QuadratDepthRequest
 from .util.data import unzip_file
+from .util.general import get_resource_path
+from .file import (
+    WEB_FOLDER_NAME,
+    IMAGE_FOLDER_NAME,
+    ASSET_FOLDER_NAME,
+    DEPTH_FOLDER_NAME,
+    DEPTH_VIS_FILENAME,
+)
+from .complexity.analysis import Analysis
 from PIL import Image
 from typing import Dict, List, Tuple
 
@@ -56,6 +67,15 @@ class Server:
     CORALSCOP_PATH = "models/vit_b_coralscop.pth"
     CORALSCOP_MODEL_TYPE = "vit_b"
 
+    # Depth Estimation
+    DEPTH_MODEL_PATH = "models/depth_anything_v2_vitl.pth"
+    DEPTH_MODEL_TYPE = "vitl"
+    DEPTH_VIS_PATH = get_resource_path(
+        os.path.join(
+            WEB_FOLDER_NAME, ASSET_FOLDER_NAME, DEPTH_FOLDER_NAME, DEPTH_VIS_FILENAME
+        )
+    )
+
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
 
@@ -84,6 +104,15 @@ class Server:
         self.mask_creator = MaskCreator(model_path)
         self.logger.info(
             f"Mask Creator initialized in {time.time() - start_time} seconds"
+        )
+
+        # Depth Estimation
+        self.logger.info("Loading depth estimation model ...")
+        start_time = time.time()
+        model_path = get_resource_path(Server.DEPTH_MODEL_PATH)
+        self.depth_estimation = DepthEstimation(model_path, Server.DEPTH_MODEL_TYPE)
+        self.logger.info(
+            f"Depth estimation model loaded in {time.time() - start_time} seconds"
         )
 
         # Project creation
@@ -516,3 +545,94 @@ class Server:
         new_data.set_embedding(data.get_embedding())
 
         return new_data
+
+    def analyze_complexity(self, quadrat_depth_request: QuadratDepthRequest) -> Dict:
+        x1, y1, x2, y2 = (
+            quadrat_depth_request.get_x1(),
+            quadrat_depth_request.get_y1(),
+            quadrat_depth_request.get_x2(),
+            quadrat_depth_request.get_y2(),
+        )
+
+        data = self.get_data(self.get_current_image_idx())
+        depth = data.get_depth()
+        if depth is None:
+            return {}
+
+        depth = depth[y1:y2, x1:x2]
+
+        analysis = Analysis()
+        fractal_dimension = analysis.cal_fractal_dimension(depth.copy())
+        gradient_rugosity = analysis.cal_gradient_rugosity(depth.copy())
+        height_range = analysis.cal_height_range(depth.copy())
+
+        response = {
+            "Fractial Dimension": fractal_dimension,
+            "Gradient Rugosity": gradient_rugosity,
+            "Height Range": height_range,
+        }
+
+        self.logger.info(f"Analysis result: {response}")
+
+        return response
+
+    def get_quadrat_depth(self, quadrat_depth_request: QuadratDepthRequest) -> Dict:
+        self.logger.info(f"Estimating depth ...")
+
+        data = self.get_data(self.get_current_image_idx())
+
+        depth = data.get_depth()
+
+        if depth is None:
+            # Lazy import
+            import cv2
+            import matplotlib
+
+            image_path = data.get_image_path()
+            # Need to append the web folder
+            image_path = os.path.join(WEB_FOLDER_NAME, image_path)
+            image_path = get_resource_path(image_path)
+
+            assert os.path.exists(image_path), f"Image not found: {image_path}"
+
+            image = cv2.imread(image_path)
+            depth = self.depth_estimation.infer(image)
+
+            data.set_depth(depth.copy())
+
+            # Save the depth image
+            cmap = matplotlib.colormaps.get_cmap("Spectral_r")
+            depth_vis = (cmap(depth)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
+
+            os.makedirs(os.path.dirname(Server.DEPTH_VIS_PATH), exist_ok=True)
+            Image.fromarray(depth_vis).save(Server.DEPTH_VIS_PATH)
+
+        x1, y1, x2, y2 = (
+            quadrat_depth_request.get_x1(),
+            quadrat_depth_request.get_y1(),
+            quadrat_depth_request.get_x2(),
+            quadrat_depth_request.get_y2(),
+        )
+
+        # Crop the depth based on the quadrat
+        depth_crop = depth[y1:y2, x1:x2]
+
+        depth_crop *= 255
+        depth_crop = depth_crop.astype(np.uint8)
+
+        # Encode the depth image to base64
+        encoded_depth = depth_crop.ravel()
+        encoded_depth = base64.b64encode(encoded_depth).decode("utf-8")
+
+        frontend_detph_vis_path = os.path.join(
+            ASSET_FOLDER_NAME, DEPTH_FOLDER_NAME, DEPTH_VIS_FILENAME
+        )
+
+        response = {
+            "encoded_depth": encoded_depth,
+            "rows": depth_crop.shape[0],
+            "cols": depth_crop.shape[1],
+            "depth_vis_path": frontend_detph_vis_path,
+        }
+
+        return response
