@@ -12,6 +12,7 @@ from ..file import WEB_FOLDER_NAME, ASSET_FOLDER_NAME, IMAGE_FOLDER_NAME
 
 from ..util.json import load_json
 from ..dataset import Dataset, Data
+from ..util.general import get_resource_path
 from PIL import Image
 
 
@@ -118,18 +119,23 @@ class ProjectLoader:
         - List[str]: List of relative image paths in the asset folder
         """
         self.clear_asset_folder()
-        asset_folder = os.path.join(
-            ProjectLoader.WEB_FOLDER_NAME, ProjectLoader.ASSET_FOLDER
-        )
-        os.makedirs(asset_folder, exist_ok=True)
+        image_folder = os.path.join(ProjectLoader.ASSET_FOLDER, IMAGE_FOLDER_NAME)
+        image_folder = get_resource_path(image_folder)
+        os.makedirs(image_folder, exist_ok=True)
 
         assset_image_paths = []
         for image_path in image_paths:
             image = Image.open(image_path)
-            image.save(os.path.join(asset_folder, os.path.basename(image_path)))
+
+            save_path = os.path.join(image_folder, os.path.basename(image_path))
+            save_path = get_resource_path(save_path)
+            self.logger.debug(f"Saving image to {save_path}")
+            image.save(save_path)
 
             asset_image_path = os.path.join(
-                ProjectLoader.ASSET_FOLDER, os.path.basename(image_path)
+                ASSET_FOLDER_NAME,
+                IMAGE_FOLDER_NAME,
+                os.path.basename(image_path),
             )
             assset_image_paths.append(asset_image_path)
 
@@ -142,6 +148,7 @@ class ProjectLoader:
         asset_folder = os.path.join(
             ProjectLoader.WEB_FOLDER_NAME, ProjectLoader.ASSET_FOLDER
         )
+        asset_folder = get_resource_path(asset_folder)
         if os.path.exists(asset_folder):
             # Delete all the files in the folder
             for filename in os.listdir(asset_folder):
