@@ -8,6 +8,7 @@ import zipfile
 import shutil
 
 from .projectCreator import ProjectCreator
+from ..file import WEB_FOLDER_NAME, ASSET_FOLDER_NAME, IMAGE_FOLDER_NAME
 
 from ..util.json import load_json
 from ..dataset import Dataset, Data
@@ -21,8 +22,8 @@ TEMP_LOAD_NAME = "__coralscop_lat_temp_load"
 
 class ProjectLoader:
 
-    WEB_FOLDER_NAME = "web"
-    ASSET_FOLDER = "assets/images"
+    WEB_FOLDER_NAME = WEB_FOLDER_NAME
+    ASSET_FOLDER = os.path.join(WEB_FOLDER_NAME, ASSET_FOLDER_NAME)
 
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
