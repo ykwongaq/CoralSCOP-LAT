@@ -17,7 +17,6 @@ export class ActionPanel {
         ActionPanel.instance = this;
 
         this.actionPanelDom = actionPanel;
-        // this.actionContainerDom = actionContainerDom;
 
         this.detectCoralButton = this.actionPanelDom.querySelector(
             "#detect-coral-button"
@@ -34,8 +33,6 @@ export class ActionPanel {
         );
 
         this.removeButton = this.actionPanelDom.querySelector("#remove-button");
-        // this.quadratButton =
-        //     this.actionPanelDom.querySelector("#quadrat-button");
 
         this.addMaskPanel = new AddMaskPanel(
             this.actionPanelDom,
@@ -51,18 +48,11 @@ export class ActionPanel {
     init() {
         this.initDetectCoralButton();
         this.initCategorySelector();
-        // this.initPromptCategorySelector();
         this.initRemoveButton();
-        // this.initAddMask();
         this.addMaskPanel.init();
-        // this.initQuadratButton();
         this.initUndoButton();
         this.initRedoButton();
     }
-
-    // initQuadratButton() {
-    //     this.quadratButton.addEventListener("click", () => {});
-    // }
 
     initDetectCoralButton() {
         this.detectCoralButton.addEventListener("click", () => {
