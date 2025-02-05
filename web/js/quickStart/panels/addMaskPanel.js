@@ -251,12 +251,14 @@ export class AddMaskPanel {
         this.undoPromptButton.classList.remove("hidden");
         this.resetPromptButton.classList.remove("hidden");
         this.confirmPromptButton.classList.remove("hidden");
+        this.exitAddMaskButton.classList.remove("hidden");
     }
 
     hide() {
         this.undoPromptButton.classList.add("hidden");
         this.resetPromptButton.classList.add("hidden");
         this.confirmPromptButton.classList.add("hidden");
+        this.exitAddMaskButton.classList.add("hidden");
     }
 
     getPromptCategorySelector() {
