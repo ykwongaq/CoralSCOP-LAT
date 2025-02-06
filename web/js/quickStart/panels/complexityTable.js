@@ -5,6 +5,7 @@ export class ComplexityTable {
     }
 
     update(data) {
+        this.clearTable();
         for (let [key, value] of Object.entries(data)) {
             const row = document.createElement("tr");
 
@@ -21,5 +22,9 @@ export class ComplexityTable {
 
             this.tableBody.appendChild(row);
         }
+    }
+
+    clearTable() {
+        this.tableBody.innerHTML = "";
     }
 }
