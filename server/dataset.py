@@ -61,7 +61,9 @@ class Data:
         self.depth = depth
 
     def get_depth(self) -> np.ndarray:
-        return self.depth
+        if self.depth is None:
+            return None
+        return self.depth.copy()
 
     def set_depth_vis_path(self, depth_vis_path: str):
         self.depth_vis_path = depth_vis_path
