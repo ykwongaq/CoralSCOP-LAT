@@ -22,7 +22,7 @@ from .project import (
 )
 from .jsonFormat import AnnotationJson
 from .dataset import Dataset, Data
-from .util.coco import to_coco_annotation, rle_mask_to_rle_vis_encoding
+from .util.coco import to_coco_annotation, rle_mask_to_rle_vis_encoding, decode_rle_mask
 from .util.requests import FileDialogRequest, ProjectCreateRequest, QuadratDepthRequest
 from .util.data import unzip_file
 from .util.general import get_resource_path
@@ -561,20 +561,60 @@ class Server:
 
         depth = depth[y1:y2, x1:x2]
 
+        responses = {}
+
         analysis = Analysis()
         fractal_dimension = analysis.cal_fractal_dimension(depth.copy())
         gradient_rugosity = analysis.cal_gradient_rugosity(depth.copy())
         height_range = analysis.cal_height_range(depth.copy())
-
-        response = {
+        analysis_result = {
             "Fractial Dimension": fractal_dimension,
             "Gradient Rugosity": gradient_rugosity,
             "Height Range": height_range,
         }
+        responses["All"] = analysis_result
 
-        self.logger.info(f"Analysis result: {response}")
+        segmentation = data.get_segmentation()
 
-        return response
+        category_dict = {}
+        for category_info in self.dataset.get_category_info():
+            category_id = int(category_info["id"])
+            category_dict[category_id] = category_info["name"]
+
+        for annotation in segmentation["annotations"]:
+            category_id = annotation["category_id"]
+            if category_id == -1:
+                continue
+
+            mask = decode_rle_mask(annotation["segmentation"])
+            mask = mask[y1:y2, x1:x2]
+            mask = mask == 1
+
+            self.logger.debug(f"mask shape: {mask.shape}")
+            self.logger.debug(f"depth shape: {depth.shape}")
+            fractal_dimension = analysis.cal_fractal_dimension(depth.copy(), mask)
+            gradient_rugosity = analysis.cal_gradient_rugosity(depth.copy(), mask)
+            height_range = analysis.cal_height_range(depth.copy(), mask)
+
+            analysis_result = {
+                "Fractial Dimension": fractal_dimension,
+                "Gradient Rugosity": gradient_rugosity,
+                "Height Range": height_range,
+            }
+
+            category_name = category_dict[category_id]
+
+            responses[category_name] = analysis_result
+
+        # response = {
+        #     "Fractial Dimension": fractal_dimension,
+        #     "Gradient Rugosity": gradient_rugosity,
+        #     "Height Range": height_range,
+        # }
+
+        self.logger.info(f"Analysis result: {responses}")
+
+        return responses
 
     def get_quadrat_depth(self, quadrat_depth_request: QuadratDepthRequest) -> Dict:
         self.logger.info(f"Estimating depth ...")

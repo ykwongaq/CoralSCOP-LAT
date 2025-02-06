@@ -93,8 +93,10 @@ export class ComplexityPage {
                         core.popUpError(error);
                     });
 
-                core.analyzeComplexity(quadrat, (reportDict) => {
-                    this.complexityTable.update(reportDict);
+                core.save(() => {
+                    core.analyzeComplexity(quadrat, (reportDict) => {
+                        this.complexityTable.update(reportDict["All"]);
+                    });
                 });
             });
         } else {

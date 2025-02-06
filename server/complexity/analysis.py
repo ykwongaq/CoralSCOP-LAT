@@ -80,7 +80,9 @@ class Analysis:
         self.scales = [1 / 2**i for i in range(num_scales)]
         self.L0 = np.min(self.scales)
 
-    def cal_fractal_dimension(self, depth: np.ndarray) -> float:
+    def cal_fractal_dimension(
+        self, depth: np.ndarray, filter_map: np.ndarray = None
+    ) -> float:
         """
         Calculate the fractal dimension of a depth map.
 
@@ -90,21 +92,49 @@ class Analysis:
         Returns:
         - fractal_dimension (float): Fractal dimension of the depth map.
         """
-        mean_height_ranges_by_scales = self.cal_mean_heigh_range_by_scale(depth)
+        mean_height_ranges_by_scales = self.cal_mean_heigh_range_by_scale(
+            depth, filter_map
+        )
         fractal_dimension = self.cal_fractial_dimension_(mean_height_ranges_by_scales)
+
+        if fractal_dimension is None:
+            return None
+
         return fractal_dimension.item()
 
-    def cal_gradient_rugosity(self, depth: np.ndarray) -> float:
+    def cal_gradient_rugosity(
+        self, depth: np.ndarray, filter_map: np.ndarray = None
+    ) -> float:
         grad_x = cv2.filter2D(depth, -1, SOBEL_X_3)
         grad_y = cv2.filter2D(depth, -1, SOBEL_Y_3)
         grad = np.sqrt(grad_x**2 + grad_y**2)
 
+        if filter_map is not None:
+            grad = grad[filter_map]
+
+            if len(grad) == 0:
+                return None
+
         return np.log10(np.sum(grad)).item()
 
-    def cal_height_range(self, depth: np.ndarray) -> float:
+    def cal_height_range(
+        self, depth: np.ndarray, filter_map: np.ndarray = None
+    ) -> float:
+        """
+        Calculate the height range of a depth map.
+        Ignore the filter map.
+        """
+        if filter_map is not None:
+            depth = depth[filter_map]
+
+        if len(depth) == 0:
+            return None
+
         return (np.max(depth) - np.min(depth)).item()
 
-    def cal_mean_heigh_range_by_scale(self, depth: np.ndarray) -> Dict:
+    def cal_mean_heigh_range_by_scale(
+        self, depth: np.ndarray, filter_map: np.ndarray = None
+    ) -> Dict:
         """
         Calculate the height range for each grid cell at different scales.
 
@@ -112,6 +142,7 @@ class Analysis:
         Dictionary where the key is the scale and the grid cell coordinates.
         Value is the height range of that grid cell.
         """
+
         mean_height_ranges_by_scale = {}
         for scale in self.scales:
             grid_coordinates = self.split_image_to_grid(depth, scale)
@@ -121,14 +152,48 @@ class Analysis:
                 depth_map_region = depth[
                     top_left_row:bottom_right_row, top_left_col:bottom_right_col
                 ]
-                height_range = self.cal_height_range(depth_map_region)
+
+                if filter_map is not None:
+                    filter_map_region = filter_map[
+                        top_left_row:bottom_right_row, top_left_col:bottom_right_col
+                    ]
+                    height_range = self.cal_height_range(
+                        depth_map_region, filter_map_region
+                    )
+                else:
+                    height_range = self.cal_height_range(depth_map_region)
                 height_ranges.append(height_range)
-            mean_height_range = np.mean(height_ranges)
+
+            # Filter out the None values
+            height_ranges = [x for x in height_ranges if x is not None]
+            if len(height_ranges) == 0:
+                mean_height_range = None
+            else:
+                mean_height_range = np.mean(height_ranges)
             mean_height_ranges_by_scale[scale] = mean_height_range
 
         return mean_height_ranges_by_scale
 
     def cal_fractial_dimension_(self, mean_height_ranges_by_scales: Dict) -> float:
+
+        scales = list(mean_height_ranges_by_scales.keys())
+        mean_height_ranges = list(mean_height_ranges_by_scales.values())
+
+        # Filter out the None values
+        scales = [
+            scales[i]
+            for i in range(len(mean_height_ranges))
+            if mean_height_ranges[i] is not None
+        ]
+        mean_height_ranges = [
+            mean_height_ranges[i]
+            for i in range(len(mean_height_ranges))
+            if mean_height_ranges[i] is not None
+        ]
+
+        if len(mean_height_ranges) < 2:
+            return None
+
         x = np.log(list(mean_height_ranges_by_scales.keys()))
         y = np.log(list(mean_height_ranges_by_scales.values()))
 
