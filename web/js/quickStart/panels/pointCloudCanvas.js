@@ -69,7 +69,7 @@ export class PointCloudCanvas {
         // You can adjust this based on your preference.
         const maxDimension = Math.max(rows, cols);
         // 0.3 is just a heuristic; tweak as needed
-        const desiredMaxDepth = 0.3 * maxDimension;
+        const desiredMaxDepth = 0.5 * maxDimension;
         // We'll map [minDepthValue, maxDepthValue] -> [0, desiredMaxDepth].
 
         let ptr = 0;
