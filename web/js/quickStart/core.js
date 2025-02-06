@@ -606,7 +606,6 @@ export class Core {
 
     setQuadrat(quadrat) {
         this.quadrat = quadrat;
-        console.log("setting quadrat", quadrat);
     }
 
     getQuadratDepth(quadrat, callBack = null, errorCallBack = null) {

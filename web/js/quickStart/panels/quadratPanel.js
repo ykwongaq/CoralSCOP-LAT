@@ -1,8 +1,9 @@
 import { ActionManager } from "../action/actionManager.js";
 import { MaskSelector } from "../maskSelector.js";
 import { MaskCreator } from "../maskCreator.js";
-import { ActionPanel } from "./actionPanel.js";
+import { ActionPanel, NavigationBar } from "./index.js";
 import { Canvas } from "../canvas.js";
+import { Core } from "../core.js";
 
 export class QuadratPanel {
     constructor(actionPanelDom, quadratBarDom) {
@@ -19,8 +20,8 @@ export class QuadratPanel {
         this.clearButton = this.quadratBarDom.querySelector(
             "#quadrat-clear-button"
         );
-        this.confirmButton = this.quadratBarDom.querySelector(
-            "#quadrat-confirm-button"
+        this.analysisButton = this.quadratBarDom.querySelector(
+            "#quadrat-analysis-button"
         );
         this.backButton = this.quadratBarDom.querySelector(
             "#back-quadrat-button"
@@ -30,7 +31,7 @@ export class QuadratPanel {
     init() {
         this.initQuadratButton();
         this.initClearButton();
-        this.initConfirmButton();
+        this.initAnalysisButton();
         this.initBackButton();
     }
 
@@ -55,9 +56,23 @@ export class QuadratPanel {
         });
     }
 
-    initClearButton() {}
+    initClearButton() {
+        this.clearButton.addEventListener("click", () => {
+            const core = new Core();
+            core.setQuadrat(null);
+        });
+    }
 
-    initConfirmButton() {}
+    initAnalysisButton() {
+        this.analysisButton.addEventListener("click", () => {
+            const core = new Core();
+            const quadrat = core.getQuadrat();
+            if (quadrat) {
+                const navigationBar = new NavigationBar();
+                navigationBar.showPage(NavigationBar.COMPLEXITY_PAGE);
+            }
+        });
+    }
 
     initBackButton() {
         this.backButton.addEventListener("click", () => {
@@ -82,13 +97,13 @@ export class QuadratPanel {
 
     show() {
         this.clearButton.classList.remove("hidden");
-        this.confirmButton.classList.remove("hidden");
+        this.analysisButton.classList.remove("hidden");
         this.backButton.classList.remove("hidden");
     }
 
     hide() {
         this.clearButton.classList.add("hidden");
-        this.confirmButton.classList.add("hidden");
+        this.analysisButton.classList.add("hidden");
         this.backButton.classList.add("hidden");
     }
 }

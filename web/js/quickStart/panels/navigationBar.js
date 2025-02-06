@@ -465,15 +465,12 @@ export class NavigationBar {
         this.clearActiveState();
         switch (pageId) {
             case NavigationBar.GALLERY_PAGE:
-                // TODO: Handle leaving the gallery page
                 break;
             case NavigationBar.ANNOTATION_PAGE:
-                // TODO: Handle leaving the annotation page
                 const canvas = new Canvas();
                 canvas.resetViewpoint();
                 break;
             case NavigationBar.STATISTIC_PAGE:
-                // TODO: Handle leaving the annotation page
                 break;
             case NavigationBar.SETTING_PAGE:
                 const configPage = new ConfigPage();
