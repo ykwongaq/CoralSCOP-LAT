@@ -463,6 +463,9 @@ export class NavigationBar {
 
     showPage(pageId) {
         this.clearActiveState();
+        const complexityPage = new ComplexityPage();
+        complexityPage.clear();
+
         switch (pageId) {
             case NavigationBar.GALLERY_PAGE:
                 break;
@@ -477,7 +480,7 @@ export class NavigationBar {
                 configPage.displayConfig();
                 break;
             case NavigationBar.COMPLEXITY_PAGE:
-                const complexityPage = new ComplexityPage();
+                // const complexityPage = new ComplexityPage();
                 complexityPage.update();
                 break;
             default:

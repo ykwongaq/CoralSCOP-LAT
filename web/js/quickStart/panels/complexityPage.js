@@ -101,4 +101,8 @@ export class ComplexityPage {
             this.noQuadratContent.classList.remove("hidden");
         }
     }
+
+    clear() {
+        this.pointCloudCanvas.clear();
+    }
 }

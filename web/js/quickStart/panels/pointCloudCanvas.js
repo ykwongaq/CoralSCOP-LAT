@@ -181,45 +181,6 @@ export class PointCloudCanvas {
         });
     }
 
-    // startRender() {
-    //     const scene = new THREE.Scene();
-    //     this.camera = new THREE.PerspectiveCamera(
-    //         75,
-    //         this.parentElement.clientWidth / this.parentElement.clientHeight,
-    //         0.1,
-    //         1000
-    //     );
-    //     this.camera.position.z = 5;
-
-    //     this.renderer = new THREE.WebGLRenderer({
-    //         canvas: this.canvasDom,
-    //         antialias: true,
-    //     });
-
-    //     setTimeout(() => {
-    //         this.resizeCanvas();
-    //     }, 100);
-
-    //     // Set the canvas background color to white
-    //     this.renderer.setClearColor(0xffffff, 1); // Color: white, Opacity: 1
-
-    //     const geometry = new THREE.BoxGeometry(1, 1, 1);
-    //     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    //     const cube = new THREE.Mesh(geometry, material);
-    //     scene.add(cube);
-
-    //     const animate = () => {
-    //         requestAnimationFrame(animate);
-
-    //         cube.rotation.x += 0.01;
-    //         cube.rotation.y += 0.01;
-
-    //         this.renderer.render(scene, this.camera);
-    //     };
-
-    //     animate();
-    // }
-
     animate() {
         requestAnimationFrame(this.animate.bind(this));
         this.controls.update();
@@ -241,6 +202,15 @@ export class PointCloudCanvas {
         if (this.camera) {
             this.camera.aspect = width / height;
             this.camera.updateProjectionMatrix();
+        }
+    }
+
+    clear() {
+        if (!this.scene) {
+            return;
+        }
+        while (this.scene.children.length > 0) {
+            this.scene.remove(this.scene.children[0]);
         }
     }
 }
