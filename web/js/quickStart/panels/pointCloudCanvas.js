@@ -33,7 +33,7 @@ export class PointCloudCanvas {
             75,
             this.parentElement.clientWidth / this.parentElement.clientHeight,
             0.1,
-            1500
+            10000
         );
 
         // Set the camera position
