@@ -1,4 +1,5 @@
 import { Category } from "./category.js";
+import { Core } from "../core.js";
 
 export class CategoryManager {
     static FOCUS_COLOR = "#0000FF"; // blue
