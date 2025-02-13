@@ -54,9 +54,10 @@ models
 ```
 
 ## Todo
-1. Quick Start
+
 2. Rearrange id after delete
 3. Smart exit alert
 4. Statistic Page - Project level statistic
 5. Tutorial
 6. Pop up problem in mac
+7. Error hanlding in creating project
