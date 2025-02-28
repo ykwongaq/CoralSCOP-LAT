@@ -195,7 +195,7 @@ class SamPredictor:
             )
             mask_input_torch = mask_input_torch[None, :, :, :]
 
-        masks, iou_predictions, low_res_masks, fc_features = self.predict_torch(
+        masks, iou_predictions, low_res_masks, fc_features, _ = self.predict_torch(
             coords_torch,
             labels_torch,
             box_torch,
@@ -290,7 +290,7 @@ class SamPredictor:
         if not return_logits:
             masks = masks > self.model.mask_threshold
 
-        return masks, iou_predictions, low_res_masks, fc_features
+        return masks, iou_predictions, low_res_masks, fc_features, cate_predictions
 
     def get_image_embedding(self) -> torch.Tensor:
         """
