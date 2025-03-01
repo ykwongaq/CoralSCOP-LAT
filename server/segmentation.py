@@ -202,7 +202,7 @@ class CoralSegmentation:
         # Use dtype=bool or uint8 to reduce memory overhead and speed up calculations.
         N = len(masks)
         flattened_masks = []
-        areas = np.zeros(N, dtype=np.int32)
+        areas = np.zeros(N, dtype=np.float64)
 
         for i, mask in enumerate(masks):
             # Ensure mask is boolean for efficient bitwise ops and multiplication
