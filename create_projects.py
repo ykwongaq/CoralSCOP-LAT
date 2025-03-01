@@ -136,7 +136,7 @@ if __name__ == "__main__":
     DEFAULT_MIN_AREA = 0.001
     DEFAULT_MIN_CONFIDENCE = 0.5
     DEFAULT_MAX_IOU = 0.01
-    DEFAULT_EMBEDDING_MODEL = "models/vit_b_coralscop.pth"
+    DEFAULT_EMBEDDING_MODEL = "models/vit_h_encoder_quantized.onnx"
     DEFAULT_SEGMENTATION_MODEL = "models/vit_b_coralscop.pth"
     DEFAULT_SEGMENTATION_MODEL_TYPE = "vit_b"
 
