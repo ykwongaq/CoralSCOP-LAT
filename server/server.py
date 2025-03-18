@@ -83,6 +83,7 @@ class Server:
         self.logger.info("Loading embedding encoder model ...")
         start_time = time.time()
         model_path = get_resource_path(Server.SAM_ENCODER_PATH)
+        # model_path = get_resource_path(Server.CORALSCOP_PATH)
         self.embeddings_generator = EmbeddingGenerator(model_path)
         self.logger.info(
             f"Embedding model loaded in {time.time() - start_time} seconds"
@@ -100,6 +101,7 @@ class Server:
         # Mask Editor
         self.logger.info("Mask Editor initialized ...")
         start_time = time.time()
+        # model_path = get_resource_path(Server.CORALSCOP_PATH)
         model_path = get_resource_path(Server.SAM_DECODER_PATH)
         self.mask_creator = MaskCreator(model_path)
         self.logger.info(

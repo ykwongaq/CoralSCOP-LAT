@@ -3,10 +3,11 @@ import os
 import logging
 
 from PIL import Image
-from server.project import ProjectCreateRequest, ProjectCreator
+from server.project import ProjectCreator
 from server.embedding import EmbeddingGenerator
 from server.segmentation import CoralSegmentation
 from typing import Dict, List, Generator
+from server.util.requests import ProjectCreateRequest
 
 
 # Initialize logging
@@ -73,6 +74,8 @@ def main(args):
     segmentation_model_path = args.segmentation_model
     segmentation_model_type = args.segmentation_model_type
 
+    no_segmentation = args.no_segmentation
+
     print(f"Creating projects for {len(image_files)} images")
     print(f"Output directory: {output_dir}")
     print(f"Batch size: {batch_size}")
@@ -83,6 +86,7 @@ def main(args):
     print(f"Segmentation model: {segmentation_model_path}")
     print(f"Segmentation model type: {segmentation_model_type}")
 
+    idx = 0
     project_requests = []
     for image_batch in batch_iterator(image_files, batch_size):
         request = {}
@@ -103,10 +107,14 @@ def main(args):
 
         request["inputs"] = inputs
         request["config"] = config
-        request["output_dir"] = output_dir
+        request["output_file"] = os.path.join(output_dir, f"project_{idx}.coral")
+        if no_segmentation:
+            request["need_segmentation"] = False
 
         project_request = ProjectCreateRequest(request)
         project_requests.append(project_request)
+
+        idx += 1
 
     # Create embedding model
     embedding_generator = EmbeddingGenerator(embedding_model_path)
@@ -124,6 +132,14 @@ def main(args):
 
 
 if __name__ == "__main__":
+    DEFAULT_BATCH_SIZE = 100
+    DEFAULT_MIN_AREA = 0.001
+    DEFAULT_MIN_CONFIDENCE = 0.5
+    DEFAULT_MAX_IOU = 0.01
+    DEFAULT_EMBEDDING_MODEL = "models/vit_h_encoder_quantized.onnx"
+    DEFAULT_SEGMENTATION_MODEL = "models/vit_b_coralscop.pth"
+    DEFAULT_SEGMENTATION_MODEL_TYPE = "vit_b"
+
     parser = argparse.ArgumentParser(description="Project Projects")
     parser.add_argument(
         "--images", type=str, required=True, help="Path to images or the image folder"
@@ -132,43 +148,51 @@ if __name__ == "__main__":
         "--output", type=str, required=True, help="Path to output folder"
     )
     parser.add_argument(
-        "--batch_size", type=int, default=100, help="Batch size for processing images"
+        "--batch_size",
+        type=int,
+        default=DEFAULT_BATCH_SIZE,
+        help=f"Batch size for processing images. Default is {DEFAULT_BATCH_SIZE}",
     )
     parser.add_argument(
         "--min_area",
         type=float,
-        default=0.001,
-        help="Minimum area for a mask. This is the fraction of the image area",
+        default=DEFAULT_MIN_AREA,
+        help=f"Minimum area for a mask. This is the fraction of the image area. Default is {DEFAULT_MIN_AREA}",
     )
     parser.add_argument(
         "--min_confidence",
         type=float,
-        default=0.5,
-        help="Minimum confidence score for a mask",
+        default=DEFAULT_MIN_CONFIDENCE,
+        help=f"Minimum confidence score for a mask. Default is {DEFAULT_MIN_CONFIDENCE}",
     )
     parser.add_argument(
         "--max_iou",
         type=float,
-        default=0.01,
-        help="Maximum IOU for mask overlap",
+        default=DEFAULT_MAX_IOU,
+        help=f"Maximum IOU for mask overlap. Default is {DEFAULT_MAX_IOU}",
     )
     parser.add_argument(
         "--embedding_model",
         type=str,
-        default="models/vit_h_encoder_quantized.onnx",
-        help="Path to the embedding model",
+        default=DEFAULT_EMBEDDING_MODEL,
+        help=f"Path to the embedding model. Default is {DEFAULT_EMBEDDING_MODEL}",
     )
     parser.add_argument(
         "--segmentation_model",
         type=str,
-        default="models/vit_b_coralscop.pth",
-        help="Path to the segmentation model",
+        default=DEFAULT_SEGMENTATION_MODEL,
+        help=f"Path to the segmentation model. Default is {DEFAULT_SEGMENTATION_MODEL}",
     )
     parser.add_argument(
         "--segmentation_model_type",
         type=str,
-        default="vit_b",
-        help="Type of the segmentation model",
+        default=DEFAULT_SEGMENTATION_MODEL_TYPE,
+        help=f"Type of the segmentation model. Default is {DEFAULT_SEGMENTATION_MODEL_TYPE}",
+    )
+    parser.add_argument(
+        "--no_segmentation",
+        action="store_true",
+        help="Disable segmentation",
     )
     args = parser.parse_args()
     main(args)

@@ -124,6 +124,7 @@ class ProjectCreator:
             if "image_path" in input:
                 image_path = input["image_path"]
                 image = Image.open(image_path)
+                image = image.convert("RGB")
                 image = np.array(image)
             else:
                 image_url = input["image_url"]

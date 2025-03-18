@@ -33,8 +33,8 @@ export class Core {
                 if (errorCallBack) {
                     errorCallBack(error);
                 } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -59,8 +59,8 @@ export class Core {
                 if (errorCallBack) {
                     errorCallBack(error);
                 } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -80,8 +80,8 @@ export class Core {
                 if (errorCallBack) {
                     errorCallBack(error);
                 } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -96,8 +96,8 @@ export class Core {
                 if (errorCallBack) {
                     errorCallBack(error);
                 } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 
@@ -112,8 +112,8 @@ export class Core {
                 if (errorCallBack) {
                     errorCallBack(error);
                 } else {
-                    this.popUpError(error);
                 }
+                this.popUpError(error);
             });
     }
 

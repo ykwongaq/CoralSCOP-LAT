@@ -26,7 +26,7 @@ class ProjectCreateRequest:
         """
         self.request = request
         assert "inputs" in request, "Missing 'inputs' in request"
-        assert "output_file" in request, "Missing 'output_dir' in request"
+        assert "output_file" in request, "Missing 'output_file' in request"
         assert "config" in request, "Missing 'config' in request"
 
         self.inputs = request["inputs"]
