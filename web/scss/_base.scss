@@ -1,0 +1,34 @@
+:where(*) {
+    &:hover, &:focus, &:active {
+        outline: none;
+    }
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    font-family: Unbounded;
+    padding: 0;
+    margin: 0;
+    color: var(--text-text-primary1);
+}
+
+
+.hidden {
+    display: none !important;
+}
+
+a {
+    text-decoration: none;
+}
+
+button {
+        cursor: pointer;
+        appearance: none;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        font-family: Unbounded;
+        background: transparent;
+}

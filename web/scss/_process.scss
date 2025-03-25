@@ -1,0 +1,28 @@
+#drop-container {
+    height: calc(100vh - 380px);
+
+    &:has(~ #deselected-gallery .gallery-item) {
+        display: none;
+    }
+}
+
+.select-link {
+    padding-block: 7px;
+    margin-inline: 10px;
+}
+
+.main-section:has(#deselected-gallery) .main-section__bottom {
+    transform: translate(0, 101%);
+    opacity: 0;
+    visibility: hidden;
+}
+
+.main-section:has(#deselected-gallery .gallery-item) .main-section__bottom {
+    transform: translate(0, 0);
+    opacity: 1;
+    visibility: visible;
+}
+
+
+body:has(#process-button:disabled) {
+}
