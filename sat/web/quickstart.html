@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Label page</title>
+        <link rel="stylesheet" href="./icon/style.css" />
+        <link rel="stylesheet" href="./css/styles.css" />
+    </head>
+    <body>
+        <div style="display: none" id="icon" class="icon-container">
+            <img src="images/coralscan_icon.png" alt="icon" />
+        </div>
+        <!-- dummy for old js -->
+        <div class="wrapper">
+            <div class="header">
+                <div class="logo-blk">
+                    <span class="logo-blk__text">Segmentation Tool</span>
+                </div>
+                <div id="top-panel" class="header__main">
+                    <div class="header__middle">
+                        <p class="header__title">
+                            <span id="progress-info-name"></span
+                            ><span id="progress-info-number"></span>
+                        </p>
+                    </div>
+                    <div class="header__main-side"></div>
+                </div>
+            </div>
+            <div class="main">
+                <nav id="navigation-bar" class="side-bar">
+                    <div class="side-bar__main">
+                        <ul class="nav-list top">
+                            <li class="nav-list__item">
+                                <button
+                                    id="back-to-main-page-button"
+                                    class="nav-list__button"
+                                >
+                                    <span class="ico-home"></span>
+                                    <span class="arrow-tooltip">Home</span>
+                                </button>
+                            </li>
+                            <li class="nav-list__item">
+                                <button
+                                    id="label-button"
+                                    class="nav-list__button"
+                                >
+                                    <span class="ico-stack"></span
+                                    ><span class="arrow-tooltip">Label</span>
+                                </button>
+                            </li>
+                            <li class="nav-list__item">
+                                <button
+                                    id="save-drop-down-button"
+                                    class="nav-list__button"
+                                >
+                                    <span class="ico-save"></span>
+                                    <span class="arrow-tooltip">Save</span>
+                                </button>
+                                <div
+                                    id="file-dropdown-menu-save"
+                                    class="normal-dropdown"
+                                >
+                                    <button
+                                        class="normal-dropdown__link"
+                                        id="save-to-button"
+                                    >
+                                        Save To
+                                    </button>
+                                </div>
+                            </li>
+                            <li class="nav-list__item">
+                                <button
+                                    id="file-button"
+                                    class="nav-list__button"
+                                >
+                                    <span class="ico-exit"></span
+                                    ><span class="arrow-tooltip">Export</span>
+                                </button>
+                                <div
+                                    id="file-dropdown-menu"
+                                    class="normal-dropdown"
+                                >
+                                    <button
+                                        class="normal-dropdown__link"
+                                        id="export-image-button"
+                                    >
+                                        Export Image
+                                    </button>
+                                    <button
+                                        class="normal-dropdown__link"
+                                        id="export-annotated-image-button"
+                                    >
+                                        Export Annotated Images
+                                    </button>
+                                    <button
+                                        class="normal-dropdown__link"
+                                        id="export-coco-button"
+                                    >
+                                        Export COCO
+                                    </button>
+                                    <button
+                                        class="normal-dropdown__link"
+                                        id="export-all-button"
+                                    >
+                                        Export All
+                                    </button>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="label-panel" class="side-bar__sub">
+                        <p class="side-bar__title">Opacity</p>
+                        <div class="side-bar__blk">
+                            <div class="slider-blk" id="mask-slider-blk">
+                                <div class="slider-blk__inner">
+                                    <input
+                                        id="mask-opacity-silder"
+                                        min="0"
+                                        max="100"
+                                        value="40"
+                                        type="range"
+                                        data-suffix="%"
+                                    />
+                                </div>
+                                <input
+                                    id="mask-opacity-input"
+                                    type="text"
+                                    value="40%"
+                                />
+                            </div>
+                        </div>
+                        <div class="side-bar__blk">
+                            <div class="toggle-blk">
+                                <p class="toggle-blk__title">
+                                    Show Masks (Tab)
+                                </p>
+                                <label class="switch">
+                                    <input
+                                        type="checkbox"
+                                        id="toogle-mask-button"
+                                    />
+                                    <span class="switch__slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="side-bar__blk">
+                            <div class="input-blk">
+                                <p class="input-blk__label">Label Search</p>
+                                <div class="input-blk__wrap">
+                                    <span class="input-blk__icon"
+                                        ><span class="ico-search"></span
+                                    ></span>
+                                    <input
+                                        type="text"
+                                        id="search-input"
+                                        placeholder="Search label"
+                                        name="search"
+                                        no-shortcuts
+                                    />
+                                    <button id="search-button" type="submit">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="side-bar__bottom">
+                            <template id="label-button-template">
+                                <div
+                                    class="label-blk labelButton color-plate-list__item"
+                                >
+                                    <div
+                                        class="label-blk__color color-plate-list__color-plate colorBox"
+                                    ></div>
+                                    <p
+                                        class="label-blk__label labelText"
+                                        contenteditable="false"
+                                        no-shortcuts
+                                    >
+                                        Staghorn Coral
+                                    </p>
+                                    <div class="label-blk__side">
+                                        <button
+                                            class="label-blk__btn label-hide-fn"
+                                            value="1"
+                                        >
+                                            <span class="ico-eye"></span
+                                            ><span class="ico-hide"></span>
+                                        </button>
+                                        <button
+                                            class="label-blk__btn label-menu-fn"
+                                        >
+                                            <span
+                                                class="ico-dots-horizontal-triple"
+                                            ></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                            <div
+                                id="label-container"
+                                class="label-container color-plate-list"
+                            ></div>
+                            <div
+                                id="label-dropdown-menu"
+                                class="normal-dropdown label-dropdown-menu"
+                            ></div>
+                            <template id="category-menu-button-template">
+                                <button class="normal-dropdown__link"></button>
+                            </template>
+                        </div>
+                        <div class="side-bar__blk">
+                            <div class="toggle-input-blk toggle-fn">
+                                <button
+                                    class="toggle-input-blk__btn toggle-fn__btn"
+                                >
+                                    <span class="icon"></span
+                                    ><span class="text"></span>
+                                </button>
+                                <div class="input-blk toggle-fn__hide">
+                                    <div class="input-blk__wrap">
+                                        <input
+                                            type="text"
+                                            id="add-category-input"
+                                            name="add"
+                                            no-shortcuts
+                                        />
+                                        <button
+                                            class="input-blk__confirm"
+                                            id="add-category-button"
+                                            type="submit"
+                                        >
+                                            Confirm
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+                <div id="galleryPage" class="main-section page">
+                    <template id="gallery-item-template">
+                        <button class="gallery-list__item gallery-item">
+                            <div class="gallery-item__img-w">
+                                <img class="gallery-item__img" src="" />
+                            </div>
+                            <p class="name gallery-item__name">
+                                <span class="gallery-item__text"
+                                    >Image-Name-Sample.jpeg</span
+                                >
+                            </p>
+                        </button>
+                    </template>
+                    <div class="main-section__inner">
+                        <p class="main-section__title">All Images</p>
+                        <div
+                            id="gallery-container"
+                            class="gallery-list gallery-list--full"
+                        ></div>
+                    </div>
+                </div>
+                <div id="annotationPage" class="main-section page">
+                    <div class="canvas-container">
+                        <canvas id="canvas" class="canvas"></canvas>
+                    </div>
+
+                    <div class="float-bar" id="action-panel">
+                        <div class="float-bar__inner">
+                            <div class="float-bar__item">
+                                <div
+                                    class="toggle-color-plate-popup toggle-fn"
+                                    id="category-selector"
+                                >
+                                    <div
+                                        class="toggle-color-plate-popup__pop toggle-fn__hide"
+                                    >
+                                        <p
+                                            class="toggle-color-plate-popup__label"
+                                        >
+                                            Label
+                                        </p>
+                                        <div
+                                            class="color-plate-list toggle-color-plate-popup__list"
+                                        ></div>
+                                    </div>
+                                    <button
+                                        id="assign-category-toggle-button"
+                                        class="toggle-fn__btn toggle-color-plate-popup__button float-bar__button toggle-button"
+                                    >
+                                        <span
+                                            class="color-blk selected-category-box"
+                                            style="display: none"
+                                        >
+                                            <span
+                                                class="label-sm-blk__text selected-category-text"
+                                            ></span>
+                                        </span>
+                                        <span>Assign Label (C)</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="float-bar__item" id="edit-btn-blk">
+                                <label class="float-bar__button radio-label">
+                                    <input
+                                        name="editMode"
+                                        id="label-mask-button"
+                                        type="radio"
+                                        value="0"
+                                        checked
+                                    />
+                                    Edit
+                                </label>
+                            </div>
+                            <div class="float-bar__item">
+                                <button
+                                    id="remove-button"
+                                    class="float-bar__button"
+                                >
+                                    <span class="ico-bin icon"></span>Remove (R)
+                                </button>
+                            </div>
+                            <div class="float-bar__item">
+                                <label class="float-bar__button radio-label">
+                                    <input
+                                        name="editMode"
+                                        id="add-mask-button"
+                                        type="radio"
+                                        value="1"
+                                    />
+                                    <span class="ico-shape icon"></span>
+                                    Add Mask (W)
+                                </label>
+                            </div>
+                            <div class="float-bar__item">
+                                <div
+                                    id="actionContainer"
+                                    class="float-bar__item actionButton"
+                                >
+                                    <button
+                                        id="undo-button"
+                                        class="float-bar__button"
+                                    >
+                                        <span class="ico-undo icon"></span>
+                                    </button>
+                                    <button
+                                        id="redo-button"
+                                        class="float-bar__button"
+                                    >
+                                        <span class="ico-redo icon"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <template id="label-small-btn-template">
+                            <div
+                                class="label-sm-blk color-plate-list__item toggle-color-plate-popup__list-item"
+                            >
+                                <button
+                                    class="label-sm-blk__btn color-plate-list__color-plate colorBox"
+                                >
+                                    <span
+                                        class="labelText label-sm-blk__text"
+                                    ></span>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div id="actionContainer-bar" class="float-bar">
+                        <div class="float-bar__inner">
+                            <div
+                                class="toggle-color-plate-popup toggle-fn"
+                                id="category-selector-prompt"
+                            >
+                                <div
+                                    class="toggle-color-plate-popup__pop toggle-fn__hide"
+                                >
+                                    <p class="toggle-color-plate-popup__label">
+                                        Label
+                                    </p>
+                                    <div
+                                        class="color-plate-list toggle-color-plate-popup__list"
+                                    ></div>
+                                </div>
+                                <button
+                                    id="assign-category-toggle-button"
+                                    class="toggle-fn__btn toggle-color-plate-popup__button float-bar__button toggle-button"
+                                >
+                                    <span
+                                        class="color-blk selected-category-box"
+                                    >
+                                        <span
+                                            class="label-sm-blk__text selected-category-text"
+                                        ></span>
+                                    </span>
+                                    <span>Assign Label (C)</span>
+                                </button>
+                            </div>
+                            <div class="float-bar__item">
+                                <div
+                                    id="actionContainer"
+                                    class="float-bar__item actionButton"
+                                >
+                                    <button
+                                        id="undo-button"
+                                        class="float-bar__button hidden"
+                                    >
+                                        <!-- <span class="ico-undo icon"></span> -->
+                                        Undo
+                                    </button>
+                                    <button
+                                        id="reset-button"
+                                        class="float-bar__button hidden"
+                                    >
+                                        <!-- <span class="ico-rotate icon"></span> -->
+                                        Reset
+                                    </button>
+                                    <button
+                                        id="confirm-button"
+                                        class="float-bar__button hidden"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="float-bar__item">
+                                <button
+                                    id="back-to-edit-mode-btn"
+                                    class="float-bar__button"
+                                >
+                                    Back
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="view-panel" class="canvas-control">
+                        <button
+                            id="zoomin-viewpoint-button"
+                            class="canvas-control__item"
+                        >
+                            +
+                        </button>
+                        <button
+                            id="reset-viewpoint-button"
+                            class="canvas-control__label canvas-control__item"
+                        >
+                            <span class="icon ico-drag"></span>
+                        </button>
+                        <button
+                            id="zoomout-viewpoint-button"
+                            class="canvas-control__item"
+                        >
+                            -
+                        </button>
+                    </div>
+                </div>
+                <div id="defaultPage" class="main-section page"></div>
+            </div>
+        </div>
+
+        <div id="loading-pop" class="loading-pop modal-pop">
+            <div class="loading-pop__inner modal-pop__inner">
+                <img
+                    class="loading-pop__loading modal-pop__loading"
+                    src="./images/loading.svg"
+                    alt=""
+                />
+                <p
+                    id="loading-percentage"
+                    class="loading-pop__number modal-pop__number"
+                ></p>
+                <p
+                    id="loading-pop-title"
+                    class="loading-pop__lg-text modal-pop__lg-text"
+                >
+                    Hold Tight!
+                </p>
+                <p
+                    class="loading-pop__text modal-pop__text"
+                    id="loading-pop-content"
+                >
+                    We're brewing up something amazing. It might take a few
+                    minutes, so sit back and relax. Better not to leave this
+                    page. Thanks for your patience! 😊
+                </p>
+                <div
+                    class="modal-pop__row"
+                    id="loading-pop-button-container"
+                ></div>
+            </div>
+        </div>
+
+        <div id="general-pop" class="modal-pop">
+            <div class="modal-pop__inner">
+                <p id="general-pop-large-text" class="modal-pop__lg-text"></p>
+                <p id="general-pop-text" class="modal-pop__text"></p>
+                <div id="button-container" class="modal-pop__row"></div>
+            </div>
+        </div>
+        <div id="error-pop" class="modal-pop">
+            <div class="modal-pop__inner">
+                <p id="error-pop-large-text" class="modal-pop__lg-text"></p>
+                <p id="error-pop-text" class="modal-pop__text"></p>
+                <textarea
+                    id="error-pop-textarea"
+                    class="model-pop__textarea"
+                    readonly
+                ></textarea>
+                <div id="button-container" class="modal-pop__row"></div>
+            </div>
+        </div>
+        <div id="loading-pop-backdrop" class="modal-pop-backdrop"></div>
+        <input type="file" id="image-input" accept="image/*" hidden />
+
+        <script
+            type="text/javascript"
+            src="https://www.gstatic.com/charts/loader.js"
+        ></script>
+
+        <script src="eel.js"></script>
+        <script
+            type="module"
+            src="js/quickStart/quickStartInterface.js"
+        ></script>
+    </body>
+</html>

@@ -1,0 +1,7 @@
+.header {
+    &__main-side  {
+        &:has(#back-to-labeling:disabled) {
+            display: none;
+        }
+    }
+}

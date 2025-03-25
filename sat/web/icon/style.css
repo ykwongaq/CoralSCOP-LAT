@@ -1,0 +1,118 @@
+@font-face {
+  font-family: "icomoon";
+  src: url("fonts/icomoon.eot?92d4hq");
+  src: url("fonts/icomoon.eot?92d4hq#iefix") format("embedded-opentype"),
+    url("fonts/icomoon.ttf?92d4hq") format("truetype"),
+    url("fonts/icomoon.woff?92d4hq") format("woff"),
+    url("fonts/icomoon.svg?92d4hq#icomoon") format("svg");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="ico-"],
+[class*=" ico-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: "icomoon" !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ico-gear:before {
+  content: "\e901";
+}
+.ico-exit:before {
+  content: "\e902";
+}
+.ico-home:before {
+  content: "\e903";
+}
+.ico-add:before {
+  content: "\e904";
+}
+.ico-eye:before {
+  content: "\e905";
+}
+.ico-stack:before {
+  content: "\e906";
+}
+.ico-grid:before {
+  content: "\e907";
+}
+.ico-info:before {
+  content: "\e908";
+}
+.ico-wave:before {
+  content: "\e909";
+}
+.ico-line:before {
+  content: "\e90a";
+}
+.ico-book:before {
+  content: "\e90b";
+}
+.ico-hide:before {
+  content: "\e90c";
+}
+.ico-border-plus:before {
+  content: "\e90d";
+}
+.ico-cross:before {
+  content: "\e90e";
+}
+.ico-circle-arrow-right:before {
+  content: "\e90f";
+}
+.ico-shape:before {
+  content: "\e910";
+}
+.ico-redo:before {
+  content: "\e911";
+}
+.ico-undo:before {
+  content: "\e912";
+}
+.ico-plus:before {
+  content: "\e913";
+}
+.ico-circle-arrow-left:before {
+  content: "\e914";
+}
+.ico-drag:before {
+  content: "\e915";
+}
+.ico-search:before {
+  content: "\e916";
+}
+.ico-bin:before {
+  content: "\e917";
+}
+.ico-border-cross:before {
+  content: "\e918";
+}
+.ico-tick:before {
+  content: "\e919";
+}
+.ico-line-arrow-left:before {
+  content: "\e91a";
+}
+.ico-dots-horizontal-triple:before {
+  content: "\e91b";
+}
+.ico-reload-alt:before {
+  content: "\e91c";
+}
+.ico-rotate:before {
+  content: "\e91d";
+}
+.ico-save:before {
+  content: "\e900";
+}

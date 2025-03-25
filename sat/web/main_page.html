@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Main Page</title>
+        <!-- <link rel="stylesheet" href="css/mainPage/mainPage.css" /> -->
+        <link rel="stylesheet" href="./icon/style.css" />
+        <link rel="stylesheet" href="./css/styles.css" />
+    </head>
+    <body>
+        <div class="home">
+            <!-- <img class="bg" src="./images/CoralSCOP_Homepage.jpg" alt="" /> -->
+            <div class="home__content">
+                <div>
+                    <!-- <img class="title" src="./images/home-title.svg" alt="" /> -->
+                    <p>Segmentation Annotation Tool</p>
+                    <div class="button-row">
+                        <button id="create-project-button" class="button">
+                            Create New Project
+                        </button>
+                        <button
+                            class="button button--border"
+                            id="load-project-button"
+                        >
+                            Load Existing Project
+                        </button>
+                        <button
+                            class="button button--border"
+                            id="quick-start-button"
+                        >
+                            Quick Start
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="/eel.js"></script>
+        <script type="module" src="js/mainInterface/mainInterface.js"></script>
+    </body>
+</html>
