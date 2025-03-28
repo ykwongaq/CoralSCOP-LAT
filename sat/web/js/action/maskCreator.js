@@ -112,7 +112,7 @@ export class MaskCreator {
         if (selectedCategory) {
             this.mask.setCategory(selectedCategory);
         } else {
-            const category = new Category(Category.UNDEFINED_ID);
+            const category = new Category(Category.PREDICTED_CORAL_ID);
             this.mask.setCategory(category);
         }
 

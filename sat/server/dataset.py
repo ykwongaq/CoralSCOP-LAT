@@ -7,6 +7,11 @@ from .util.coco import rle_mask_to_rle_vis_encoding
 
 class Data:
 
+    STATUS_UNDEFINED = -1
+    STATUS_HEALTHY = 0
+    STATUS_BLEACHED = 1
+    STATUS_DEAD = 2
+
     def __init__(self):
         self.image_name = None
         self.image_path = None
@@ -57,15 +62,9 @@ class Data:
             "image_name": "image_name",
             "image_path": "image_path",
             "idx": 0,
-            "segmentation": Json information containing ["images" and "annotations"]. Also note that there is
-            an additional key "rle" which is the RLE encoding for the segmentation mask for visualization.
+            "segmentation": Coral segmentation following the coco format.
         }
         """
-
-        assert self.image_name is not None, "Data has no image name"
-        assert self.image_path is not None, "Data has no image path"
-        assert self.idx != -1, "Data has no index"
-        assert self.segmentation is not None, "Data has no segmentation"
 
         # Convert the segmentation mask encoding to RLE for front end visualization
         segmentation = copy.deepcopy(self.segmentation)
@@ -94,6 +93,7 @@ class Dataset:
         # Key is the image idx, and the value is the Data object
         self.data: Dict[int, Data] = {}
         self.category_info: List[Dict] = None
+        self.status_info: List[Dict] = None
         self.last_saved_id = 0
 
     def add_data(self, data: Data):
@@ -101,6 +101,19 @@ class Dataset:
         Add data to the dataset.
         Need to verify the data is valid
         """
+        assert data.get_image_name() is not None, "Data has no image name"
+        assert data.get_image_path() is not None, "Data has no image path"
+        assert (
+            data.get_embedding() is not None
+        ), f"Data {data.get_image_name()} has no embedding"
+        assert (
+            data.get_segmentation() is not None
+        ), f"Data {data.get_image_name()} has no segmentation"
+        assert data.get_idx() != -1, f"Data {data.get_image_name()} has no index"
+        assert (
+            data.get_idx() not in self.data
+        ), f"Data {data.get_image_name()} already exists"
+
         self.data[data.get_idx()] = data
 
     def update_data(self, data_idx: int, segmentation: Dict):
@@ -143,6 +156,9 @@ class Dataset:
                 "id": -1,
                 "name": "Detected Coral",
                 "supercategory": "Detected Coral",
+                "supercategory_id": -1,
+                "is_coral": True,
+                "status": -1,
             },
         ]
         """
@@ -150,6 +166,12 @@ class Dataset:
 
     def set_category_info(self, category_info: List[Dict]):
         self.category_info = category_info
+
+    def set_status_info(self, status_info: List[Dict]):
+        self.status_info = status_info
+
+    def get_status_info(self) -> List[Dict]:
+        return self.status_info
 
     def get_data_list_by_category_id(self, category_id: int) -> List[Data]:
         """

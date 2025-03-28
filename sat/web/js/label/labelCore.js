@@ -50,6 +50,9 @@ export class LabelCore extends AnnotationCore {
                             categoryManager.updateCategoryList(
                                 response["category_info"]
                             );
+                            categoryManager.updateStatus(
+                                response["status_info"]
+                            );
 
                             const galleryPage = manager
                                 .getToolInterface()
@@ -65,7 +68,7 @@ export class LabelCore extends AnnotationCore {
                             this.showData();
 
                             navigationBar.showPage(
-                                NavigationBarLabel.ANNOTATION_PAGE
+                                navigationBar.constructor.ANNOTATION_PAGE
                             );
 
                             navigationBar.enable();
@@ -95,8 +98,11 @@ export class LabelCore extends AnnotationCore {
 
         if (filePath === null) {
             const fileDialogRequest = new FileDialogRequest();
-            fileDialogRequest.setTitle("Save SAT Project File");
-            fileDialogRequest.addFileType("SAT Project File", "*.sat");
+            fileDialogRequest.setTitle("Save CoralSCOP-LAT Project File");
+            fileDialogRequest.addFileType(
+                "CoralSCOP-LAT Project File",
+                "*.coral"
+            );
             this.selectFile(
                 fileDialogRequest,
                 (filePath_) => {

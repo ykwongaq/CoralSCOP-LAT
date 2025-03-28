@@ -38,6 +38,9 @@ class AnnotationJson:
     def set_iscrowd(self, iscrowd: int):
         self.iscrowd = iscrowd
 
+    def set_predicted_iou(self, predicted_iou: float):
+        self.predicted_iou = predicted_iou
+
     def to_json(self):
         assert self.segmentation is not None, "segmentation is not set"
         assert self.bbox is not None, "bbox is not set"
@@ -46,6 +49,7 @@ class AnnotationJson:
         assert self.id is not None, "id is not set"
         assert self.image_id is not None, "image_id is not set"
         assert self.iscrowd is not None, "iscrowd is not set"
+        assert self.predicted_iou is not None, "predicted_iou is not set"
         return {
             "segmentation": self.segmentation,
             "bbox": self.bbox,
@@ -54,4 +58,5 @@ class AnnotationJson:
             "id": self.id,
             "image_id": self.image_id,
             "iscrowd": self.iscrowd,
+            "predicted_iou": self.predicted_iou,
         }

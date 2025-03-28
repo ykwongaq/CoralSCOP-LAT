@@ -5,12 +5,16 @@ import { Manager } from "../../manager.js";
 
 export class NavigationBarQuickStart extends NavigationBar {
     static ANNOTATION_PAGE = "annotationPage";
+    static STATISTIC_PAGE = "statisticPage";
+    static SETTING_PAGE = "settingPage";
 
     constructor(dom) {
         super();
         this.dom = dom;
 
         this.labelButton = this.dom.querySelector("#label-button");
+        this.statisticButton = this.dom.querySelector("#statistic-button");
+        this.settingButton = this.dom.querySelector("#setting-button");
 
         this.exportButton = this.dom.querySelector("#file-button");
         this.exportDropDownMenu = this.dom.querySelector("#file-dropdown-menu");
@@ -19,12 +23,16 @@ export class NavigationBarQuickStart extends NavigationBar {
             "#export-annotated-image-button"
         );
         this.exportCOCOButton = this.dom.querySelector("#export-coco-button");
+        this.exportExcelButton = this.dom.querySelector("#export-excel-button");
+        this.exportChartsButton = this.dom.querySelector(
+            "#export-graph-button"
+        );
         this.exportAllButton = this.dom.querySelector("#export-all-button");
 
         this.saveDropdownButton = this.dom.querySelector(
             "#save-drop-down-button"
         );
-        // this.saveButton = this.dom.querySelector("#save-button");
+        this.saveButton = this.dom.querySelector("#save-button");
         this.saveToButton = this.dom.querySelector("#save-to-button");
         this.saveDropDownMenu = this.dom.querySelector(
             "#file-dropdown-menu-save"
@@ -37,6 +45,8 @@ export class NavigationBarQuickStart extends NavigationBar {
     init() {
         super.init();
         this.initLabelButton();
+        this.initStatisticButton();
+        this.initSettingButton();
         this.initExportButton();
         this.initSave();
     }
@@ -44,6 +54,18 @@ export class NavigationBarQuickStart extends NavigationBar {
     initLabelButton() {
         this.labelButton.addEventListener("click", () => {
             this.showPage(NavigationBarQuickStart.ANNOTATION_PAGE);
+        });
+    }
+
+    initSettingButton() {
+        this.settingButton.addEventListener("click", () => {
+            this.showPage(NavigationBarQuickStart.SETTING_PAGE);
+        });
+    }
+
+    initStatisticButton() {
+        this.statisticButton.addEventListener("click", () => {
+            this.showPage(NavigationBarQuickStart.STATISTIC_PAGE);
         });
     }
 
@@ -171,7 +193,78 @@ export class NavigationBarQuickStart extends NavigationBar {
                             loadingPopManager.hide();
                             this.enable();
                             core.popUpError(error);
-                            s;
+                        }
+                    );
+                });
+            });
+        });
+
+        this.exportExcelButton.addEventListener("click", () => {
+            const manager = new Manager();
+            const core = manager.getCore();
+            core.save(() => {
+                this.disable();
+                core.selectFolder(null, (fileFolder) => {
+                    if (fileFolder === null) {
+                        this.enable();
+                        return;
+                    }
+
+                    const loadingPopManager = new LoadingPopManager();
+                    loadingPopManager.clear();
+                    loadingPopManager.updateLargeText("Exporting");
+                    loadingPopManager.updateText(
+                        "Exporting the excel files. Please wait."
+                    );
+                    loadingPopManager.show();
+
+                    core.exportExcel(
+                        fileFolder,
+                        () => {
+                            loadingPopManager.hide();
+                            this.enable();
+                        },
+                        (error) => {
+                            console.error(error);
+                            loadingPopManager.hide();
+                            this.enable();
+                            core.popUpError(error);
+                        }
+                    );
+                });
+            });
+        });
+
+        this.exportChartsButton.addEventListener("click", () => {
+            const manager = new Manager();
+            const core = manager.getCore();
+            core.save(() => {
+                this.disable();
+                core.selectFolder(null, async (fileFolder) => {
+                    if (fileFolder === null) {
+                        this.enable();
+                        return;
+                    }
+
+                    const loadingPopManager = new LoadingPopManager();
+                    loadingPopManager.clear();
+                    loadingPopManager.updateLargeText("Exporting");
+                    loadingPopManager.updateText(
+                        "Exporting the charts. Please wait."
+                    );
+                    loadingPopManager.show();
+
+                    core.exportCharts(
+                        fileFolder,
+                        () => {
+                            loadingPopManager.hide();
+                            this.enable();
+                        },
+                        (error) => {
+                            console.error(error);
+                            loadingPopManager.hide();
+                            this.enable();
+                            core.popUpError(error);
                         }
                     );
                 });
@@ -259,9 +352,14 @@ export class NavigationBarQuickStart extends NavigationBar {
                 () => {
                     this.disable();
                     const fileDialogRequest = new FileDialogRequest();
-                    fileDialogRequest.setTitle("Save SAT Project File");
-                    fileDialogRequest.addFileType("SAT Project File", "*.sat");
-                    fileDialogRequest.setDefaultExt(".sat");
+                    fileDialogRequest.setTitle(
+                        "Save CoralSCOP-LAT Project File"
+                    );
+                    fileDialogRequest.addFileType(
+                        "CoralSCOP-LAT Project File",
+                        "*.coral"
+                    );
+                    fileDialogRequest.setDefaultExt(".coral");
 
                     core.selectSaveFile(
                         fileDialogRequest,
@@ -346,6 +444,7 @@ export class NavigationBarQuickStart extends NavigationBar {
 
     disable() {
         this.labelButton.disabled = true;
+        this.statisticButton.disabled = true;
         this.exportButton.disabled = true;
         this.disableExport();
         this.disableSave();
@@ -353,6 +452,7 @@ export class NavigationBarQuickStart extends NavigationBar {
 
     enable() {
         this.labelButton.disabled = false;
+        this.statisticButton.disabled = false;
         this.exportButton.disabled = false;
         this.enableExport();
         this.enableSave();
@@ -362,6 +462,8 @@ export class NavigationBarQuickStart extends NavigationBar {
         this.exportImageButton.disabled = true;
         this.exportAnnotatedImageButton.disabled = true;
         this.exportCOCOButton.disabled = true;
+        this.exportExcelButton.disabled = true;
+        this.exportChartsButton.disabled = true;
         this.exportAllButton.disabled = true;
     }
 
@@ -370,6 +472,8 @@ export class NavigationBarQuickStart extends NavigationBar {
         this.exportAnnotatedImageButton.disabled = false;
         this.exportCOCOButton.disabled = false;
         this.exportAllButton.disabled = false;
+        this.exportExcelButton.disabled = false;
+        this.exportChartsButton.disabled = false;
     }
 
     disableSave() {

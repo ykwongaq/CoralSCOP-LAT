@@ -1,18 +1,17 @@
+import logging
 import os
 import zipfile
-import logging
 import shutil
 
 from ..util.json import save_json
 from ..dataset import Dataset
-from PIL import Image
-
 from ..jsonFormat import (
     ImageJson,
-    AnnotationJson,
-    CategoryJson,
-    ProjectInfoJson,
     AnnotationFileJson,
+    AnnotationJson,
+    ProjectInfoJson,
+    StatusJson,
+    CategoryJson,
 )
 
 
@@ -22,12 +21,11 @@ TEMP_CREATE_NAME_2 = "__coralscop_lat_temp_2"
 
 class ProjectSaver:
     def __init__(self):
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger(__name__)
 
     def save_dataset(
         self, dataset: Dataset, project_path_origin: str, project_path_new: str
     ):
-        print(f"Saving dataset to {project_path_new} and {project_path_origin}")
         # Unzip the original project to temp folder
         temp_folder_origin = os.path.join(
             os.path.dirname(project_path_origin), TEMP_CREATE_NAME
@@ -92,6 +90,7 @@ class ProjectSaver:
                 annotation_json.set_id(mask["id"])
                 annotation_json.set_image_id(data.get_idx())
                 annotation_json.set_iscrowd(mask["iscrowd"])
+                annotation_json.set_predicted_iou(mask["predicted_iou"])
                 annotation_file_json.add_annotation(annotation_json)
 
             save_json(annotation_file_json.to_json(), annotation_path)
@@ -105,9 +104,17 @@ class ProjectSaver:
             category_json = CategoryJson()
             category_json.set_id(category["id"])
             category_json.set_name(category["name"])
-            category_json.set_supercategory(category["supercategory"])
+            category_json.set_super_category(category["supercategory"])
+            category_json.set_super_category_id(category["supercategory_id"])
+            category_json.set_is_coral(category["is_coral"])
+            category_json.set_status(category["status"])
             project_info_json.add_category_info(category_json)
 
+        for status in dataset.get_status_info():
+            status_json = StatusJson()
+            status_json.set_id(status["id"])
+            status_json.set_name(status["name"])
+            project_info_json.add_status_info(status_json)
         project_info_json.set_last_image_idx(dataset.get_last_saved_id())
 
         save_json(project_info_json.to_json(), project_info_path)

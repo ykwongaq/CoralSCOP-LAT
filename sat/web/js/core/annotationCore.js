@@ -72,8 +72,10 @@ export class AnnotationCore extends Core {
 
         const categoryManager = new CategoryManager();
         const categoryInfo = categoryManager.toJson();
+        const statusInfo = categoryManager.getStatusInfo();
 
         data["category_info"] = categoryInfo;
+        data["status_info"] = statusInfo;
 
         eel.save_data(data)()
             .then(() => {

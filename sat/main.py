@@ -1,5 +1,6 @@
 import logging
 import eel
+import argparse
 
 from server.server import Server
 from typing import List, Dict, Tuple
@@ -44,6 +45,7 @@ def select_file(request: Dict) -> str:
 def select_save_file(request: Dict) -> str:
     file_dialog_request = FileDialogRequest(request)
     return server.select_save_file(file_dialog_request)
+
 
 @eel.expose
 def create_project(project_create_request: Dict):
@@ -119,22 +121,43 @@ def export_images(output_dir: str):
 def export_annotated_images(output_dir: str, data_list: List[Dict]):
     server.export_annotated_images(output_dir, data_list)
 
+
 @eel.expose
 def export_coco(output_path: str):
     server.export_coco(output_path)
 
 
 @eel.expose
-def import_json(input_path: str):
-    server.import_json(input_path)
+def export_excel(output_dir: str):
+    server.export_excel(output_dir)
+
+
+@eel.expose
+def export_charts(output_dir: str, requests: List[Dict]):
+    server.export_charts(output_dir, requests)
+
+
+@eel.expose
+def detect_coral(request: Dict) -> Dict:
+    return server.detect_coral(request).to_json()
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Start the SAT tool.")
+    parser.add_argument(
+        "--model_type",
+        type=str,
+        default="vit_b",
+        choices=["vit_h", "vit_l", "vit_b"],
+    )
+
+    args = parser.parse_args()
+
     setup_logging()
     print("Please wait for the tool to be ready ...")
     eel.init("web")
     print(f"About to start the server ...")
-    server = Server()
+    server = Server(args.model_type)
     print(f"Server initialized ...")
     eel.start("main_page.html", size=(1200, 800), port=0)
     print(f"Server started ...")

@@ -7,7 +7,7 @@ import { NavigationBarLabel, TopPanelLabel } from "./panels/index.js";
 import { LabelPanel, ActionPanel, ViewPanel, Canvas } from "../panels/index.js";
 
 import { navigateTo } from "../util/navigate.js";
-import { AnnotationPage } from "../pages/index.js";
+import { AnnotationPage, StatisticPage } from "../pages/index.js";
 import { GalleryPageLabel } from "./pages/gallleryPageLabel.js";
 
 export class LabelInterface {
@@ -15,6 +15,7 @@ export class LabelInterface {
         this.core = null;
         this.annotationPage = null;
         this.galleryPage = null;
+        this.statisticPage = null;
         this.navigationBar = null;
     }
 
@@ -81,6 +82,13 @@ export class LabelInterface {
         this.galleryPage = new GalleryPageLabel(galleryPageDom);
         this.galleryPage.init();
 
+        // Statistic Page
+        const statisticPageDom = document.getElementById(
+            NavigationBarLabel.STATISTIC_PAGE
+        );
+        this.statisticPage = new StatisticPage(statisticPageDom);
+        this.statisticPage.init();
+
         // Navigation Bar
         const navigationBarDom = document.getElementById("navigation-bar");
         this.navigationBar = new NavigationBarLabel(navigationBarDom);
@@ -95,6 +103,11 @@ export class LabelInterface {
             NavigationBarLabel.GALLERY_PAGE,
             this.galleryPage,
             galleryPageDom
+        );
+        this.navigationBar.addPage(
+            NavigationBarLabel.STATISTIC_PAGE,
+            this.statisticPage,
+            statisticPageDom
         );
     }
 }

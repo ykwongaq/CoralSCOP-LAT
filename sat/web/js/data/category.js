@@ -1,8 +1,9 @@
 import { CategoryManager } from "./categoryManager.js";
 
 export class Category {
-    static UNDEFINED_ID = -1;
-    static PROMPT_ID = -2;
+    static DEAD_CORAL_ID = 0;
+    static PREDICTED_CORAL_ID = -1;
+    static PROMPT_COLOR_ID = -2;
 
     constructor(categoryId) {
         this.categoryId = categoryId;
@@ -28,11 +29,24 @@ export class Category {
         return categoryManager.getCategoryNameByCategoryId(this.categoryId);
     }
 
-    getSuperCategoryName() {
+    /**
+     * Get the super category name, which identifies the coral name
+     * @returns {string} Category super name
+     */
+    getCategorySuperName() {
         const categoryManager = new CategoryManager();
-        return categoryManager.getSuperCategoryNameByCategoryId(
+        return categoryManager.getSupercategoryNameByCategoryId(
             this.categoryId
         );
+    }
+
+    /**
+     * Get the super category id, which identifies the coral type or other non-coral type
+     * @returns {number} Super category id
+     */
+    getSuperCategoryId() {
+        const categoryManager = new CategoryManager();
+        return categoryManager.getSuperCategoryIdByCategoryId(this.categoryId);
     }
 
     /**
@@ -43,8 +57,21 @@ export class Category {
      * @returns {string} Icon name
      */
     getIconName() {
-        let categoryId = this.getCategoryId();
-        return `${categoryId}`;
+        let superCategoryId = this.getSuperCategoryId();
+        if (this.isBleached()) {
+            return `${superCategoryId}B`;
+        }
+        return `${superCategoryId}`;
+    }
+
+    isCoral() {
+        const categoryManager = new CategoryManager();
+        return categoryManager.getIsCoralByCategoryId(this.categoryId);
+    }
+
+    getStatus() {
+        const categoryManager = new CategoryManager();
+        return categoryManager.getStatusByCategoryId(this.categoryId);
     }
 
     /**
@@ -69,5 +96,23 @@ export class Category {
      */
     getBorderColor() {
         return CategoryManager.getBorderColorByCategoryId(this.getCategoryId());
+    }
+
+    isBleached() {
+        return this.getStatus() == CategoryManager.STATUS_BLEACHED;
+    }
+
+    isHealthy() {
+        return this.getStatus() == CategoryManager.STATUS_HEALTHY;
+    }
+
+    isDead() {
+        return this.getStatus() == CategoryManager.STATUS_DEAD;
+    }
+
+    getCategoriesOfOtherStatus() {
+        const categoryManager = new CategoryManager();
+        const categoryList = categoryManager.getOtherStatusofCategory(this);
+        return categoryList;
     }
 }

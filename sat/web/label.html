@@ -15,7 +15,8 @@
         <div class="wrapper">
             <div class="header">
                 <div class="logo-blk">
-                    <span class="logo-blk__text">Segmentation Tool</span>
+                    <img class="logo-blk__img" src="./images/logo.png" />
+                    <span class="logo-blk__text">CoralSCOP-LAT</span>
                 </div>
                 <div id="top-panel" class="header__main">
                     <!-- <div class="header__main-side hidden">
@@ -69,7 +70,6 @@
                         <ul class="nav-list top">
                             <li class="nav-list__item">
                                 <button
-                                    onclick="navigateTo('main_page.html')"
                                     id="back-to-main-page-button"
                                     class="nav-list__button"
                                 >
@@ -93,6 +93,17 @@
                                 >
                                     <span class="ico-stack"></span
                                     ><span class="arrow-tooltip">Label</span>
+                                </button>
+                            </li>
+                            <li class="nav-list__item">
+                                <button
+                                    id="statistic-button"
+                                    class="nav-list__button"
+                                >
+                                    <span class="ico-wave"></span
+                                    ><span class="arrow-tooltip"
+                                        >Statistic</span
+                                    >
                                 </button>
                             </li>
                             <li class="nav-list__item">
@@ -153,6 +164,18 @@
                                     </button>
                                     <button
                                         class="normal-dropdown__link"
+                                        id="export-excel-button"
+                                    >
+                                        Export Excel
+                                    </button>
+                                    <button
+                                        class="normal-dropdown__link"
+                                        id="export-graph-button"
+                                    >
+                                        Export Charts
+                                    </button>
+                                    <button
+                                        class="normal-dropdown__link"
                                         id="export-all-button"
                                     >
                                         Export All
@@ -185,7 +208,7 @@
                         <div class="side-bar__blk">
                             <div class="toggle-blk">
                                 <p class="toggle-blk__title">
-                                    Show Masks (Tab)
+                                    Show Coral (Tab)
                                 </p>
                                 <label class="switch">
                                     <input
@@ -194,6 +217,41 @@
                                     />
                                     <span class="switch__slider"></span>
                                 </label>
+                            </div>
+                        </div>
+                        <div class="side-bar__blk">
+                            <div class="radio-button-gp-blk">
+                                <p class="radio-button-gp-blk__label">Type</p>
+                                <div class="radio-btn-gp">
+                                    <label class="radio-btn-gp__label">
+                                        <input
+                                            name="status"
+                                            id="status-1-button"
+                                            type="radio"
+                                            value="0"
+                                            checked
+                                        />
+                                        <span>Healthy</span>
+                                    </label>
+                                    <label class="radio-btn-gp__label">
+                                        <input
+                                            name="status"
+                                            id="status-2-button"
+                                            type="radio"
+                                            value="1"
+                                        />
+                                        <span>Bleached</span>
+                                    </label>
+                                    <label class="radio-btn-gp__label">
+                                        <input
+                                            name="status"
+                                            id="status-3-button"
+                                            type="radio"
+                                            value="2"
+                                        />
+                                        <span>Dead</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                         <div class="side-bar__blk">
@@ -397,10 +455,7 @@
                                 </label>
                             </div>
                             <div class="float-bar__item">
-                                <div
-                                    id="actionContainer"
-                                    class="float-bar__item actionButton"
-                                >
+                                <div class="float-bar__item actionButton">
                                     <button
                                         id="undo-button"
                                         class="float-bar__button"

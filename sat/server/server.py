@@ -1,27 +1,29 @@
 import logging
 import time
 import os
+import numpy as np
+import copy
+import shutil
 
 from tkinter import Tk, filedialog, messagebox
 from .embedding import EmbeddingGenerator
+from .segmentation import CoralSegmentation
 
 # from .maskEiditor import MaskEidtor
-from .mask.maskCreator import MaskCreator
-from .mask.prompt import Prompt
+from .mask import MaskCreator, Prompt
 from .util.general import get_resource_path
-
 from .project import (
     ProjectCreator,
     ProjectLoader,
     ProjectExportor,
-    JsonImportor,
     ProjectSaver,
 )
-from .util.requests import ProjectCreateRequest
+from .jsonFormat import AnnotationJson
 from .dataset import Dataset, Data
 from .util.coco import to_coco_annotation, rle_mask_to_rle_vis_encoding
-from .util.requests import FileDialogRequest
-
+from .util.requests import FileDialogRequest, ProjectCreateRequest
+from .util.data import unzip_file
+from PIL import Image
 from typing import Dict, List, Tuple
 
 from functools import wraps
@@ -50,29 +52,66 @@ class Server:
     SAM_DECODER_PATH = "models/vit_h_decoder_quantized.onnx"
     SAM_MODEL_TYPE = "vit_b"
 
-    def __init__(self):
+    # CoralSCOP
+    CORALSCOP_PATH = "models/vit_b_coralscop.pth"
+    CORALSCOP_MODEL_TYPE = "vit_b"
+
+    def __init__(self, model_type: str = "vit_b"):
         self.logger = logging.getLogger(self.__class__.__name__)
 
+        self.model_type = model_type
         # Embedding Encoder Model
         self.logger.info("Loading embedding encoder model ...")
         start_time = time.time()
-        model_path = get_resource_path(Server.SAM_ENCODER_PATH)
+
+        if model_type == "vit_h":
+            self.encoder_model_path = get_resource_path(Server.SAM_ENCODER_PATH)
+            self.decoder_model_path = get_resource_path(Server.SAM_DECODER_PATH)
+        elif model_type == "vit_l":
+            self.encoder_model_path = get_resource_path(
+                os.path.join("models", "vit_l_encoder.onnx")
+            )
+            self.decoder_model_path = get_resource_path(
+                os.path.join("models", "vit_l_decoder.onnx")
+            )
+        elif model_type == "vit_b":
+            self.encoder_model_path = get_resource_path(
+                os.path.join("models", "vit_b_encoder.onnx")
+            )
+            self.decoder_model_path = get_resource_path(
+                os.path.join("models", "vit_b_decoder.onnx")
+            )
+
+        model_path = get_resource_path(self.encoder_model_path)
+        # model_path = get_resource_path(Server.CORALSCOP_PATH)
         self.embeddings_generator = EmbeddingGenerator(model_path)
         self.logger.info(
             f"Embedding model loaded in {time.time() - start_time} seconds"
         )
 
+        # Coral Segmentation Model
+        self.logger.info("Loading segmentation model ...")
+        start_time = time.time()
+        model_path = get_resource_path(Server.CORALSCOP_PATH)
+        self.coral_segmentation = CoralSegmentation(
+            model_path, Server.CORALSCOP_MODEL_TYPE
+        )
+        self.logger.info(f"CoralSCOP loaded in {time.time() - start_time} seconds")
+
         # Mask Editor
         self.logger.info("Mask Editor initialized ...")
         start_time = time.time()
+        # model_path = get_resource_path(Server.CORALSCOP_PATH)
         model_path = get_resource_path(Server.SAM_DECODER_PATH)
-        self.mask_creator = MaskCreator(model_path)
+        self.mask_creator = MaskCreator(self.decoder_model_path)
         self.logger.info(
             f"Mask Creator initialized in {time.time() - start_time} seconds"
         )
 
         # Project creation
-        self.project_creator = ProjectCreator(self.embeddings_generator)
+        self.project_creator = ProjectCreator(
+            self.embeddings_generator, self.coral_segmentation
+        )
 
         # Dataset
         self.dataset: Dataset = None
@@ -169,6 +208,15 @@ class Server:
                     )
                     continue
 
+                # if os.path.exists(file_path):
+                #     confirm = messagebox.askyesno(
+                #         "File Exists",
+                #         f"The file '{os.path.basename(file_path)}' already exists. Do you want to overwrite it?",
+                #     )
+
+                #     if not confirm:
+                #         continue
+
                 self.logger.info(f"Selected save file: {file_path}")
                 return file_path
         except Exception as e:
@@ -229,8 +277,14 @@ class Server:
             self.logger.error(f"Category info not found")
             return None
 
+        status_info = self.dataset.get_status_info()
+        if status_info is None:
+            self.logger.error(f"Status info not found")
+            return None
+
         response = data.to_json()
         response["category_info"] = category_info
+        response["status_info"] = status_info
 
         return response
 
@@ -332,6 +386,7 @@ class Server:
         data_idx = data["images"][0]["id"]
         self.dataset.update_data(data_idx, segmentation)
         self.dataset.set_category_info(data["category_info"])
+        self.dataset.set_status_info(data["status_info"])
 
     @time_it
     def save_dataset(self, output_path: str):
@@ -404,38 +459,82 @@ class Server:
         project_export.export_coco(output_path, self.get_dataset())
 
     @time_it
-    def import_json(self, input_path: str):
-        self.logger.info(f"Importing JSON from {input_path} ...")
+    def export_excel(self, output_dir: str):
+        self.logger.info(f"Exporting Excel dataset to {output_dir} ...")
+        project_export = ProjectExportor(self.project_path)
+        project_export.export_excel(output_dir, self.get_dataset())
 
-        json_importor = JsonImportor()
-        improted_dataset = json_importor.import_json(input_path)
+    @time_it
+    def export_charts(self, output_dir: str, requests: List[Dict]):
+        self.logger.info(f"Exporting charts to {output_dir} ...")
+        project_export = ProjectExportor(self.project_path)
+        project_export.export_charts(output_dir, requests)
 
-        imported_data_dict: Dict[str, Data] = {}
-        for imported_data in improted_dataset.get_data_list():
-            imported_data_dict[imported_data.get_image_name()] = imported_data
+    @time_it
+    def detect_coral(self, request: Dict) -> Data:
+        self.logger.info(f"Detecting coral ...")
 
-        matched_count = 0
-        for data in self.dataset.get_data_list():
-            data_name = data.get_image_name()
-            if data_name in imported_data_dict:
-                self.logger.info(f"Matching data found for {data_name}")
-                matched_count += 1
+        # Reuse create project to store the configuration
+        create_project_request = ProjectCreateRequest(request)
 
-                # Update the segmentation json information
-                imported_data = imported_data_dict[data_name]
-                data_idx = data.get_idx()
+        data = self.get_data(self.get_current_image_idx())
 
-                segmentation = imported_data.get_segmentation()
-                segmentation["images"][0]["id"] = data_idx
+        # Unzip the project folder to get the image
+        temp_folder = os.path.join(os.path.dirname(self.project_path), "temp")
+        if os.path.exists(temp_folder):
+            shutil.rmtree(temp_folder)
+        os.makedirs(temp_folder, exist_ok=True)
+        unzip_file(self.project_path, temp_folder)
 
-                for annotation in segmentation["annotations"]:
-                    annotation["image_id"] = data_idx
-                data.set_segmentation(imported_data.get_segmentation())
-            else:
-                # If not matching found, then set the annotation to empty
-                self.logger.error(f"Data not found for {data_name}")
-                image_data = data.get_segmentation()["images"][0]
-                data.set_segmentation({"images": [image_data], "annotations": []})
+        image_folder = os.path.join(temp_folder, "images")
+        image_paths = []
+        for file in os.listdir(image_folder):
+            image_paths.append(os.path.join(image_folder, file))
 
-        self.logger.info(f"Matched {matched_count} data")
-        self.dataset.set_category_info(improted_dataset.get_category_info())
+        assert len(image_paths) == 1, "Only one image is expected"
+        image_path = image_paths[0]
+
+        image = Image.open(image_path)
+        image = np.array(image)
+
+        # Remove the temporary folder
+        shutil.rmtree(temp_folder)
+
+        masks = self.coral_segmentation.generate_masks_json(image)
+        if len(masks) == 0:
+            self.logger.info(f"No coral detected")
+            return
+
+        # Add detected coral into the annotation list
+        min_area = create_project_request.get_min_area()
+        min_confidence = create_project_request.get_min_confidence()
+        max_iou = create_project_request.get_max_iou()
+
+        masks = self.coral_segmentation.filter(masks, min_area, min_confidence, max_iou)
+
+        data_idx = data.get_idx()
+        annotation_list = []
+        for idx, mask in enumerate(masks):
+            annotation_json = AnnotationJson()
+            annotation_json.set_segmentation(mask["segmentation"])
+            annotation_json.set_bbox(mask["bbox"])
+            annotation_json.set_area(mask["area"])
+            annotation_json.set_category_id(mask["category_id"])
+            annotation_json.set_id(idx)
+            annotation_json.set_image_id(data_idx)
+            annotation_json.set_iscrowd(mask["iscrowd"])
+            annotation_json.set_predicted_iou(mask["predicted_iou"])
+            annotation_list.append(annotation_json.to_json())
+
+        segmentation = data.get_segmentation()
+        segmentation = copy.deepcopy(segmentation)
+        segmentation["annotations"] = annotation_list
+
+        new_data = Data()
+        new_data.set_idx(data_idx)
+        new_data.set_image_name(data.get_image_name())
+        new_data.set_image_path(data.get_image_path())
+        new_data.set_segmentation(segmentation)
+        new_data.set_embedding(data.get_embedding())
+
+        return new_data

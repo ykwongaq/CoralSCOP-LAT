@@ -1,27 +1,30 @@
 import logging
 import os
-import shutil
+import threading
 import time
-import zipfile
-from typing import Dict, List, Tuple, Union
-
+import eel
 import numpy as np
+import zipfile
+import shutil
+
+from .projectCreator import ProjectCreator
+from ..file import WEB_FOLDER_NAME, ASSET_FOLDER_NAME, IMAGE_FOLDER_NAME
+
+from ..util.json import load_json
+from ..dataset import Dataset, Data
+from ..util.general import get_resource_path
 from PIL import Image
 
-from ..dataset import Data, Dataset
-from ..util.general import get_resource_path
-from ..util.json import load_json
-from .projectCreator import ProjectCreator
 
-TEMP_CREATE_NAME = "__coralscop_lat_temp"
-TEMP_CREATE_NAME_2 = "__coralscop_lat_temp_2"
+from typing import List, Union
+
 TEMP_LOAD_NAME = "__coralscop_lat_temp_load"
 
 
 class ProjectLoader:
 
-    WEB_FOLDER_NAME = "web"
-    ASSET_FOLDER = "assets/images"
+    WEB_FOLDER_NAME = WEB_FOLDER_NAME
+    ASSET_FOLDER = os.path.join(WEB_FOLDER_NAME, ASSET_FOLDER_NAME)
 
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -34,7 +37,6 @@ class ProjectLoader:
         - Dataset: The loaded dataset
         - int: Last image index
         """
-
         if project_path is None:
             project_path = ProjectCreator.TEMP_PROJECT_FILE
 
@@ -85,18 +87,22 @@ class ProjectLoader:
             embedding = np.load(embedding_path)
             data.set_embedding(embedding)
 
-            if os.path.exists(annotation_path):
-                annotations = load_json(annotation_path)
-                data.set_segmentation(annotations)
+            annotations = load_json(annotation_path)
+            data.set_segmentation(annotations)
 
-            data.set_idx(idx)
+            # Data index is the image idx
+            image_id = annotations["images"][0]["id"]
+            data.set_idx(image_id)
+
             dataset.add_data(data)
 
         # Load project info
         project_info = load_json(project_info_path)
         last_image_idx = project_info["last_image_idx"]
         category_info = project_info["category_info"]
+        status_info = project_info["status_info"]
         dataset.set_category_info(category_info)
+        dataset.set_status_info(status_info)
 
         # Delete the temporary folder
         shutil.rmtree(temp_output_dir)
@@ -113,21 +119,23 @@ class ProjectLoader:
         - List[str]: List of relative image paths in the asset folder
         """
         self.clear_asset_folder()
-        asset_folder = os.path.join(
-            ProjectLoader.WEB_FOLDER_NAME, ProjectLoader.ASSET_FOLDER
-        )
-        os.makedirs(get_resource_path(asset_folder), exist_ok=True)
+        image_folder = os.path.join(ProjectLoader.ASSET_FOLDER, IMAGE_FOLDER_NAME)
+        image_folder = get_resource_path(image_folder)
+        os.makedirs(image_folder, exist_ok=True)
 
         assset_image_paths = []
         for image_path in image_paths:
             image = Image.open(image_path)
 
-            save_path = os.path.join(asset_folder, os.path.basename(image_path))
+            save_path = os.path.join(image_folder, os.path.basename(image_path))
             save_path = get_resource_path(save_path)
+            self.logger.debug(f"Saving image to {save_path}")
             image.save(save_path)
 
             asset_image_path = os.path.join(
-                ProjectLoader.ASSET_FOLDER, os.path.basename(image_path)
+                ASSET_FOLDER_NAME,
+                IMAGE_FOLDER_NAME,
+                os.path.basename(image_path),
             )
             assset_image_paths.append(asset_image_path)
 
@@ -140,9 +148,9 @@ class ProjectLoader:
         asset_folder = os.path.join(
             ProjectLoader.WEB_FOLDER_NAME, ProjectLoader.ASSET_FOLDER
         )
+        asset_folder = get_resource_path(asset_folder)
         if os.path.exists(asset_folder):
             # Delete all the files in the folder
             for filename in os.listdir(asset_folder):
                 file_path = os.path.join(asset_folder, filename)
-                file_path = get_resource_path(file_path)
                 os.remove(file_path)

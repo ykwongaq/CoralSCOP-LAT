@@ -4,3 +4,5 @@ from .categoryJson import CategoryJson
 from .cocoJson import COCOJson
 from .projectInfoJson import ProjectInfoJson
 from .annotationFileJson import AnnotationFileJson
+from .statusJson import StatusJson
+from .categoryJson import CategoryJson

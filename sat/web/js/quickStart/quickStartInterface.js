@@ -9,7 +9,7 @@ import {
 } from "../panels/index.js";
 
 import { GeneralPopManager } from "../util/generalPopManager.js";
-import { AnnotationPage } from "../pages/index.js";
+import { AnnotationPage, ConfigPage, StatisticPage } from "../pages/index.js";
 import { NavigationBarQuickStart } from "./panels/navigationBarQuickStart.js";
 import { LoadingPopManager } from "../util/loadingPopManager.js";
 import { navigateTo } from "../util/navigate.js";
@@ -19,6 +19,8 @@ export class QuickStartInterface {
         this.core = null;
         this.annotationPage = null;
         this.navigationBar = null;
+        this.statisticPage = null;
+        this.configPage = null;
 
         this.imageInput = document.getElementById("image-input");
     }
@@ -77,10 +79,34 @@ export class QuickStartInterface {
         this.navigationBar = new NavigationBarQuickStart(navigationBarDom);
         this.navigationBar.init();
 
+        const statisticPageDom = document.getElementById(
+            NavigationBarQuickStart.STATISTIC_PAGE
+        );
+        this.statisticPage = new StatisticPage(statisticPageDom);
+        this.statisticPage.init();
+
+        const configPageDom = document.getElementById(
+            NavigationBarQuickStart.SETTING_PAGE
+        );
+        this.configPage = new ConfigPage(configPageDom);
+        this.configPage.init();
+
         this.navigationBar.addPage(
             NavigationBarQuickStart.ANNOTATION_PAGE,
             this.annotationPage,
             annotationPageDom
+        );
+
+        this.navigationBar.addPage(
+            NavigationBarQuickStart.STATISTIC_PAGE,
+            this.statisticPage,
+            statisticPageDom
+        );
+
+        this.navigationBar.addPage(
+            NavigationBarQuickStart.SETTING_PAGE,
+            this.configPage,
+            configPageDom
         );
 
         this.imageInput.addEventListener("change", (event) => {

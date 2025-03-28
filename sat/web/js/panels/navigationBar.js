@@ -5,6 +5,9 @@ export class NavigationBar {
         this.mainPageBubtton = document.getElementById(
             "back-to-main-page-button"
         );
+
+        this.pages = {};
+        this.currentPage = null;
     }
 
     init() {
@@ -14,13 +17,14 @@ export class NavigationBar {
     }
 
     showPage(pageId) {
-        const pages = document.querySelectorAll(".page");
-        pages.forEach((page) => {
-            page.classList.remove("active-page");
-        });
-
-        const page = document.getElementById(pageId);
-        page.classList.add("active-page");
+        if (this.currentPage) {
+            this.currentPage.leavePage();
+        }
+        this.clearActiveState();
+        const [page, pageDom] = this.pages[pageId];
+        pageDom.classList.add("active-page");
+        page.enterPage();
+        this.currentPage = page;
     }
 
     disable() {
@@ -29,5 +33,19 @@ export class NavigationBar {
 
     enable() {
         this.mainPageBubtton.disabled = false;
+    }
+
+    addPage(pageId, page, pageDom) {
+        this.pages[pageId] = [page, pageDom];
+    }
+
+    clearPages() {
+        this.pages = {};
+    }
+
+    clearActiveState() {
+        for (const [page, pageDom] of Object.values(this.pages)) {
+            pageDom.classList.remove("active-page");
+        }
     }
 }

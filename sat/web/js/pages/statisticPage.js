@@ -1,8 +1,9 @@
-import { LabelCore } from "../label/labelCore.js";
+import { Manager } from "../manager.js";
+import { Page } from "./page.js";
 import { Category, CategoryManager } from "../data/index.js";
 import { GeneralPopManager } from "../util/generalPopManager.js";
 
-export class StatisticPage {
+export class StatisticPage extends Page {
     static SHALLOW_GRAY_COLOR = "#D3D3D3";
     static DEEP_GRAY_COLOR = "#7A7A7A";
     static GREEN_COLOR = "#28A745";
@@ -10,11 +11,7 @@ export class StatisticPage {
     static WHITE_COLOR = "#FFFFFF";
 
     constructor(dom) {
-        if (StatisticPage.instance) {
-            return StatisticPage.instance;
-        }
-        StatisticPage.instance = this;
-
+        super();
         this.dom = dom;
 
         this.currentImageGrid = dom.querySelector("#current-image-grid");
@@ -45,6 +42,10 @@ export class StatisticPage {
         this.chartUrls = {};
 
         return this;
+    }
+
+    enterPage() {
+        this.update();
     }
 
     async init() {
@@ -128,7 +129,8 @@ export class StatisticPage {
             }
         }
 
-        const core = new LabelCore();
+        const manager = new Manager();
+        const core = manager.getCore();
         const data = core.getData();
 
         this.clearCharts();

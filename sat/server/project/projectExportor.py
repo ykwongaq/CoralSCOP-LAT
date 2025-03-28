@@ -7,13 +7,14 @@ from ..util.json import save_json
 from ..dataset import Dataset
 from PIL import Image
 from ..util.data import unzip_file
-
+from ..util.excel import ExcelUtil
 from ..jsonFormat import (
     ImageJson,
     AnnotationJson,
-    CategoryJson,
     COCOJson,
+    CategoryJson,
 )
+
 
 from typing import Dict, List
 
@@ -67,7 +68,7 @@ class ProjectExportor:
             image = Image.fromarray(image)
             image.save(os.path.join(output_annotated_image_folder, data["image_name"]))
 
-    def is_file_path(self, path: str) -> bool:
+    def is_file_path(self, path):
         # Check if the path looks like a file (e.g., has an extension)
         return not path.endswith(os.sep) and os.path.splitext(path)[1] != ""
 
@@ -88,7 +89,7 @@ class ProjectExportor:
             i = 1
             while os.path.exists(output_coco_file):
                 output_coco_file = os.path.join(
-                    output_dir, f"{ProjectExportor.COCO_FILE_NAME}_{i}.json"
+                    output_dir, f"{ProjectExport.COCO_FILE_NAME}_{i}.json"
                 )
                 i += 1
 
@@ -116,13 +117,55 @@ class ProjectExportor:
                 annotation_json.set_id(mask["id"])
                 annotation_json.set_image_id(data.get_idx())
                 annotation_json.set_iscrowd(mask["iscrowd"])
+                annotation_json.set_predicted_iou(mask["predicted_iou"])
                 coco_json.add_annotation(annotation_json)
 
         for category in dataset.get_category_info():
             category_json = CategoryJson()
             category_json.set_id(category["id"])
             category_json.set_name(category["name"])
-            category_json.set_supercategory(category["supercategory"])
+            category_json.set_super_category(category["supercategory"])
+            category_json.set_super_category_id(category["supercategory_id"])
+            category_json.set_is_coral(category["is_coral"])
+            category_json.set_status(category["status"])
             coco_json.add_category(category_json)
 
         save_json(coco_json.to_json(), output_coco_file)
+
+    def export_excel(self, output_dir: str, dataset: Dataset):
+
+        excel_output_dir = os.path.join(output_dir, "excel")
+        os.makedirs(excel_output_dir, exist_ok=True)
+
+        excel_util = ExcelUtil(dataset.get_category_info())
+
+        data_list = dataset.get_data_list()
+        for data in data_list:
+            image_name = data.get_image_name()
+            image_name_without_ext = os.path.splitext(image_name)[0]
+            excel_output_path = os.path.join(
+                excel_output_dir, f"{image_name_without_ext}.xlsx"
+            )
+            excel_util.export_excel(data, excel_output_path)
+
+    def export_charts(self, output_dir: str, requests: List[Dict]):
+        """
+        Export the charts to the output directory
+
+        Request format:
+        {
+            "encoded_chart": string,
+            "chart_name": string,
+        }
+        """
+        output_chart_dir = os.path.join(output_dir, "charts")
+        os.makedirs(output_chart_dir, exist_ok=True)
+
+        for request in requests:
+            chart_name = request["chart_name"]
+            encoded_chart = request["encoded_chart"]
+
+            chart_path = os.path.join(output_chart_dir, f"{chart_name}.png")
+            chart = decode_image_url(encoded_chart)
+            Image.fromarray(chart).save(chart_path)
+            self.logger.info(f"Exported chart: {chart_name} to {chart_path}")

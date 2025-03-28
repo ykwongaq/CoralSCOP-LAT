@@ -59,6 +59,9 @@ export class QuickStartCore extends AnnotationCore {
                             categoryManager.updateCategoryList(
                                 response["category_info"]
                             );
+                            categoryManager.updateStatus(
+                                response["status_info"]
+                            );
 
                             const data = Data.parseResponse(response);
                             this.setData(data);

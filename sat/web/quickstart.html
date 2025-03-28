@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Label page</title>
+        <title>Quick Start page</title>
         <link rel="stylesheet" href="./icon/style.css" />
         <link rel="stylesheet" href="./css/styles.css" />
     </head>
@@ -15,9 +15,11 @@
         <div class="wrapper">
             <div class="header">
                 <div class="logo-blk">
-                    <span class="logo-blk__text">Segmentation Tool</span>
+                    <img class="logo-blk__img" src="./images/logo.png" />
+                    <span class="logo-blk__text">CoralSCOP-LAT</span>
                 </div>
                 <div id="top-panel" class="header__main">
+                    <div class="header__main-side"></div>
                     <div class="header__middle">
                         <p class="header__title">
                             <span id="progress-info-name"></span
@@ -33,6 +35,7 @@
                         <ul class="nav-list top">
                             <li class="nav-list__item">
                                 <button
+                                    onclick="navigateTo('main_page.html')"
                                     id="back-to-main-page-button"
                                     class="nav-list__button"
                                 >
@@ -42,11 +45,42 @@
                             </li>
                             <li class="nav-list__item">
                                 <button
+                                    id="import-image-button"
+                                    class="nav-list__button"
+                                >
+                                    <span class="ico-add"></span>
+                                    <span class="arrow-tooltip"
+                                        >Import Image</span
+                                    >
+                                </button>
+                            </li>
+                            <li class="nav-list__item">
+                                <button
                                     id="label-button"
                                     class="nav-list__button"
                                 >
                                     <span class="ico-stack"></span
                                     ><span class="arrow-tooltip">Label</span>
+                                </button>
+                            </li>
+                            <li class="nav-list__item">
+                                <button
+                                    id="statistic-button"
+                                    class="nav-list__button"
+                                >
+                                    <span class="ico-wave"></span
+                                    ><span class="arrow-tooltip"
+                                        >Statistic</span
+                                    >
+                                </button>
+                            </li>
+                            <li class="nav-list__item">
+                                <button
+                                    id="setting-button"
+                                    class="nav-list__button"
+                                >
+                                    <span class="ico-gear"></span
+                                    ><span class="arrow-tooltip">Setting</span>
                                 </button>
                             </li>
                             <li class="nav-list__item">
@@ -101,6 +135,18 @@
                                     </button>
                                     <button
                                         class="normal-dropdown__link"
+                                        id="export-excel-button"
+                                    >
+                                        Export Excel
+                                    </button>
+                                    <button
+                                        class="normal-dropdown__link"
+                                        id="export-graph-button"
+                                    >
+                                        Export Charts
+                                    </button>
+                                    <button
+                                        class="normal-dropdown__link"
                                         id="export-all-button"
                                     >
                                         Export All
@@ -133,7 +179,7 @@
                         <div class="side-bar__blk">
                             <div class="toggle-blk">
                                 <p class="toggle-blk__title">
-                                    Show Masks (Tab)
+                                    Show Coral (Tab)
                                 </p>
                                 <label class="switch">
                                     <input
@@ -142,6 +188,41 @@
                                     />
                                     <span class="switch__slider"></span>
                                 </label>
+                            </div>
+                        </div>
+                        <div class="side-bar__blk">
+                            <div class="radio-button-gp-blk">
+                                <p class="radio-button-gp-blk__label">Type</p>
+                                <div class="radio-btn-gp">
+                                    <label class="radio-btn-gp__label">
+                                        <input
+                                            name="status"
+                                            id="status-1-button"
+                                            type="radio"
+                                            value="0"
+                                            checked
+                                        />
+                                        <span>Healthy</span>
+                                    </label>
+                                    <label class="radio-btn-gp__label">
+                                        <input
+                                            name="status"
+                                            id="status-2-button"
+                                            type="radio"
+                                            value="1"
+                                        />
+                                        <span>Bleached</span>
+                                    </label>
+                                    <label class="radio-btn-gp__label">
+                                        <input
+                                            name="status"
+                                            id="status-3-button"
+                                            type="radio"
+                                            value="2"
+                                        />
+                                        <span>Dead</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                         <div class="side-bar__blk">
@@ -204,7 +285,20 @@
                             <div
                                 id="label-dropdown-menu"
                                 class="normal-dropdown label-dropdown-menu"
-                            ></div>
+                            >
+                                <!-- <button
+                                    class="normal-dropdown__link"
+                                    id="rename-label-button"
+                                >
+                                    Rename
+                                </button>
+                                <button
+                                    class="normal-dropdown__link"
+                                    id="delete-label-button"
+                                >
+                                    Delete
+                                </button> -->
+                            </div>
                             <template id="category-menu-button-template">
                                 <button class="normal-dropdown__link"></button>
                             </template>
@@ -238,27 +332,6 @@
                         </div>
                     </div>
                 </nav>
-                <div id="galleryPage" class="main-section page">
-                    <template id="gallery-item-template">
-                        <button class="gallery-list__item gallery-item">
-                            <div class="gallery-item__img-w">
-                                <img class="gallery-item__img" src="" />
-                            </div>
-                            <p class="name gallery-item__name">
-                                <span class="gallery-item__text"
-                                    >Image-Name-Sample.jpeg</span
-                                >
-                            </p>
-                        </button>
-                    </template>
-                    <div class="main-section__inner">
-                        <p class="main-section__title">All Images</p>
-                        <div
-                            id="gallery-container"
-                            class="gallery-list gallery-list--full"
-                        ></div>
-                    </div>
-                </div>
                 <div id="annotationPage" class="main-section page">
                     <div class="canvas-container">
                         <canvas id="canvas" class="canvas"></canvas>
@@ -266,6 +339,15 @@
 
                     <div class="float-bar" id="action-panel">
                         <div class="float-bar__inner">
+                            <div class="float-bar__item">
+                                <button
+                                    id="detect-coral-button"
+                                    class="float-bar__button"
+                                >
+                                    <span class="ico-search icon"></span>Detect
+                                    Coral
+                                </button>
+                            </div>
                             <div class="float-bar__item">
                                 <div
                                     class="toggle-color-plate-popup toggle-fn"
@@ -331,6 +413,15 @@
                                     Add Mask (W)
                                 </label>
                             </div>
+                            <!-- <div class="float-bar__item">
+                                <button
+                                    id="quadrat-button"
+                                    class="float-bar__button"
+                                >
+                                    <span class="ico-rectangle icon"></span
+                                    >Define Quadrat
+                                </button>
+                            </div> -->
                             <div class="float-bar__item">
                                 <div
                                     id="actionContainer"
@@ -455,6 +546,182 @@
                         </button>
                     </div>
                 </div>
+                <div
+                    id="statisticPage"
+                    class="main-section page statistic-page statistic-content-container"
+                >
+                    <div class="main-section__inner">
+                        <div class="chart-toggle-blk">
+                            <p class="chart-toggle-blk__title">
+                                Ignore Undefined Coral
+                            </p>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    id="toogle-ignore-undefined-button"
+                                    checked
+                                />
+                                <span class="switch__slider"></span>
+                            </label>
+                        </div>
+                        <h2 class="main-section__title">Statistic Report</h2>
+                        <div class="main-section__content">
+                            <section class="chart-group">
+                                <div
+                                    id="current-image-grid"
+                                    class="charts-grid"
+                                ></div>
+                            </section>
+                        </div>
+                    </div>
+                    <template id="chart-item-template">
+                        <div class="chart-item">
+                            <p class="chart-name chart-item__name"></p>
+                            <div class="chart-item__top">
+                                <div class="chart chart-box"></div>
+                                <div class="legends"></div>
+                            </div>
+                            <div class="chart-item__bottom">
+                                <button class="download-btn button">
+                                    Download Png
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div id="settingPage" class="main-section page">
+                    <div class="main-section__inner">
+                        <p class="main-section__title">Setting</p>
+                        <p class="main-section__desc">
+                            Adjust the settings to carefully filter out any
+                            unwanted masks generated by the model, enhancing the
+                            accuracy and performance of your results.
+                        </p>
+
+                        <div class="main-section__content">
+                            <div class="settings-group">
+                                <div class="setting-item" id="min-area-block">
+                                    <label
+                                        id="min-area-text"
+                                        for="min-area-slider"
+                                        class="setting-item__title"
+                                        >Min Area:</label
+                                    >
+                                    <p class="setting-item__desc">
+                                        Filter out the masks that is too small.
+                                        (in % of pixel area of the image). Range
+                                        (0-20)
+                                    </p>
+                                    <div class="slider-blk">
+                                        <input
+                                            id="min-area-input"
+                                            type="text"
+                                            value="20"
+                                        />
+                                        <div class="slider-blk__inner">
+                                            <input
+                                                type="range"
+                                                id="min-area-slider"
+                                                name="min-area"
+                                                min="0"
+                                                max="20"
+                                                data-suffix="%"
+                                                step="0.1"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <label
+                                        id="min-confidence-text"
+                                        for="min-confidence-slider"
+                                        class="setting-item__title"
+                                        >Min Confidence</label
+                                    >
+                                    <p class="setting-item__desc">
+                                        Filter out the masks that is too low
+                                        confidence. It can increase the
+                                        reliability of the annotation. (in %).
+                                    </p>
+                                    <div
+                                        class="slider-blk"
+                                        id="min-confidence-block"
+                                    >
+                                        <input
+                                            id="min-confidence-input"
+                                            type="text"
+                                            value="100"
+                                        />
+                                        <div class="slider-blk__inner">
+                                            <input
+                                                type="range"
+                                                id="min-confidence-slider"
+                                                name="min-confidence"
+                                                min="0"
+                                                max="100"
+                                                data-suffix="%"
+                                                value="100"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="setting-item"
+                                    id="max-overlap-block"
+                                >
+                                    <label
+                                        id="max-overlap-text"
+                                        for="max-overlap-slider"
+                                        class="setting-item__title"
+                                        >Max Overlap</label
+                                    >
+                                    <p class="setting-item__desc">
+                                        Filter out the masks that overlap too
+                                        much with other masks. It overlaps is
+                                        measured using Intersection over Union
+                                        (IoU). (in %).
+                                    </p>
+                                    <div
+                                        class="slider-blk"
+                                        id="max-overlap-block"
+                                    >
+                                        <input
+                                            id="max-overlap-input"
+                                            type="text"
+                                            value="100"
+                                        />
+                                        <div class="slider-blk__inner">
+                                            <input
+                                                type="range"
+                                                id="max-overlap-slider"
+                                                name="max-overlap"
+                                                min="0"
+                                                max="50"
+                                                step="0.1"
+                                                data-suffix="%"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="main-section__bottom">
+                            <button
+                                id="cancel-setting-button"
+                                class="save-button button button--border"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                id="save-setting-button"
+                                class="save-button button"
+                            >
+                                Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div id="defaultPage" class="main-section page"></div>
             </div>
         </div>
@@ -511,6 +778,7 @@
             </div>
         </div>
         <div id="loading-pop-backdrop" class="modal-pop-backdrop"></div>
+
         <input type="file" id="image-input" accept="image/*" hidden />
 
         <script
@@ -519,6 +787,7 @@
         ></script>
 
         <script src="eel.js"></script>
+        <script src="js/util/navigate.js"></script>
         <script
             type="module"
             src="js/quickStart/quickStartInterface.js"

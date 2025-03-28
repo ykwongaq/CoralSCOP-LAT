@@ -11,25 +11,31 @@ import tempfile
 from ..util.general import decode_image_url
 from ..util.json import save_json
 from ..embedding import EmbeddingGenerator
+from ..segmentation import CoralSegmentation
+from ..dataset import Data
 from PIL import Image
 from ..util.requests import ProjectCreateRequest
-
 from ..jsonFormat import (
     ImageJson,
-    ProjectInfoJson,
     AnnotationFileJson,
+    AnnotationJson,
+    ProjectInfoJson,
+    StatusJson,
+    CategoryJson,
 )
 
-TEMP_CREATE_NAME = "__sat_temp"
+
+TEMP_CREATE_NAME = "__coralscop_lat_temp"
 
 
 class ProjectCreator:
 
     SAM_ENCODER_PATH = "models/vit_h_encoder_quantized.onnx"
     SAM_MODEL_TYPE = "vit_b"
+    CORALSCOP_PATH = "models/vit_b_coralscop.pth"
 
     TEMP_PROJECT_FILE = os.path.join(
-        tempfile.gettempdir(), "SAT", "temp_project.sat"
+        tempfile.gettempdir(), "CoralSCOP-LAT", "temp_project.coral"
     )
 
     # Singleton
@@ -40,13 +46,18 @@ class ProjectCreator:
             cls._instance = super(ProjectCreator, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, embedding_generator: EmbeddingGenerator):
+    def __init__(
+        self,
+        embedding_generator: EmbeddingGenerator,
+        segmentation: CoralSegmentation,
+    ):
         if hasattr(self, "initialized"):
             # Prevent re-initialization
             return
 
         self.logger = logging.getLogger(self.__class__.__name__)
         self.embeddings_generator = embedding_generator
+        self.segmentation = segmentation
 
         # Threading
         self.stop_event = threading.Event()
@@ -62,6 +73,8 @@ class ProjectCreator:
         """
         inputs = request.get_inputs()
         inputs = sorted(inputs, key=lambda x: x["image_file_name"])
+
+        need_segmentation = request.need_segmentation()
 
         output_file = request.get_output_file()
 
@@ -129,8 +142,12 @@ class ProjectCreator:
                 terminated = True
                 break
 
-            # Generate annotations
+            # Detect coral
             annotation_file_json = AnnotationFileJson()
+            if need_segmentation:
+                masks = self.segmentation.generate_masks_json(image)
+            else:
+                masks = []
 
             image_json = ImageJson()
             image_json.set_id(idx)
@@ -139,11 +156,37 @@ class ProjectCreator:
             image_json.set_height(image.shape[0])
             annotation_file_json.add_image(image_json)
 
+            if len(masks) == 0:
+                pass
+            else:
+                min_area = request.get_min_area()
+                min_confidence = request.get_min_confidence()
+                max_iou = request.get_max_iou()
+
+                masks = self.segmentation.filter(
+                    masks, min_area, min_confidence, max_iou
+                )
+                self.logger.info(f"Finalized masks: {len(masks)}")
+                for mask in masks:
+                    mask["image_id"] = idx
+
+                for mask in masks:
+                    annotation_json = AnnotationJson()
+                    annotation_json.set_segmentation(mask["segmentation"])
+                    annotation_json.set_bbox(mask["bbox"])
+                    annotation_json.set_area(mask["area"])
+                    annotation_json.set_category_id(mask["category_id"])
+                    annotation_json.set_id(mask["id"])
+                    annotation_json.set_image_id(idx)
+                    annotation_json.set_iscrowd(mask["iscrowd"])
+                    annotation_json.set_predicted_iou(mask["predicted_iou"])
+                    annotation_file_json.add_annotation(annotation_json)
+
             end_time = time.time()
             self.logger.info(f"Processed image in {end_time - start_time:.2f} seconds")
 
             # Check if the stop event is set
-            if image is None or embedding is None:
+            if image is None or embedding is None or masks is None:
                 terminated = True
                 break
 
@@ -174,8 +217,49 @@ class ProjectCreator:
 
         project_info_json = ProjectInfoJson()
         project_info_json.set_last_image_idx(0)
+
+        detected_coral_category = CategoryJson()
+        detected_coral_category.set_id(-1)
+        detected_coral_category.set_name("Undefined Coral")
+        detected_coral_category.set_super_category("Undefined Coral")
+        detected_coral_category.set_super_category_id(-1)
+        detected_coral_category.set_is_coral(True)
+        detected_coral_category.set_status(-1)
+        project_info_json.add_category_info(detected_coral_category)
+
+        dead_coral_category = CategoryJson()
+        dead_coral_category.set_id(0)
+        dead_coral_category.set_name("Dead Coral")
+        dead_coral_category.set_super_category("Dead Coral")
+        dead_coral_category.set_super_category_id(0)
+        dead_coral_category.set_is_coral(True)
+        dead_coral_category.set_status(2)
+        project_info_json.add_category_info(dead_coral_category)
+
+        healty_status = StatusJson()
+        healty_status.set_id(Data.STATUS_HEALTHY)
+        healty_status.set_name("Healthy")
+        project_info_json.add_status_info(healty_status)
+
+        bleached_status = StatusJson()
+        bleached_status.set_id(Data.STATUS_BLEACHED)
+        bleached_status.set_name("Bleached")
+        project_info_json.add_status_info(bleached_status)
+
+        dead_status = StatusJson()
+        dead_status.set_id(Data.STATUS_DEAD)
+        dead_status.set_name("Dead")
+        project_info_json.add_status_info(dead_status)
+
+        undefined_status = StatusJson()
+        undefined_status.set_id(Data.STATUS_UNDEFINED)
+        undefined_status.set_name("Undefined")
+        project_info_json.add_status_info(undefined_status)
+
         save_json(project_info_json.to_json(), project_info_path)
 
+        # project_name = self.find_available_project_name(output_dir)
+        # project_path = os.path.join(output_dir, project_name)
         project_path = output_file
         with zipfile.ZipFile(project_path, "w") as archive:
             for root, _, files in os.walk(output_temp_dir):
@@ -223,10 +307,10 @@ class ProjectCreator:
         self.stop_event.set()
 
     def find_available_project_name(self, output_dir: str) -> str:
-        project_name = "project.sat"
+        project_name = "project.coral"
         i = 1
         while os.path.exists(os.path.join(output_dir, project_name)):
-            project_name = f"project_{i}.sat"
+            project_name = f"project_{i}.coral"
             i += 1
 
             if i > 1000:
