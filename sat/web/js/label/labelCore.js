@@ -322,7 +322,8 @@ export class LabelCore extends AnnotationCore {
      * @param {function} callBack
      */
     async exportCharts(outputDir, callBack = null, errorCallBack = null) {
-        const statisticPage = new StatisticPage();
+        const manager = new Manager();
+        const statisticPage = manager.getToolInterface().getStatisticPage();
         statisticPage.update();
         const exportImageUrls = await statisticPage.getExportImageUrls();
         console.log(exportImageUrls);

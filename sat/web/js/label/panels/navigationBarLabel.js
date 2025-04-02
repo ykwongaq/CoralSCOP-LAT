@@ -1,6 +1,7 @@
 import { LoadingPopManager } from "../../util/loadingPopManager.js";
 import { Manager } from "../../manager.js";
 import { NavigationBar } from "../../panels/navigationBar.js";
+import { FileDialogRequest } from "../../requests/filedialogRequest.js";
 
 export class NavigationBarLabel extends NavigationBar {
     static GALLERY_PAGE = "galleryPage";

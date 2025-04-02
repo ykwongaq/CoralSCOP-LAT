@@ -31,6 +31,10 @@ export class LabelInterface {
         return this.navigationBar;
     }
 
+    getStatisticPage() {
+        return this.statisticPage;
+    }
+
     init() {
         const manager = new Manager();
 

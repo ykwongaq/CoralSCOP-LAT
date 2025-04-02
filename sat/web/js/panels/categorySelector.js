@@ -42,7 +42,8 @@ export class CategorySelector {
         const currentType = labelPanel.getCurrentType();
 
         // Get the category list based on the current type
-        let categoryList = categoryManager.getCategoryList();
+        let categoryList = categoryManager.getCategoryListByStatus(currentType);
+        console.log(categoryList);
         for (const category of categoryList) {
             const button = this.createCategoryButton(category);
             this.categoryButtonContainer.appendChild(button);

@@ -19,6 +19,7 @@ export class CategoryManager {
     static DEAD_BORDER_COLOR = "#000000";
 
     static COLOR_LIST = [
+        "#000000",
         "#F6C3CB",
         // "#EB361C",
         "#FFA500",

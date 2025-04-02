@@ -186,7 +186,7 @@ export class LabelPanel {
 
             // Prepare the record for history manager
             const categoryManager = new CategoryManager();
-            const success = categoryManager.addCategory(labelName);
+            const success = categoryManager.addCoralCategory(labelName);
             if (!success) {
                 // Cannot add the category because the category name is duplicated
                 const generalPopManager = new GeneralPopManager();
