@@ -43,7 +43,6 @@ export class CategorySelector {
 
         // Get the category list based on the current type
         let categoryList = categoryManager.getCategoryListByStatus(currentType);
-        console.log(categoryList);
         for (const category of categoryList) {
             const button = this.createCategoryButton(category);
             this.categoryButtonContainer.appendChild(button);

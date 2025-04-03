@@ -76,10 +76,10 @@ class Server:
             )
         elif model_type == "vit_b":
             self.encoder_model_path = get_resource_path(
-                os.path.join("models", "vit_b_encoder.onnx")
+                os.path.join("models", "vit_b_encoder_quantized.onnx")
             )
             self.decoder_model_path = get_resource_path(
-                os.path.join("models", "vit_b_decoder.onnx")
+                os.path.join("models", "vit_b_decoder_quantized.onnx")
             )
 
         model_path = get_resource_path(self.encoder_model_path)
