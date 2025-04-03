@@ -1,16 +1,11 @@
 import { Manager } from "../manager.js";
 import { QuickStartCore } from "./quickStartCore.js";
-import {
-    LabelPanel,
-    TopPanel,
-    ActionPanel,
-    ViewPanel,
-    Canvas,
-} from "../panels/index.js";
+import { LabelPanel, TopPanel, ViewPanel, Canvas } from "../panels/index.js";
 
 import { GeneralPopManager } from "../util/generalPopManager.js";
 import { AnnotationPage, ConfigPage, StatisticPage } from "../pages/index.js";
 import { NavigationBarQuickStart } from "./panels/navigationBarQuickStart.js";
+import { ActionPanelQuickStart } from "./panels/actionPanelQuickStart.js";
 import { LoadingPopManager } from "../util/loadingPopManager.js";
 import { navigateTo } from "../util/navigate.js";
 
@@ -31,6 +26,14 @@ export class QuickStartInterface {
 
     getNavigationBar() {
         return this.navigationBar;
+    }
+
+    getConfigPage() {
+        return this.configPage;
+    }
+
+    getStatisticPage() {
+        return this.statisticPage;
     }
 
     getCore() {
@@ -66,7 +69,10 @@ export class QuickStartInterface {
         const actionContainerDom = document.getElementById(
             "actionContainer-bar"
         );
-        const actionPanel = new ActionPanel(actionPanelDom, actionContainerDom);
+        const actionPanel = new ActionPanelQuickStart(
+            actionPanelDom,
+            actionContainerDom
+        );
         actionPanel.init();
         this.annotationPage.setActionPanel(actionPanel);
 

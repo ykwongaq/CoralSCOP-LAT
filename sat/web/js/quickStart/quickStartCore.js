@@ -102,6 +102,95 @@ export class QuickStartCore extends AnnotationCore {
 
         loadProject_(filePath, callBack);
     }
+
+    detectCoral(request, callBack = null, errorCallBack = null) {
+        eel.detect_coral(request.toJson())()
+            .then((response) => {
+                this.recordData();
+
+                const importedData = Data.parseResponse(response);
+                const data = this.getData();
+                for (const mask of importedData.getMasks()) {
+                    data.addMask(mask);
+                }
+
+                const manager = new Manager();
+                const canvas = manager
+                    .getToolInterface()
+                    .getAnnotationPage()
+                    .getCanvas();
+                canvas.updateMasks();
+
+                if (callBack != null) {
+                    callBack();
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                }
+                this.popUpError(error);
+            });
+    }
+
+    exportExcel(outputDir, callBack = null, errorCallBack = null) {
+        eel.export_excel(outputDir)()
+            .then(() => {
+                if (callBack != null) {
+                    callBack();
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
+    }
+
+    /**
+     * Send a list of requst to server side to export the chart.
+     *
+     * Request format:
+     * {
+     *  "encoded_chart": string,
+     *  "chart_name": string
+     * }
+     * @param {string} outputDir
+     * @param {function} callBack
+     */
+    async exportCharts(outputDir, callBack = null, errorCallBack = null) {
+        const manager = new Manager();
+        const statisticPage = manager.getToolInterface().getStatisticPage();
+        statisticPage.update();
+        const exportImageUrls = await statisticPage.getExportImageUrls();
+        console.log(exportImageUrls);
+
+        const requests = [];
+        for (const chartName in exportImageUrls) {
+            const encodedChart = exportImageUrls[chartName];
+            const request = {
+                encoded_chart: encodedChart,
+                chart_name: chartName,
+            };
+            requests.push(request);
+        }
+
+        eel.export_charts(outputDir, requests)()
+            .then(() => {
+                if (callBack != null) {
+                    callBack();
+                }
+            })
+            .catch((error) => {
+                if (errorCallBack != null) {
+                    errorCallBack(error);
+                } else {
+                    this.popUpError(error);
+                }
+            });
+    }
 }
 
 /**

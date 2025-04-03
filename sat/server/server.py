@@ -437,6 +437,7 @@ class Server:
         annotation = to_coco_annotation(mask)
         annotation["category_id"] = -2  # Category id for prompted mask
         annotation["rle"] = rle_mask_to_rle_vis_encoding(annotation["segmentation"])
+        annotation["predicted_iou"] = 1.0
 
         return annotation
 
