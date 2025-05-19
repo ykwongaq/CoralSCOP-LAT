@@ -34,7 +34,7 @@ pip install -r requirements.txt
 
 ## 4. Download Models
 
-Create `models` folder
+Create `sat/models` folder
 
 ### Download CoralSCOP model
 
@@ -42,15 +42,15 @@ Download the `CoralSCOP` Model weight from `https://github.com/zhengziqiang/Cora
 
 ### Download SAM model
 
-Download two models, `vit_h_decoder_quantized.onnx` and `vit_h_encoder_quantized.onnx`, from [OneDrive](https://hkustconnect-my.sharepoint.com/:f:/g/personal/ykwongaq_connect_ust_hk/EhRCvPn3zYRHjaGm43XYOz8ByFFJr6n9l75Gi7KkoEuVVA?e=PXGTcO), and save them into the models folder.
+Download two models, `vit_b_decoder_quantized.onnx` and `vit_b_encoder_quantized.onnx`, from [OneDrive](https://hkustconnect-my.sharepoint.com/:f:/g/personal/ykwongaq_connect_ust_hk/EhRCvPn3zYRHjaGm43XYOz8ByFFJr6n9l75Gi7KkoEuVVA?e=PXGTcO), and save them into the models folder.
 
 At the end, the `models` folder should have the following structure:
 
 ```
 models
 |- vit_b_coralscop.pth
-|- vit_h_decoder_quantized.onnx
-|- vit_h_encoder_quantized.onnx
+|- vit_b_decoder_quantized.onnx
+|- vit_b_encoder_quantized.onnx
 ```
 
 ## Todo
