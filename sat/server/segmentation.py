@@ -39,9 +39,12 @@ class CoralSegmentation:
         sam = sam_model_registry[model_type](checkpoint=model_path)
         device = ""
         if torch.cuda.is_available():
-            device = "cuda"
+            device = torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            device = torch.device("mps")
         else:
-            device = "cpu"
+            device = torch.device("cpu")
+        self.logger.info(f"Using device: {device}")
 
         device = torch.device(device)
         self.logger.info(f"Using device: {device}")
