@@ -32,6 +32,10 @@ Install required packages:
 pip install -r requirements.txt
 ```
 
+Please install `torch`, `torchvision` that best match with the device environment from [Offical Webpage](https://pytorch.org/).
+
+
+
 ## 4. Download Models
 
 Create `sat/models` folder
