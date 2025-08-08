@@ -36,13 +36,7 @@ pip install -r requirements.txt
 
 Create `sat/models` folder
 
-### Download CoralSCOP model
-
-Download the `CoralSCOP` Model weight from `https://github.com/zhengziqiang/CoralSCOP` and move it to `models` folder
-
-### Download SAM model
-
-Download two models, `vit_b_decoder_quantized.onnx` and `vit_b_encoder_quantized.onnx`, from [OneDrive](https://hkustconnect-my.sharepoint.com/:f:/g/personal/ykwongaq_connect_ust_hk/EhRCvPn3zYRHjaGm43XYOz8ByFFJr6n9l75Gi7KkoEuVVA?e=PXGTcO), and save them into the models folder.
+Download three models, `vit_b_coralscop.pth`, `vit_b_decoder_quantized.onnx` and `vit_b_encoder_quantized.onnx`, from [OneDrive](https://hkustconnect-my.sharepoint.com/:f:/g/personal/ykwongaq_connect_ust_hk/EhRCvPn3zYRHjaGm43XYOz8ByFFJr6n9l75Gi7KkoEuVVA?e=PXGTcO), and save them into the models folder.
 
 At the end, the `models` folder should have the following structure:
 
@@ -53,11 +47,8 @@ models
 |- vit_b_encoder_quantized.onnx
 ```
 
-## Todo
-
-2. Rearrange id after delete
-3. Smart exit alert
-4. Statistic Page - Project level statistic
-5. Tutorial
-6. Pop up problem in mac
-7. Error hanlding in creating project
+## 5. Lanch Application
+Run the following python script
+```bash
+python sat/main.py
+```
