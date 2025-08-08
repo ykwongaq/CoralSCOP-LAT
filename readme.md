@@ -50,5 +50,6 @@ models
 ## 5. Lanch Application
 Run the following python script
 ```bash
-python sat/main.py
+cd sat
+python main.py
 ```
