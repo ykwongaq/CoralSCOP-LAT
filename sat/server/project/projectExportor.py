@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+import numpy as np
 
 from ..util.general import decode_image_url
 from ..util.json import save_json
@@ -14,7 +15,7 @@ from ..jsonFormat import (
     COCOJson,
     CategoryJson,
 )
-
+from pycocotools import mask as maskUtils
 
 from typing import Dict, List
 
@@ -43,7 +44,7 @@ class ProjectExportor:
         os.makedirs(image_folder, exist_ok=True)
 
         # Copy the images to the images folder
-        project_image_folder = os.path.join(temp_dir, "images")
+        project_image_folder = os.path.join(temp_dir, "images_full_res")
         for image_name in os.listdir(project_image_folder):
             image_path = os.path.join(project_image_folder, image_name)
             shutil.copy(image_path, image_folder)
@@ -51,7 +52,9 @@ class ProjectExportor:
         # Remove the temporary folder
         shutil.rmtree(temp_dir)
 
-    def export_annotated_images(self, output_dir: str, data_list: List[Dict]):
+    def export_annotated_images(
+        self, output_dir: str, data_list: List[Dict], dataset: Dataset
+    ):
         """
         Params:
         - output_dir: The output directory
@@ -63,9 +66,16 @@ class ProjectExportor:
         """
         output_annotated_image_folder = os.path.join(output_dir, "annotated_images")
         os.makedirs(output_annotated_image_folder, exist_ok=True)
+
+        origin_res = dataset.get_origin_res()
+
         for data in data_list:
             image = decode_image_url(data["encoded_image"])
             image = Image.fromarray(image)
+            original_image_res = origin_res.get(data["image_name"])
+            original_image_width = original_image_res.get("width")
+            original_image_height = original_image_res.get("height")
+            image = image.resize((original_image_width, original_image_height))
             image.save(os.path.join(output_annotated_image_folder, data["image_name"]))
 
     def is_file_path(self, path):
@@ -89,7 +99,7 @@ class ProjectExportor:
             i = 1
             while os.path.exists(output_coco_file):
                 output_coco_file = os.path.join(
-                    output_dir, f"{ProjectExport.COCO_FILE_NAME}_{i}.json"
+                    output_dir, f"{ProjectExportor.COCO_FILE_NAME}_{i}.json"
                 )
                 i += 1
 
@@ -104,15 +114,33 @@ class ProjectExportor:
             image_json = ImageJson()
             image_json.set_id(data.get_idx())
             image_json.set_filename(data.get_image_name())
-            image_json.set_width(data.get_image_width())
-            image_json.set_height(data.get_image_height())
+
+            origin_res = data.get_origin_res()
+            origin_height = origin_res.get("height")
+            origin_width = origin_res.get("width")
+            image_json.set_width(origin_width)
+            image_json.set_height(origin_height)
             coco_json.add_image(image_json)
 
             for mask in data.get_segmentation()["annotations"]:
                 annotation_json = AnnotationJson()
-                annotation_json.set_segmentation(mask["segmentation"])
-                annotation_json.set_bbox(mask["bbox"])
-                annotation_json.set_area(mask["area"])
+
+                # Resize the segmentation mask, bbox, and area to the original image size
+                segmentation_mask = mask["segmentation"]
+                segmentation_mask = maskUtils.decode(segmentation_mask)
+                segmentation_mask = np.array(
+                    Image.fromarray(segmentation_mask).resize(
+                        (origin_width, origin_height), resample=Image.Resampling.NEAREST
+                    )
+                )
+                rle = maskUtils.encode(np.asfortranarray(segmentation_mask))
+                rle["counts"] = rle["counts"].decode("utf-8")
+                bbox = maskUtils.toBbox(rle).tolist()
+                area = int(maskUtils.area(rle))
+
+                annotation_json.set_segmentation(rle)
+                annotation_json.set_bbox(bbox)
+                annotation_json.set_area(area)
                 annotation_json.set_category_id(mask["category_id"])
                 annotation_json.set_id(mask["id"])
                 annotation_json.set_image_id(data.get_idx())

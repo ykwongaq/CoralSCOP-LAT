@@ -50,6 +50,7 @@ class ProjectCreator:
         self,
         embedding_generator: EmbeddingGenerator,
         segmentation: CoralSegmentation,
+        max_dimension: int,
     ):
         if hasattr(self, "initialized"):
             # Prevent re-initialization
@@ -58,6 +59,7 @@ class ProjectCreator:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.embeddings_generator = embedding_generator
         self.segmentation = segmentation
+        self.max_dimension = max_dimension
 
         # Threading
         self.stop_event = threading.Event()
@@ -96,6 +98,9 @@ class ProjectCreator:
         image_folder = os.path.join(output_temp_dir, "images")
         os.makedirs(image_folder, exist_ok=True)
 
+        image_full_res_folder = os.path.join(output_temp_dir, "images_full_res")
+        os.makedirs(image_full_res_folder, exist_ok=True)
+
         embedding_folder = os.path.join(output_temp_dir, "embeddings")
         os.makedirs(embedding_folder, exist_ok=True)
 
@@ -110,6 +115,8 @@ class ProjectCreator:
             eel.updateProgressPercentage(0)
 
         terminated = False
+
+        origin_res = {}
         for idx, input in enumerate(inputs):
             image_filename = input["image_file_name"]
             filename = os.path.splitext(image_filename)[0]
@@ -118,17 +125,23 @@ class ProjectCreator:
             self.logger.info(f"Processing image: {image_filename}")
 
             start_time = time.time()
-            self.logger.info(f"Processing image {image_filename} ...")
 
             # Create image
             if "image_path" in input:
-                image_path = input["image_path"]
-                image = Image.open(image_path)
+                full_res_image_path = input["image_path"]
+                image = Image.open(full_res_image_path)
                 image = image.convert("RGB")
                 image = np.array(image)
             else:
                 image_url = input["image_url"]
                 image = decode_image_url(image_url)
+
+            origin_res[image_filename] = {
+                "width": image.shape[1],
+                "height": image.shape[0],
+            }
+
+            image_resized = self.resize_image(image, self.max_dimension)
 
             if self.stop_event.is_set():
                 self.logger.info("Project creation stopped.")
@@ -136,7 +149,7 @@ class ProjectCreator:
                 break
 
             # Generate embedding
-            embedding = self.embeddings_generator.generate_embedding(image)
+            embedding = self.embeddings_generator.generate_embedding(image_resized)
             if self.stop_event.is_set():
                 self.logger.info("Project creation stopped.")
                 terminated = True
@@ -145,15 +158,15 @@ class ProjectCreator:
             # Detect coral
             annotation_file_json = AnnotationFileJson()
             if need_segmentation:
-                masks = self.segmentation.generate_masks_json(image)
+                masks = self.segmentation.generate_masks_json(image_resized)
             else:
                 masks = []
 
             image_json = ImageJson()
             image_json.set_id(idx)
             image_json.set_filename(image_filename)
-            image_json.set_width(image.shape[1])
-            image_json.set_height(image.shape[0])
+            image_json.set_width(image_resized.shape[1])
+            image_json.set_height(image_resized.shape[0])
             annotation_file_json.add_image(image_json)
 
             if len(masks) == 0:
@@ -191,12 +204,14 @@ class ProjectCreator:
                 break
 
             image_path = os.path.join(image_folder, image_filename)
+            full_res_image_path = os.path.join(image_full_res_folder, image_filename)
             embedding_path = os.path.join(embedding_folder, f"{filename}.npy")
             annotation_path = os.path.join(annotation_folder, f"{filename}.json")
 
             np.save(embedding_path, embedding)
             save_json(annotation_file_json.to_json(), annotation_path)
-            Image.fromarray(image).save(image_path)
+            Image.fromarray(image).save(full_res_image_path)
+            Image.fromarray(image_resized).save(image_path)
 
             process_percentage = (idx + 1) / len(inputs) * 100
             process_percentage = int(process_percentage)
@@ -255,6 +270,8 @@ class ProjectCreator:
         undefined_status.set_id(Data.STATUS_UNDEFINED)
         undefined_status.set_name("Undefined")
         project_info_json.add_status_info(undefined_status)
+
+        project_info_json.set_origin_res(origin_res)
 
         save_json(project_info_json.to_json(), project_info_path)
 
@@ -316,3 +333,21 @@ class ProjectCreator:
             if i > 1000:
                 raise Exception("Too many project files in the output directory")
         return project_name
+
+    def resize_image(self, image: np.ndarray, max_dimension: int) -> np.ndarray:
+        height, width = image.shape[:2]
+        if max(height, width) <= max_dimension:
+            return image
+
+        if height >= width:
+            new_height = max_dimension
+            new_width = int((width / height) * new_height)
+        else:
+            new_width = max_dimension
+            new_height = int((height / width) * new_width)
+
+        self.logger.debug(
+            f"Resizing image from ({width}, {height}) to ({new_width}, {new_height})"
+        )
+        resized_image = np.array(Image.fromarray(image).resize((new_width, new_height)))
+        return resized_image

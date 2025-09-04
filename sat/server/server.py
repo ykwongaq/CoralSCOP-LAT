@@ -56,10 +56,12 @@ class Server:
     CORALSCOP_PATH = "models/vit_b_coralscop.pth"
     CORALSCOP_MODEL_TYPE = "vit_b"
 
-    def __init__(self, model_type: str = "vit_b"):
+    def __init__(self, model_type: str = "vit_b", max_dimension: int = 1024):
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.model_type = model_type
+        self.max_dimension = max_dimension
+
         # Embedding Encoder Model
         self.logger.info("Loading embedding encoder model ...")
         start_time = time.time()
@@ -110,7 +112,7 @@ class Server:
 
         # Project creation
         self.project_creator = ProjectCreator(
-            self.embeddings_generator, self.coral_segmentation
+            self.embeddings_generator, self.coral_segmentation, self.max_dimension
         )
 
         # Dataset
@@ -451,7 +453,7 @@ class Server:
     def export_annotated_images(self, output_dir: str, data_list: List[Dict]):
         self.logger.info(f"Exporting annotated images to {output_dir} ...")
         project_export = ProjectExportor(self.project_path)
-        project_export.export_annotated_images(output_dir, data_list)
+        project_export.export_annotated_images(output_dir, data_list, self.dataset)
 
     @time_it
     def export_coco(self, output_path: str):

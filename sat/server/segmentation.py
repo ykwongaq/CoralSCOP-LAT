@@ -32,6 +32,7 @@ class CoralSegmentation:
         point_number=32,
         iou_threshold=0.62,
         sta_threshold=0.62,
+        max_masks_num=100,
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info(f"Initializing {self.__class__.__name__} ...")
@@ -44,6 +45,7 @@ class CoralSegmentation:
             device = torch.device("mps")
         else:
             device = torch.device("cpu")
+        self.max_masks_num = max_masks_num
         self.logger.info(f"Using device: {device}")
 
         device = torch.device(device)
@@ -78,6 +80,14 @@ class CoralSegmentation:
         self.logger.info(f"Generate masks time: {time.time() - start_time:.2f} seconds")
         # Filter out the masks that the predicted_iou is null
         masks = [mask for mask in masks if mask["predicted_iou"] is not None]
+
+        self.logger.info(f"Total masks generated: {len(masks)}")
+        # Sort the masks by the predicted_iou in descending order
+        masks.sort(key=lambda x: x["predicted_iou"], reverse=True)
+
+        self.logger.info(f"Keep top {self.max_masks_num} masks")
+        # Keep only the top max_masks_num masks
+        masks = masks[: self.max_masks_num]
 
         return masks
 

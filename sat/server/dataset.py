@@ -18,6 +18,7 @@ class Data:
         self.idx = -1
         self.embedding = None
         self.segmentation = None
+        self.origin_res: Dict[str, int] = {}
 
     def set_image_name(self, image_name: str):
         self.image_name = image_name
@@ -85,6 +86,12 @@ class Data:
             "idx": self.idx,
         }
 
+    def get_origin_res(self) -> Dict[str, int]:
+        return self.origin_res
+
+    def set_origin_res(self, origin_res: Dict[str, int]):
+        self.origin_res = origin_res
+
 
 class Dataset:
 
@@ -94,7 +101,8 @@ class Dataset:
         self.data: Dict[int, Data] = {}
         self.category_info: List[Dict] = None
         self.status_info: List[Dict] = None
-        self.last_saved_id = 0
+        self.last_saved_id: int = 0
+        self.origin_res: Dict[str, Dict[str, int]] = {}
 
     def add_data(self, data: Data):
         """
@@ -184,3 +192,9 @@ class Dataset:
                     target_data.append(data)
                     break
         return target_data
+
+    def set_origin_res(self, origin_res: Dict[str, Dict[str, int]]):
+        self.origin_res = origin_res
+
+    def get_origin_res(self) -> Dict[str, Dict[str, int]]:
+        return self.origin_res

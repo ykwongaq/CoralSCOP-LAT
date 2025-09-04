@@ -151,13 +151,20 @@ if __name__ == "__main__":
         choices=["vit_h", "vit_l", "vit_b"],
     )
 
+    parser.add_argument(
+        "--max_dimension",
+        type=int,
+        default=1024,
+        help="The maximum dimension for image processing.",
+    )
+
     args = parser.parse_args()
 
     setup_logging()
     print("Please wait for the tool to be ready ...")
     eel.init("web")
     print(f"About to start the server ...")
-    server = Server(args.model_type)
+    server = Server(args.model_type, args.max_dimension)
     print(f"Server initialized ...")
     eel.start("main_page.html", size=(1200, 800), port=0)
     print(f"Server started ...")

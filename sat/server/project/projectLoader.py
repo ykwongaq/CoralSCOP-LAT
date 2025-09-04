@@ -74,8 +74,17 @@ class ProjectLoader:
         asset_image_paths = self.store_image(image_files)
         asset_image_paths = sorted(asset_image_paths)
 
+        # Load project info
+        project_info = load_json(project_info_path)
+        last_image_idx = project_info["last_image_idx"]
+        category_info = project_info["category_info"]
+        status_info = project_info["status_info"]
+        origin_res = project_info.get("origin_res")
+        dataset.set_category_info(category_info)
+        dataset.set_status_info(status_info)
+        dataset.set_origin_res(origin_res)
+
         # Construct dataset
-        dataset = Dataset()
         for idx, filename in enumerate(filenames):
             embedding_path = os.path.join(embedding_folder, f"{filename}.npy")
             annotation_path = os.path.join(annotation_folder, f"{filename}.json")
@@ -94,15 +103,10 @@ class ProjectLoader:
             image_id = annotations["images"][0]["id"]
             data.set_idx(image_id)
 
-            dataset.add_data(data)
+            origin_image_res = origin_res.get(image_filenames[idx])
+            data.set_origin_res(origin_image_res)
 
-        # Load project info
-        project_info = load_json(project_info_path)
-        last_image_idx = project_info["last_image_idx"]
-        category_info = project_info["category_info"]
-        status_info = project_info["status_info"]
-        dataset.set_category_info(category_info)
-        dataset.set_status_info(status_info)
+            dataset.add_data(data)
 
         # Delete the temporary folder
         shutil.rmtree(temp_output_dir)
