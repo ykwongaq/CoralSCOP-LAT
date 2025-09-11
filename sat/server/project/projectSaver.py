@@ -54,6 +54,14 @@ class ProjectSaver:
             image_path_new = os.path.join(image_folder_new, image_name)
             shutil.copy(image_path_origin, image_path_new)
 
+        image_full_res_origin = os.path.join(temp_folder_origin, "images_full_res")
+        image_full_res_new = os.path.join(temp_folder_new, "images_full_res")
+        os.makedirs(image_full_res_new, exist_ok=True)
+        for image_name in os.listdir(image_full_res_origin):
+            image_path_origin = os.path.join(image_full_res_origin, image_name)
+            image_path_new = os.path.join(image_full_res_new, image_name)
+            shutil.copy(image_path_origin, image_path_new)
+
         # Copy the embeddings to the new project folder
         embedding_folder_origin = os.path.join(temp_folder_origin, "embeddings")
         embedding_folder_new = os.path.join(temp_folder_new, "embeddings")
@@ -116,6 +124,7 @@ class ProjectSaver:
             status_json.set_name(status["name"])
             project_info_json.add_status_info(status_json)
         project_info_json.set_last_image_idx(dataset.get_last_saved_id())
+        project_info_json.set_origin_res(dataset.get_origin_res())
 
         save_json(project_info_json.to_json(), project_info_path)
 
