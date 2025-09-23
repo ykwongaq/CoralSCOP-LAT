@@ -91,7 +91,7 @@ Download `CoralSCOP-LAT-Windowe.zip` from [OneDrive](https://hkustconnect-my.sha
 
 Unzip the file and double click the `CoralSCOP-LAT.exe` file to launch the file.
 
-A ``macOS` version is planned for future development.
+A `macOS` version is planned for future development.
 
 ## Tutorial
 
