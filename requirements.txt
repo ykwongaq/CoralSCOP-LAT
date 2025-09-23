@@ -82,3 +82,5 @@ webencodings==0.5.1
 yarg==0.1.9
 zope.event==5.1.1
 zope.interface==7.2
+torch
+torchvision
