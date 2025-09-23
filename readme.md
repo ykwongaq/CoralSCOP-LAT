@@ -9,7 +9,7 @@
 
 <br/>
 
-[Yuk-Kwan Wong]()<sup>1</sup>, [Ziqiang Zheng]()<sup>1</sup>, [Mingzhe Zhang]()<sup>1</sup>, [David J. Suggett]()<sup>2,3</sup>, [Sai-Kit Yeung]()<sup>1</sup>
+[Yuk-Kwan Wong]()<sup>1</sup>, [Ziqiang Zheng]()<sup>1</sup>, [Mingzhe Zhang]()<sup>1</sup>, [David J. Suggett](https://www.kaust.edu.sa/en/study/faculty/david-suggett)<sup>2,3</sup>, [Sai-Kit Yeung](https://saikit.org/index.html)<sup>1</sup>
 
 <sup>1</sup> Hong Kong University of Science and Technology &nbsp;&nbsp;
 <sup>2</sup> King Abdullah University of Science and Technology, Saudi Arabia &nbsp;&nbsp;
