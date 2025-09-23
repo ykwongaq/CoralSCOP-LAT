@@ -1,7 +1,12 @@
 <div align="center">
 <h1>CoralSCOP-LAT: Labeling and analyzing tool for coral reef images with dense segmantic mask</h1>
 
-![Static Badge](https://img.shields.io/badge/paper-Ecological%20Informatics-blue?link=https%3A%2F%2Fwww.sciencedirect.com%2Fscience%2Farticle%2Fpii%2FS157495412500411X)
+<a href="https://www.sciencedirect.com/science/article/pii/S157495412500411X" target="_blank" rel="noopener noreferrer">
+<img alt="Static Badge" src="https://img.shields.io/badge/
+paper-Ecological%20Informatics-blue">
+</a>
+
+<br/>
 
 [Yuk-Kwan Wong]()<sup>1</sup>, [Ziqiang Zheng]()<sup>1</sup>, [Mingzhe Zhangddd]()<sup>1</sup>, [David J. Suggett]()<sup>2,3</sup>, [Sai-Kit Yeung]()<sup>1</sup>
 
