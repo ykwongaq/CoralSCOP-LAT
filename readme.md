@@ -19,7 +19,9 @@
 
 ## Overview
 
+<p style="text-align: justify;">
 CoralSCOP-LAT is a semi-automatic annotation and analysis tool for coral reef imagery, developed to overcome the limitations of traditional point-based methods. Built on the CoralSCOP foundation model, it delivers dense segmentation masks with strong zero-shot generalization across diverse reef sites. The tool streamlines research workflows by providing automatic coral segmentation, customizable labeling, and integrated statistical reporting, enabling efficient, accurate, and flexible large-scale coral reef monitoring and conservation studies.
+</p>
 
 <p align="center">
   <img src="images/teaser.png" alt="Teaser Image">
