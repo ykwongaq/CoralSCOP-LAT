@@ -54,6 +54,8 @@ Then activate it by
 conda activate coralscop-lat
 ```
 
+Install `torch` and `torchvision` from [PyTorch](https://pytorch.org/get-started/locally/)
+
 Then install the required package by
 
 ```bash
