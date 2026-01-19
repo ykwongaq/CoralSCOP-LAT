@@ -104,7 +104,7 @@ A `macOS` version is planned for future development.
 
 ## Tutorial
 
-Coming Soon.
+Please refer to `tutorial.pdf`
 
 ## Reference
 
