@@ -50,7 +50,7 @@ Install `Anaconda` from the [link](https://www.anaconda.com/download)
 Create an `Anaconda` environment by
 
 ```bash
-conda create -n coralscop-lat python=3.10
+conda create -n coralscop-lat python=3.12
 ```
 
 Then activate it by
