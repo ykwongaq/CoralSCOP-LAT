@@ -1,12 +1,13 @@
 import argparse
-import os
 import logging
+import os
+from typing import Dict, Generator, List
 
 from PIL import Image
-from server.project import ProjectCreator
+
 from server.embedding import EmbeddingGenerator
+from server.project import ProjectCreator
 from server.segmentation import CoralSegmentation
-from typing import Dict, List, Generator
 from server.util.requests import ProjectCreateRequest
 
 
@@ -75,6 +76,7 @@ def main(args):
     segmentation_model_type = args.segmentation_model_type
 
     no_segmentation = args.no_segmentation
+    max_dimension = args.max_dimension
 
     print(f"Creating projects for {len(image_files)} images")
     print(f"Output directory: {output_dir}")
@@ -85,6 +87,8 @@ def main(args):
     print(f"Embedding model: {embedding_model_path}")
     print(f"Segmentation model: {segmentation_model_path}")
     print(f"Segmentation model type: {segmentation_model_type}")
+    print(f"No segmentation: {no_segmentation}")
+    print(f"Max dimension: {max_dimension}")
 
     idx = 0
     project_requests = []
@@ -124,7 +128,9 @@ def main(args):
         model_path=segmentation_model_path, model_type=segmentation_model_type
     )
 
-    project_creator = ProjectCreator(embedding_generator, segmentation_model)
+    project_creator = ProjectCreator(
+        embedding_generator, segmentation_model, max_dimension=max_dimension
+    )
 
     for idx, request in enumerate(project_requests):
         print(f"Creating project {idx + 1} ...")
@@ -193,6 +199,11 @@ if __name__ == "__main__":
         "--no_segmentation",
         action="store_true",
         help="Disable segmentation",
+    )
+    parser.add_argument(
+        "--max_dimension",
+        type=int,
+        default=1024,
     )
     args = parser.parse_args()
     main(args)
