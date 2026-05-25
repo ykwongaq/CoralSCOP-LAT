@@ -1,0 +1,48 @@
+.colorPickerPopup {
+  position: relative;
+}
+
+.colorPickerBtn::after {
+  font-family: icomoon;
+  content: "\e90f";
+  transform: rotate(90deg);
+  margin-left: 15px;
+  transition: 0.2s all;
+  font-size: 20px;
+  color: var(--icon-icon-secondary2);
+}
+
+.colorPickerPopupOpen .colorPickerBtn::after {
+  transform: rotate(-90deg);
+}
+
+.colorPickerPop {
+  padding: 20px;
+  position: absolute;
+  bottom: calc(100% + 40px);
+  left: 0;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  background-color: #fff;
+}
+
+.colorPickerLabel {
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.colorPickerList {
+  display: grid;
+  gap: 8px;
+  max-width: 140px;
+  grid-template-columns: repeat(auto-fill, minmax(20px, 1fr));
+}
+
+.colorPickerPopup .colorPlate {
+  padding: 0;
+  cursor: pointer;
+}
+
+.colorPickerPopup .colorPlate:hover {
+  opacity: 0.7;
+}

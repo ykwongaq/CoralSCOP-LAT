@@ -1,0 +1,49 @@
+.galleryListItem {
+  width: 100%;
+}
+
+.galleryItem {
+  --line-color: #e6e9ea;
+  position: relative;
+  border: 1px solid var(--line-color);
+}
+
+.galleryItemImgW {
+  aspect-ratio: 1;
+  background-color: var(--surface-surface-primary3);
+  pointer-events: none;
+}
+
+.galleryItemImg {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.galleryItemName {
+  padding: 10px 15px 10px 15px;
+  background-color: #fff;
+  font-size: 20px;
+  font-family: Roboto;
+  border-top: 1px solid var(--line-color);
+  display: flex;
+  align-items: center;
+  position: relative;
+  line-height: 1.1;
+  justify-content: space-between;
+  min-height: 50px;
+  word-break: break-all;
+  pointer-events: none;
+}
+
+.galleryItemText {
+  /* No specific styles currently */
+}
+
+.galleryItem:where(button) {
+  cursor: pointer;
+}
+
+.galleryItem:where(button):hover {
+  border-color: var(--surface-surface-primary1);
+}

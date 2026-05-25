@@ -1,0 +1,44 @@
+.sideBar {
+  --side-padding: 22px;
+  display: flex;
+  height: 100%;
+  max-width: var(--logo-blk-width);
+}
+
+.sideBarMain {
+  width: var(--nav-width);
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navList .arrowTooltip {
+  --tool-height: 30px;
+  position: absolute;
+  height: 30px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--text-text-primary2);
+  padding: 2px 18px;
+  font-size: 13px;
+  background-color: var(--surface-surface-primary3);
+  top: calc(50% - var(--tool-height) / 2);
+  left: calc(100% - 10px);
+  z-index: 12;
+  transition: 0.2s all;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-10px, 0);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.13);
+  border-radius: 4px;
+  pointer-events: none;
+  color: var(--text-text-primary1);
+}

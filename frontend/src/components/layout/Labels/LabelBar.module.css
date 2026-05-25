@@ -1,0 +1,63 @@
+.sideBarBlk {
+	padding-block: 20px;
+}
+
+.sideBarBlk:has(+ .sideBarBlk) {
+	border-bottom: 1px solid #f7f8f9;
+}
+
+.sideBarBottom {
+	flex: 1;
+	overflow: auto;
+}
+
+.labelContainer :global(.labelButton) {
+	padding-inline: var(--side-padding);
+}
+
+.colorPlateList {
+	--size: 23px;
+	--bg-color: #000;
+	--color: #fff;
+	--def-bg-color--1: #f6c3cb;
+	--def-fs-color--1: #000;
+	--def-bg-color--2: #eb361c;
+	--def-fs-color--2: #fff;
+	--def-bg-color--3: #225437;
+	--def-fs-color--3: #fff;
+	--def-bg-color--4: #f7d941;
+	--def-fs-color--4: #000;
+	--def-bg-color--5: #73fbfe;
+	--def-fs-color--5: #000;
+	--def-bg-color--6: #9efcd6;
+	--def-fs-color--6: #000;
+	--def-bg-color--7: #2b00f7;
+	--def-fs-color--7: #fff;
+	--def-bg-color--8: #f2aa34;
+	--def-fs-color--8: #000;
+	--def-bg-color--9: #ef7c76;
+	--def-fs-color--9: #000;
+	--def-bg-color--10: #badfe5;
+	--def-fs-color--10: #000;
+	--def-bg-color--11: #bed966;
+	--def-fs-color--11: #000;
+	--def-bg-color--12: #cce1fd;
+	--def-fs-color--12: #000;
+	--def-bg-color--13: #f188e9;
+	--def-fs-color--13: #000;
+	--def-bg-color--14: #6cfb45;
+	--def-fs-color--14: #000;
+	--def-bg-color--15: #7fcbac;
+	--def-fs-color--15: #000;
+	--def-bg-color--16: #c9bfb6;
+	--def-fs-color--16: #000;
+	--def-bg-color--17: #163263;
+	--def-fs-color--17: #fff;
+	--def-bg-color--18: #751608;
+	--def-fs-color--18: #fff;
+	--def-bg-color--19: #54afaa;
+	--def-fs-color--19: #fff;
+	--def-bg-color--20: #5f0f63;
+	--def-fs-color--20: #fff;
+	counter-reset: item;
+}

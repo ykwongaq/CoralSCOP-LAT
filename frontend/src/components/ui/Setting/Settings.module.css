@@ -1,0 +1,47 @@
+/* ============================================================
+   Setting Item (shared by select / slider blocks)
+   ============================================================ */
+
+.settingItem {
+    box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.1);
+    padding: 25px 15%;
+}
+
+.settingItemTitle {
+    font-weight: 600;
+    color: var(--text-text-page-heading);
+    font-size: 20px;
+}
+
+.settingItemDesc {
+    font-family: Roboto;
+    font-size: 16px;
+    margin-top: 14px;
+    margin-bottom: 8px;
+}
+
+.sliderBlk {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+}
+
+.sliderBlkInner {
+    flex: 1;
+    display: flex;
+}
+
+.sliderBlk input[type="text"] {
+    flex-shrink: 0;
+    width: 72px;
+    height: 37px;
+    text-align: center;
+    font-family: Roboto;
+    border: 1px solid var(--line-line-primary1);
+    padding: 0;
+    background-color: var(--surface-surface-primary3);
+}
+
+.inputError {
+    border-color: red;
+}

@@ -1,0 +1,35 @@
+.statCellCrop {
+  max-width: 40%;
+  width: 40%;
+}
+
+.statCropWrapRow {
+  display: flex;
+  justify-content: center;
+}
+
+.statTagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.statTag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--surface-surface-primary3);
+  border: 1px solid var(--line-line-primary2);
+  border-radius: 100px;
+  font-size: 12px;
+  color: var(--text-text-primary1);
+  font-family: Roboto;
+}
+
+.statNoStatus {
+  color: var(--text-text-secondary1);
+}
+
+.statLoading {
+  color: var(--text-text-secondary1);
+  font-style: italic;
+}

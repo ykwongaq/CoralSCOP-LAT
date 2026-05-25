@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coral Watch Card Extractor</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2em;
+      }
+
+      .upload-section {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .upload-btn {
+        background: #667eea;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+      }
+
+      .upload-btn:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      #fileInput {
+        display: none;
+      }
+
+      .canvas-container {
+        display: flex;
+        gap: 30px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .canvas-wrapper {
+        flex: 1;
+        min-width: 300px;
+        max-width: 500px;
+      }
+
+      .canvas-wrapper h3 {
+        color: #555;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      canvas {
+        border: 3px solid #ddd;
+        border-radius: 10px;
+        cursor: crosshair;
+        display: block;
+        width: 100%;
+        height: auto;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .instructions {
+        background: #f0f4ff;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+      }
+
+      .instructions h3 {
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+
+      .instructions ol {
+        margin-left: 20px;
+        color: #555;
+        line-height: 1.8;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+        font-weight: 600;
+      }
+
+      .transform-btn {
+        background: #10b981;
+        color: white;
+      }
+
+      .transform-btn:hover:not(:disabled) {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+      }
+
+      .reset-btn {
+        background: #ef4444;
+        color: white;
+      }
+
+      .reset-btn:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+      }
+
+      .download-btn {
+        background: #f59e0b;
+        color: white;
+      }
+
+      .download-btn:hover:not(:disabled) {
+        background: #d97706;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .point-indicator {
+        background: #667eea;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 5px;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 10px;
+      }
+
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🪸 Coral Watch Card Extractor</h1>
+
+      <div class="instructions">
+        <h3>📋 Instructions:</h3>
+        <ol>
+          <li>Upload an image containing the Coral Watch card</li>
+          <li>
+            Click on the 4 corners of the card in order:
+            <strong>Top-Left → Top-Right → Bottom-Right → Bottom-Left</strong>
+          </li>
+          <li>Click "Transform Image" to extract and unwarp the card</li>
+          <li>Download your perfectly aligned card image!</li>
+        </ol>
+      </div>
+
+      <div class="upload-section">
+        <button
+          class="upload-btn"
+          onclick="document.getElementById('fileInput').click()"
+        >
+          📁 Upload Image
+        </button>
+        <input type="file" id="fileInput" accept="image/*" />
+        <div id="pointIndicator" class="point-indicator hidden">
+          Click corner: <span id="pointNumber">1</span> of 4
+        </div>
+      </div>
+
+      <div class="canvas-container">
+        <div class="canvas-wrapper">
+          <h3>Original Image</h3>
+          <canvas id="sourceCanvas"></canvas>
+        </div>
+        <div class="canvas-wrapper" id="outputWrapper" class="hidden">
+          <h3>Extracted Card</h3>
+          <canvas id="outputCanvas"></canvas>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="reset-btn" id="resetBtn" onclick="resetPoints()">
+          🔄 Reset Points
+        </button>
+        <button
+          class="transform-btn"
+          id="transformBtn"
+          onclick="transformImage()"
+          disabled
+        >
+          ✨ Transform Image
+        </button>
+        <button
+          class="download-btn"
+          id="downloadBtn"
+          onclick="downloadImage()"
+          disabled
+        >
+          ⬇️ Download Image
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let sourceCanvas, sourceCtx, outputCanvas, outputCtx;
+      let image = null;
+      let corners = [];
+      let originalImageData = null;
+
+      const OUTPUT_WIDTH = 512;
+      const OUTPUT_HEIGHT = 512;
+
+      window.onload = function () {
+        sourceCanvas = document.getElementById("sourceCanvas");
+        sourceCtx = sourceCanvas.getContext("2d");
+        outputCanvas = document.getElementById("outputCanvas");
+        outputCtx = outputCanvas.getContext("2d");
+
+        document
+          .getElementById("fileInput")
+          .addEventListener("change", handleImageUpload);
+        sourceCanvas.addEventListener("click", handleCanvasClick);
+      };
+
+      function handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          image = new Image();
+          image.onload = function () {
+            // Set canvas size to fit image (max 600px width)
+            const maxWidth = 600;
+            const scale = Math.min(1, maxWidth / image.width);
+            sourceCanvas.width = image.width * scale;
+            sourceCanvas.height = image.height * scale;
+
+            drawImage();
+            resetPoints();
+            document
+              .getElementById("pointIndicator")
+              .classList.remove("hidden");
+          };
+          image.src = event.target.result;
+          originalImageData = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function drawImage() {
+        sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
+        sourceCtx.drawImage(
+          image,
+          0,
+          0,
+          sourceCanvas.width,
+          sourceCanvas.height,
+        );
+
+        // Draw corners
+        corners.forEach((corner, index) => {
+          // Draw circle
+          sourceCtx.beginPath();
+          sourceCtx.arc(corner.x, corner.y, 8, 0, 2 * Math.PI);
+          sourceCtx.fillStyle = "#10b981";
+          sourceCtx.fill();
+          sourceCtx.strokeStyle = "white";
+          sourceCtx.lineWidth = 3;
+          sourceCtx.stroke();
+
+          // Draw number
+          sourceCtx.fillStyle = "white";
+          sourceCtx.font = "bold 14px Arial";
+          sourceCtx.textAlign = "center";
+          sourceCtx.textBaseline = "middle";
+          sourceCtx.fillText(index + 1, corner.x, corner.y);
+
+          // Draw lines between points
+          if (index > 0) {
+            sourceCtx.beginPath();
+            sourceCtx.moveTo(corners[index - 1].x, corners[index - 1].y);
+            sourceCtx.lineTo(corner.x, corner.y);
+            sourceCtx.strokeStyle = "#10b981";
+            sourceCtx.lineWidth = 2;
+            sourceCtx.stroke();
+          }
+        });
+
+        // Close the polygon
+        if (corners.length === 4) {
+          sourceCtx.beginPath();
+          sourceCtx.moveTo(corners[3].x, corners[3].y);
+          sourceCtx.lineTo(corners[0].x, corners[0].y);
+          sourceCtx.strokeStyle = "#10b981";
+          sourceCtx.lineWidth = 2;
+          sourceCtx.stroke();
+        }
+      }
+
+      function handleCanvasClick(e) {
+        if (!image || corners.length >= 4) return;
+
+        const rect = sourceCanvas.getBoundingClientRect();
+        const scaleX = sourceCanvas.width / rect.width;
+        const scaleY = sourceCanvas.height / rect.height;
+
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+
+        corners.push({ x, y });
+        drawImage();
+
+        document.getElementById("pointNumber").textContent = corners.length + 1;
+
+        if (corners.length === 4) {
+          document.getElementById("transformBtn").disabled = false;
+          document.getElementById("pointIndicator").innerHTML =
+            '✅ All 4 corners selected! <span id="pointNumber" style="display:none;">4</span>';
+          document.getElementById("pointIndicator").style.background =
+            "#10b981";
+        }
+      }
+
+      function resetPoints() {
+        corners = [];
+        if (image) {
+          drawImage();
+        }
+        document.getElementById("transformBtn").disabled = true;
+        document.getElementById("downloadBtn").disabled = true;
+        document.getElementById("pointNumber").textContent = "1";
+        document.getElementById("pointIndicator").style.background = "#667eea";
+        document.getElementById("pointIndicator").innerHTML =
+          'Click corner: <span id="pointNumber">1</span> of 4';
+        document.getElementById("outputWrapper").classList.add("hidden");
+      }
+
+      function transformImage() {
+        if (corners.length !== 4) return;
+
+        // Calculate scale factor between canvas and original image
+        const scale = image.width / sourceCanvas.width;
+
+        // Scale corners to original image size
+        const scaledCorners = corners.map((c) => ({
+          x: c.x * scale,
+          y: c.y * scale,
+        }));
+
+        // Set output canvas size
+        outputCanvas.width = OUTPUT_WIDTH;
+        outputCanvas.height = OUTPUT_HEIGHT;
+
+        // Perform perspective transform
+        perspectiveTransform(scaledCorners);
+
+        document.getElementById("outputWrapper").classList.remove("hidden");
+        document.getElementById("downloadBtn").disabled = false;
+      }
+
+      function perspectiveTransform(srcCorners) {
+        // Destination corners (perfect rectangle)
+        const dstCorners = [
+          { x: 0, y: 0 }, // Top-left
+          { x: OUTPUT_WIDTH, y: 0 }, // Top-right
+          { x: OUTPUT_WIDTH, y: OUTPUT_HEIGHT }, // Bottom-right
+          { x: 0, y: OUTPUT_HEIGHT }, // Bottom-left
+        ];
+
+        // Calculate transformation matrix (swapped to get inverse mapping)
+        const matrix = getPerspectiveTransform(dstCorners, srcCorners);
+
+        // Create a temporary canvas with the original image
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = image.width;
+        tempCanvas.height = image.height;
+        const tempCtx = tempCanvas.getContext("2d");
+        tempCtx.drawImage(image, 0, 0);
+        const srcImageData = tempCtx.getImageData(
+          0,
+          0,
+          image.width,
+          image.height,
+        );
+
+        // Create output image data
+        const outputImageData = outputCtx.createImageData(
+          OUTPUT_WIDTH,
+          OUTPUT_HEIGHT,
+        );
+
+        // Apply transformation
+        for (let y = 0; y < OUTPUT_HEIGHT; y++) {
+          for (let x = 0; x < OUTPUT_WIDTH; x++) {
+            // Transform destination coordinates to source coordinates
+            const srcPoint = applyMatrix(matrix, x, y);
+
+            // Bilinear interpolation
+            const color = getPixelBilinear(
+              srcImageData,
+              srcPoint.x,
+              srcPoint.y,
+            );
+
+            const dstIdx = (y * OUTPUT_WIDTH + x) * 4;
+            outputImageData.data[dstIdx] = color.r;
+            outputImageData.data[dstIdx + 1] = color.g;
+            outputImageData.data[dstIdx + 2] = color.b;
+            outputImageData.data[dstIdx + 3] = color.a;
+          }
+        }
+
+        outputCtx.putImageData(outputImageData, 0, 0);
+      }
+
+      function getPerspectiveTransform(src, dst) {
+        // Solve for perspective transformation matrix
+        // This uses the Direct Linear Transform (DLT) algorithm
+
+        const A = [];
+        for (let i = 0; i < 4; i++) {
+          A.push([
+            src[i].x,
+            src[i].y,
+            1,
+            0,
+            0,
+            0,
+            -dst[i].x * src[i].x,
+            -dst[i].x * src[i].y,
+          ]);
+          A.push([
+            0,
+            0,
+            0,
+            src[i].x,
+            src[i].y,
+            1,
+            -dst[i].y * src[i].x,
+            -dst[i].y * src[i].y,
+          ]);
+        }
+
+        const b = [
+          dst[0].x,
+          dst[0].y,
+          dst[1].x,
+          dst[1].y,
+          dst[2].x,
+          dst[2].y,
+          dst[3].x,
+          dst[3].y,
+        ];
+
+        // Solve using Gaussian elimination
+        const h = gaussianElimination(A, b);
+        h.push(1);
+
+        return h;
+      }
+
+      function gaussianElimination(A, b) {
+        const n = b.length;
+        const augmented = A.map((row, i) => [...row, b[i]]);
+
+        // Forward elimination
+        for (let i = 0; i < n; i++) {
+          // Find pivot
+          let maxRow = i;
+          for (let k = i + 1; k < n; k++) {
+            if (Math.abs(augmented[k][i]) > Math.abs(augmented[maxRow][i])) {
+              maxRow = k;
+            }
+          }
+          [augmented[i], augmented[maxRow]] = [augmented[maxRow], augmented[i]];
+
+          // Eliminate column
+          for (let k = i + 1; k < n; k++) {
+            const factor = augmented[k][i] / augmented[i][i];
+            for (let j = i; j <= n; j++) {
+              augmented[k][j] -= factor * augmented[i][j];
+            }
+          }
+        }
+
+        // Back substitution
+        const x = new Array(n);
+        for (let i = n - 1; i >= 0; i--) {
+          x[i] = augmented[i][n];
+          for (let j = i + 1; j < n; j++) {
+            x[i] -= augmented[i][j] * x[j];
+          }
+          x[i] /= augmented[i][i];
+        }
+
+        return x;
+      }
+
+      function applyMatrix(matrix, x, y) {
+        const w = matrix[6] * x + matrix[7] * y + 1;
+        return {
+          x: (matrix[0] * x + matrix[1] * y + matrix[2]) / w,
+          y: (matrix[3] * x + matrix[4] * y + matrix[5]) / w,
+        };
+      }
+
+      function getPixelBilinear(imageData, x, y) {
+        const x1 = Math.floor(x);
+        const x2 = Math.ceil(x);
+        const y1 = Math.floor(y);
+        const y2 = Math.ceil(y);
+
+        // Check bounds
+        if (
+          x1 < 0 ||
+          x2 >= imageData.width ||
+          y1 < 0 ||
+          y2 >= imageData.height
+        ) {
+          return { r: 255, g: 255, b: 255, a: 255 };
+        }
+
+        const dx = x - x1;
+        const dy = y - y1;
+
+        const c11 = getPixel(imageData, x1, y1);
+        const c21 = getPixel(imageData, x2, y1);
+        const c12 = getPixel(imageData, x1, y2);
+        const c22 = getPixel(imageData, x2, y2);
+
+        return {
+          r: Math.round(
+            c11.r * (1 - dx) * (1 - dy) +
+              c21.r * dx * (1 - dy) +
+              c12.r * (1 - dx) * dy +
+              c22.r * dx * dy,
+          ),
+          g: Math.round(
+            c11.g * (1 - dx) * (1 - dy) +
+              c21.g * dx * (1 - dy) +
+              c12.g * (1 - dx) * dy +
+              c22.g * dx * dy,
+          ),
+          b: Math.round(
+            c11.b * (1 - dx) * (1 - dy) +
+              c21.b * dx * (1 - dy) +
+              c12.b * (1 - dx) * dy +
+              c22.b * dx * dy,
+          ),
+          a: Math.round(
+            c11.a * (1 - dx) * (1 - dy) +
+              c21.a * dx * (1 - dy) +
+              c12.a * (1 - dx) * dy +
+              c22.a * dx * dy,
+          ),
+        };
+      }
+
+      function getPixel(imageData, x, y) {
+        const idx = (y * imageData.width + x) * 4;
+        return {
+          r: imageData.data[idx],
+          g: imageData.data[idx + 1],
+          b: imageData.data[idx + 2],
+          a: imageData.data[idx + 3],
+        };
+      }
+
+      function downloadImage() {
+        const link = document.createElement("a");
+        link.download = "coral-watch-card-extracted.png";
+        link.href = outputCanvas.toDataURL("image/png");
+        link.click();
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,44 @@
+.sideBarTitle {
+  color: var(--text-text-page-heading);
+  font-size: 24px;
+  font-weight: 600;
+  padding-inline: var(--side-padding);
+}
+
+.sideBarBlock {
+  padding-block: 20px;
+}
+
+.sideBarBlock:has(+ .sideBarBlock) {
+  border-bottom: 1px solid #f7f8f9;
+}
+
+.sideBarBlock .sliderBlock {
+  margin-inline: var(--side-padding);
+}
+
+.sliderBlock {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+}
+
+.sliderBlockInner {
+  flex: 1;
+  display: flex;
+}
+
+.sliderBlock input[type="text"] {
+  flex-shrink: 0;
+  width: 72px;
+  height: 37px;
+  text-align: center;
+  font-family: Roboto;
+  border: 1px solid var(--line-line-primary1);
+  padding: 0;
+  background-color: var(--surface-surface-primary3);
+}
+
+.inputError {
+  border-color: red;
+}

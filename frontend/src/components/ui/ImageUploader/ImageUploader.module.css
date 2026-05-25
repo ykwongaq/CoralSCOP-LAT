@@ -1,0 +1,27 @@
+/* ============================================================
+   Image Drop Zone
+   ============================================================ */
+
+.dropContainer {
+  height: calc(100vh * 0.1);
+  border: 2px dashed black;
+  display: flex;
+  justify-content: center;
+  margin: 5px;
+}
+
+.dropContainerLarge {
+  height: 90%;
+  min-height: calc(100vh * 0.5);
+}
+
+.dropContainerActive {
+  border-color: var(--surface-surface-primary1);
+  background-color: var(--surface-surface-primary3);
+}
+
+.dropText {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

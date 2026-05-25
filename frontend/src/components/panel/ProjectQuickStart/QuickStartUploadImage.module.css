@@ -1,0 +1,99 @@
+.buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.flowBarButton {
+  width: 240px;
+}
+
+.selectLink {
+  margin-inline: 10px;
+  padding-block: 7px;
+}
+
+.dropContainer {
+  height: calc(100vh * 0.1);
+  border: 2px dashed black;
+  display: flex;
+  justify-content: center;
+  margin: 5px;
+}
+
+.dropContainerLarge {
+  height: 30%;
+  min-height: calc(100vh * 0.22);
+}
+
+.dropContainerActive {
+  border-color: var(--surface-surface-primary1);
+  background-color: var(--surface-surface-primary3);
+}
+
+.dropText {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sampleImagesSection {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-border-default);
+}
+
+.sampleImagesTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-text-secondary);
+  margin-bottom: 12px;
+  margin-top: 0;
+}
+
+.sampleImagesBar {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.sampleImageItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border-border-default);
+  border-radius: 8px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  width: 120px;
+}
+
+.sampleImageItem:hover:not(:disabled) {
+  border-color: var(--surface-surface-primary1);
+  background-color: var(--surface-surface-primary3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.sampleImageItem:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sampleImage {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.sampleImageLabel {
+  font-size: 12px;
+  text-align: center;
+  color: var(--text-text-secondary);
+  word-break: break-word;
+  max-width: 100%;
+}

@@ -1,0 +1,73 @@
+.header {
+	height: var(--header-height);
+	display: flex;
+	flex-shrink: 0;
+}
+
+.headerMainSide {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0px 20px;
+	position: relative;
+}
+
+.headerTitle {
+	color: var(--text-text-primary1);
+	font-size: 20px;
+	max-width: 800px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.headerMiddle {
+	min-width: 560px;
+	display: flex;
+	align-items: center;
+	padding: 0px 20px;
+}
+
+.arrowLink {
+	color: var(--text-text-secondary1);
+	font-size: 16px;
+	align-items: center;
+	display: inline-flex;
+	position: absolute;
+	left: 20px;
+}
+
+.circleArrow {
+	width: 30px;
+	height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--icon-icon-secondary2);
+	font-size: 26px;
+	transition: 0.2s all;
+}
+
+.circleArrow:hover {
+	color: var(--text-text-primary2);
+}
+
+.circleArrowPrev {
+	margin-right: 10px;
+}
+
+.circleArrowNext {
+	margin-left: 10px;
+}
+
+.progressInfoName {
+	display: inline-block;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	margin-right: 10px;
+	margin-left: 10px;
+	overflow: hidden;
+}

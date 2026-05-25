@@ -1,0 +1,54 @@
+.inputBlk {
+	--height: 42px;
+	--border-w: 1px;
+	--side-padding: 18px;
+}
+
+.inputBlkLabel {
+	font-size: 15px;
+	margin-bottom: 8px;
+}
+
+.inputBlkWrap {
+	display: flex;
+	border-radius: 100px;
+	border: var(--border-w) solid var(--line-line-primary1);
+	padding: 0 var(--side-padding);
+	align-items: center;
+	background-color: var(--surface-surface-primary3);
+}
+
+.inputBlkWrap:has(input:focus) {
+	border-color: var(--surface-surface-primary1);
+}
+
+.inputBlkIcon {
+	margin-right: 10px;
+}
+
+.inputBlk input {
+	width: 100%;
+	background: transparent;
+	padding: 0;
+	height: var(--height);
+	border: 0;
+	font-size: 14px;
+	color: var(--text-text-primary2);
+}
+
+.inputBlk input::placeholder {
+	color: var(--text-text-primary2);
+	opacity: 1;
+}
+
+.inputBlkConfirm {
+	height: calc(var(--border-w) * 2 + var(--height));
+	padding: 0 15px;
+	color: #fff;
+	background-color: #2a43ab;
+	border: var(--border-w) solid #002a67;
+	border-radius: 100px;
+	margin-block: calc(-1 * var(--border-w));
+	margin-right: calc(-1 * var(--side-padding));
+	margin-left: var(--side-padding);
+}

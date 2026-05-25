@@ -1,0 +1,23 @@
+.normalDropdown {
+  background-color: #fff;
+  border-radius: 18px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.12);
+  z-index: 3;
+  padding: 10px 0;
+}
+.normalDropdownLink {
+  text-align: left;
+  display: block;
+  width: 100%;
+  font-family: Roboto;
+  padding: 12px 20px;
+  font-size: 14px;
+}
+.normalDropdownLink:hover {
+  background-color: var(--surface-surface-primary3);
+}
+
+.labelDropdownMenu {
+  position: absolute;
+  display: none;
+}

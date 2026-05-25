@@ -1,0 +1,25 @@
+.dropContainer {
+  height: calc(100vh * 0.18);
+  min-height: 140px;
+  border: 2px dashed black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 5px;
+}
+
+.dropContainerActive {
+  border-color: var(--surface-surface-primary1);
+  background-color: var(--surface-surface-primary3);
+}
+
+.dropText {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.selectLink {
+  margin-inline: 10px;
+  padding-block: 7px;
+}

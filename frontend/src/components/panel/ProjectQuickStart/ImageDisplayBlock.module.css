@@ -1,0 +1,19 @@
+/* ============================================================
+   Image Preview Display
+   ============================================================ */
+
+.imageDisplayBlock {
+  height: 90%;
+  min-height: calc(100vh * 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 20px;
+}
+
+.imageDisplayBlockImg {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}

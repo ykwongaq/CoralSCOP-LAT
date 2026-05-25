@@ -1,0 +1,9 @@
+.sideBarSub {
+  width: calc(var(--logo-blk-width) - var(--nav-width));
+  background-color: #fff;
+  margin-left: 1px;
+  padding: 10px 10px;
+  display: flex;
+  flex-direction: column;
+  /* height: calc(100vh - var(--header-height)); */
+}

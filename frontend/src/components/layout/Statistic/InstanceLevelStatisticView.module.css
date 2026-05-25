@@ -1,0 +1,664 @@
+/* ============================================================
+   Instance Level Statistic View — Compact Layout
+   ============================================================ */
+
+.statSection {
+  padding: 10px 12px;
+  flex: 1;
+  min-height: 0;
+  max-height: 47vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.statSectionInstance {
+  box-sizing: border-box;
+}
+
+.statSectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-text-page-heading);
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.statSectionSubTitle {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-text-secondary1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: Roboto;
+  line-height: 1.2;
+}
+
+/* ============================================================
+   Split Layout
+   ============================================================ */
+
+.statSplitRow {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.statImagePanel {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-surface-primary3);
+  /* border-radius: 8px;
+  border: 1px solid var(--line-line-primary1); */
+  overflow: hidden;
+  /* padding: 8px; */
+}
+
+.statImagePanel canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.statDataPanel {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.statDataPanel::-webkit-scrollbar {
+  width: 5px;
+}
+
+.statDataPanel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.statDataPanel::-webkit-scrollbar-thumb {
+  background: var(--line-line-primary2);
+  border-radius: 3px;
+}
+
+/* ============================================================
+   Category Block
+   ============================================================ */
+
+.statCategoryBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.statCategoryLabel {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-text-secondary1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: Roboto;
+  line-height: 1.2;
+}
+
+.statCategoryName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #000000;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+/* ============================================================
+   Compact Metrics Row
+   ============================================================ */
+
+.statMetricsRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--surface-surface-primary3);
+  border-radius: 8px;
+  border: 1px solid var(--line-line-primary1);
+  padding: 8px 6px;
+  flex-shrink: 0;
+}
+
+.statMetricBlock {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.statMetricValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-text-primary2);
+  line-height: 1.2;
+  text-align: center;
+  word-break: break-word;
+}
+
+.statMetricLabel {
+  font-size: 9px;
+  color: var(--text-text-secondary1);
+  font-family: Roboto;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.statMetricDivider {
+  width: 1px;
+  height: 24px;
+  background: var(--line-line-primary1);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Tags
+   ============================================================ */
+
+.statTagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.statTag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--surface-surface-primary3);
+  border: 1px solid var(--line-line-primary2);
+  border-radius: 100px;
+  font-size: 10px;
+  color: var(--text-text-primary1);
+  font-family: Roboto;
+  line-height: 1.2;
+}
+
+.statNoStatus {
+  color: var(--text-text-secondary1);
+  font-family: Roboto;
+  font-size: 12px;
+}
+
+.statLoading {
+  color: var(--text-text-secondary1);
+  font-style: italic;
+  font-family: Roboto;
+}
+
+/* ============================================================
+   Empty State
+   ============================================================ */
+
+.statEmptyHint {
+  font-family: Roboto;
+  font-size: 13px;
+  color: var(--text-text-secondary1);
+  text-align: center;
+  margin-top: 24px;
+}
+
+/* ============================================================
+   Color Classification — Compact
+   ============================================================ */
+
+.statClassificationWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface-surface-primary3);
+  border-radius: 8px;
+  border: 1px solid var(--line-line-primary1);
+  padding: 8px 10px;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.statClassificationWrap.expanded {
+  overflow: hidden;
+}
+
+.statClassificationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statClassCount {
+  font-size: 10px;
+  color: var(--text-text-secondary1);
+  font-family: Roboto;
+}
+
+/* ============================================================
+   Threshold Control
+   ============================================================ */
+
+.statThresholdControl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line-line-primary2);
+  flex-shrink: 0;
+}
+
+.statThresholdLabel {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-text-secondary1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: Roboto;
+  line-height: 1.2;
+}
+
+.statThresholdSliderWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.statThresholdSlider {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-line-primary1);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.statThresholdSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-text-primary1);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.statThresholdSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-text-primary1);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.statThresholdValue {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-text-primary1);
+  min-width: 30px;
+  text-align: center;
+  font-family: Roboto;
+}
+
+/* Pie Chart */
+.statChartWrap {
+  width: 100%;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+/* Expand / Collapse Button */
+.statToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  align-self: center;
+  padding: 3px 12px;
+  background: var(--surface-surface-primary5);
+  border: 1px solid var(--line-line-primary2);
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-text-primary2);
+  font-family: Roboto;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.statToggleBtn:hover {
+  background: var(--surface-surface-primary3);
+  border-color: var(--line-line-secondary1);
+}
+
+/* Stacked Bar */
+.statStackedBar {
+  display: flex;
+  width: 100%;
+  height: 18px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.statStackedSegment {
+  height: 100%;
+  transition: opacity 0.15s ease;
+  cursor: pointer;
+  min-width: 2px;
+}
+
+.statStackedSegment:hover {
+  opacity: 0.85;
+}
+
+/* Top Classes Grid */
+.statTopClassesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+/* Scrollable grid in expanded mode */
+.statGridScrollable {
+  max-height: 140px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.statClassificationWrap.expanded .statGridScrollable {
+  max-height: 20.5vh;
+  overflow-y: auto;
+}
+
+.statGridScrollable::-webkit-scrollbar {
+  width: 5px;
+}
+
+.statGridScrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.statGridScrollable::-webkit-scrollbar-thumb {
+  background: var(--line-line-primary2);
+  border-radius: 3px;
+}
+
+.statTopClassItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  background: var(--surface-surface-primary5);
+  border-radius: 5px;
+  border: 1px solid var(--line-line-primary1);
+  transition: opacity 0.2s ease;
+  cursor: default;
+  min-width: 0;
+}
+
+.statTopClassItem.dimmed {
+  opacity: 0.35;
+}
+
+.statTopClassDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.statTopClassName {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-text-primary1);
+  font-family: Roboto;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.statTopClassPct {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-text-primary2);
+  font-family: Roboto;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.statTopClassMore {
+  justify-content: center;
+  background: transparent;
+  border-style: dashed;
+}
+
+.statTopClassMore .statTopClassName {
+  color: var(--text-text-secondary1);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Color Classification — Placeholder
+   ============================================================ */
+
+.statPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 8px;
+  text-align: center;
+}
+
+.statPlaceholderIcon {
+  color: var(--text-text-secondary2);
+  opacity: 0.5;
+}
+
+.statPlaceholderText {
+  font-size: 11px;
+  color: var(--text-text-secondary1);
+  font-family: Roboto;
+  line-height: 1.4;
+  max-width: 180px;
+}
+
+/* ============================================================
+   Settings Header and Modal
+   ============================================================ */
+
+.statHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.statSettingsButtonWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.statSettingsBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #000000;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.statSettingsBtn:hover {
+  background: var(--surface-surface-primary5);
+}
+
+.statSettingsModal {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface-surface-primary3);
+  border-radius: 8px;
+  border: 1px solid var(--line-line-primary1);
+  padding: 12px;
+  margin-top: 8px;
+  min-width: 240px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.statSettingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-line-primary2);
+}
+
+.statSettingsTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-text-primary1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: Roboto;
+}
+
+.statSettingControl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.statSettingLabel {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-text-secondary1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: Roboto;
+  line-height: 1.2;
+}
+
+.statSettingCheckbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--text-text-primary1);
+}
+
+.statSettingInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statSettingSlider {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line-line-primary1);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.statSettingSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-text-primary1);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.statSettingSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-text-primary1);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.statSettingValueInput {
+  width: 45px;
+  height: 24px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-text-primary1);
+  background: var(--surface-surface-primary5);
+  border: 1px solid var(--line-line-primary1);
+  border-radius: 4px;
+  font-family: Roboto;
+  text-align: center;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.statSettingValueInput:focus {
+  outline: none;
+  border-color: var(--line-line-secondary1);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(66, 93, 249, 0.18);
+}
+
+.statSettingValueInput::-webkit-outer-spin-button,
+.statSettingValueInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.statSettingValueInput[type="number"] {
+  -moz-appearance: textfield;
+}

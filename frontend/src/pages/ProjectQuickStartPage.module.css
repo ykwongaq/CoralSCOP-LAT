@@ -1,0 +1,11 @@
+#annotationPage,
+#scaleDefinePage {
+	padding: 0;
+}
+
+#statisticPage {
+	padding: 0;
+	overflow: hidden;
+	gap: var(--gap);
+	background: var(--surface-suface-bg);
+}

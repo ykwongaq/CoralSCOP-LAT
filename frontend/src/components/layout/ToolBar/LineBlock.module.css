@@ -1,0 +1,91 @@
+/* ============================================================
+   Scale Line Block (individual scale reference line)
+   ============================================================ */
+
+.scaleLineBlock {
+    border: 1px solid #d9e2ec;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.scaleLineBlock:hover {
+    border-color: #9fc3ff;
+}
+
+.scaleLineBlockSelected {
+    border-color: #ff8a00;
+    box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.14);
+}
+
+.scaleLineBlockHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.scaleLineBlockTitle {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-text-primary1);
+}
+
+.scaleLineBlockMeta {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--text-text-secondary1);
+}
+
+.scaleLineBlockTag {
+    font-size: 11px;
+    font-weight: 600;
+    color: #2d8cff;
+    background: rgba(45, 140, 255, 0.1);
+    border-radius: 999px;
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+
+.scaleLineBlockControls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.scaleLineBlockField {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-text-secondary1);
+}
+
+.scaleLineBlockInput,
+.scaleLineBlockSelect {
+    border: 1px solid #d9e2ec;
+    border-radius: 8px;
+    padding: 7px 8px;
+    font-size: 14px;
+    color: var(--text-text-primary1);
+    background: #fff;
+}
+
+.scaleLineBlockDelete {
+    grid-column: 1 / -1;
+    justify-self: flex-end;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 10px;
+    background: rgba(221, 54, 33, 0.12);
+    color: #b42318;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}

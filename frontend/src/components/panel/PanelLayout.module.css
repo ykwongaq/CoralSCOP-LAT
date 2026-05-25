@@ -1,0 +1,25 @@
+.mainSectionInner {
+  background-color: #fff;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: var(--padding) var(--padding) 0;
+  height: calc(100vh - var(--header-height));
+}
+
+.mainSectionTitle {
+  color: var(--text-text-page-heading);
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 34px;
+}
+
+.mainSectionContent {
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.mainSectionBottom {
+  margin-inline: calc(-1 * var(--padding));
+}

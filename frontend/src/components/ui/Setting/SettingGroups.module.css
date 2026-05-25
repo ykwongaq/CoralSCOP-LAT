@@ -1,0 +1,8 @@
+.settingsGroup {
+    display: grid;
+    gap: 25px 44px;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 4%;
+    margin-top: 4%;
+    margin-bottom: 30px;
+}

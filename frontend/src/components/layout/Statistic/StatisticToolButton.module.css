@@ -1,0 +1,71 @@
+.button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 6px 14px;
+	font-size: 13px;
+	font-weight: 500;
+	font-family: inherit;
+	color: var(--text-text-primary1);
+	background: #ffffff;
+	border: 1px solid var(--line-line-primary1);
+	border-radius: 100px;
+	cursor: pointer;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.button:hover:not(:disabled) {
+	background: var(--surface-surface-primary3);
+	border-color: var(--surface-surface-primary2);
+	color: var(--text-text-primary1);
+	box-shadow: 0 2px 8px rgba(66, 93, 249, 0.1);
+}
+
+.button:active {
+	background: var(--surface-surface-primary1);
+	color: #ffffff;
+	border-color: var(--surface-surface-primary1);
+	box-shadow: 0 1px 3px rgba(66, 93, 249, 0.15);
+	transform: translateY(0.5px);
+}
+
+.button.active {
+	background: var(--surface-surface-primary1);
+	color: #ffffff;
+	border-color: var(--surface-surface-primary1);
+	box-shadow: 0 1px 3px rgba(66, 93, 249, 0.15);
+}
+
+.button:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+	box-shadow: none;
+}
+
+.button:focus-visible {
+	outline: 2px solid var(--surface-surface-primary2);
+	outline-offset: 2px;
+}
+
+.label {
+	white-space: nowrap;
+	line-height: 1;
+}
+
+.imageButton {
+	padding: 5px 16px;
+}
+
+.image {
+	display: block;
+	height: 24px;
+	width: auto;
+	object-fit: contain;
+	transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.button:hover:not(:disabled) .image {
+	transform: scale(1.04);
+}

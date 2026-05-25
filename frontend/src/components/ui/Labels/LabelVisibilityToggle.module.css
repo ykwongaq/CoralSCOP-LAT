@@ -1,0 +1,38 @@
+/* ============================================================
+   Label Visibility Toggle
+   ============================================================ */
+
+.labelBlkBtn {
+    color: var(--icon-icon-secondary2);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 53px;
+    aspect-ratio: 1;
+    font-size: 18px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.labelBlkBtn * {
+    pointer-events: none;
+}
+
+.labelBlkBtn:hover {
+    color: #000;
+}
+
+/* Visibility toggle button: default = label visible */
+.labelBlkBtn :global(.ico-hide) {
+    display: none;
+}
+
+/* Active = label hidden: swap icons */
+.labelBlkBtnActive :global(.ico-eye) {
+    display: none;
+}
+
+.labelBlkBtnActive :global(.ico-hide) {
+    display: inline;
+}

@@ -1,0 +1,23 @@
+.logo-blk {
+  font-size: 24px;
+  background: var(--blue-blue500) url("../../assets/images/logo-bg.png");
+  background-size: cover;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--logo-blk-width);
+  flex-grow: 0;
+}
+
+.logo-blk__text {
+  font-size: 1em;
+  color: #fff;
+  font-weight: 800;
+}
+
+.logo-blk__img {
+  width: 3.25em;
+  margin-right: -0.0833333333em;
+  margin-top: -0.1666666667em;
+}

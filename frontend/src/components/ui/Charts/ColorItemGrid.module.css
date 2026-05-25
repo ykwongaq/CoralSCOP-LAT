@@ -1,0 +1,72 @@
+.topClassesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.gridScrollable {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.gridScrollable::-webkit-scrollbar {
+  width: 5px;
+}
+
+.gridScrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gridScrollable::-webkit-scrollbar-thumb {
+  background: var(--line-line-primary2);
+  border-radius: 3px;
+}
+
+.topClassItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  background: var(--surface-surface-primary5);
+  border-radius: 5px;
+  border: 1px solid var(--line-line-primary1);
+  transition: opacity 0.2s ease;
+  cursor: default;
+  min-width: 0;
+}
+
+.topClassItem.dimmed {
+  opacity: 0.35;
+}
+
+.topClassDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.topClassName {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-text-primary1);
+  font-family: Roboto;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.topClassPct {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-text-primary2);
+  font-family: Roboto;
+  line-height: 1.2;
+  flex-shrink: 0;
+}

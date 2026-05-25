@@ -1,0 +1,14 @@
+{
+    "data_dir": "embeddings",
+    "sam_model_path": "checkpoints/sam3/sam3.pt",
+    "CoralSCOP": {
+        "coralSCOP_model_path": "checkpoints/CoralSCOP/vit_b_coralscop.pth",
+        "model_type": "vit_b",
+         "iou_threshold": 0.62,
+         "sta_threshold": 0.62,
+         "point_number": 32,
+         "max_masks_num": 100
+    },
+    "coral_tank_model_path": "checkpoints/CoralTank/best.pt",
+    "gpu_embedding_cache_size": 10
+}

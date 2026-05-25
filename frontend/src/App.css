@@ -1,0 +1,292 @@
+@font-face {
+  font-family: "Unbounded";
+  src:
+    url("assets/fonts/Unbounded-ExtraBold.woff2") format("woff2"),
+    url("assets/fonts/Unbounded-ExtraBold.woff") format("woff");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unbounded";
+  src:
+    url("assets/fonts/Unbounded-Bold.woff2") format("woff2"),
+    url("assets/fonts/Unbounded-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unbounded";
+  src:
+    url("assets/fonts/Unbounded-Black.woff2") format("woff2"),
+    url("assets/fonts/Unbounded-Black.woff") format("woff");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unbounded";
+  src:
+    url("assets/fonts/Unbounded-ExtraLight.woff2") format("woff2"),
+    url("assets/fonts/Unbounded-ExtraLight.woff") format("woff");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unbounded";
+  src:
+    url("assets/fonts/Unbounded-SemiBold.woff2") format("woff2"),
+    url("assets/fonts/Unbounded-SemiBold.woff") format("woff");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unbounded";
+  src:
+    url("assets/fonts/Unbounded-Light.woff2") format("woff2"),
+    url("assets/fonts/Unbounded-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unbounded";
+  src:
+    url("assets/fonts/Unbounded-Regular.woff2") format("woff2"),
+    url("assets/fonts/Unbounded-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Unbounded";
+  src:
+    url("assets/fonts/Unbounded-Medium.woff2") format("woff2"),
+    url("assets/fonts/Unbounded-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto";
+  src:
+    url("assets/fonts/Roboto-Bold.woff2") format("woff2"),
+    url("assets/fonts/Roboto-Bold.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto";
+  src:
+    url("assets/fonts/Roboto-Light.woff2") format("woff2"),
+    url("assets/fonts/Roboto-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto";
+  src:
+    url("assets/fonts/Roboto-Medium.woff2") format("woff2"),
+    url("assets/fonts/Roboto-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto";
+  src:
+    url("assets/fonts/Roboto-Thin.woff2") format("woff2"),
+    url("assets/fonts/Roboto-Thin.woff") format("woff");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Roboto";
+  src:
+    url("assets/fonts/Roboto-Regular.woff2") format("woff2"),
+    url("assets/fonts/Roboto-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --blue-blue400: #425df9;
+  --blue-blue900: #002a67;
+  --blue-blue500: #2a43ab;
+  --blue-blue200: #7a9ae3;
+  --blue-blue100: #f4f6ff;
+  --blue-blue50: #e4eeff;
+  --torque-torque500: #00dfd4;
+  --basic-white500: #ffffff;
+  --basic-black500: #000000;
+  --basic-gray400: #999898;
+  --basic-gray200: #dedede;
+  --purple-purple300: #929bc2;
+  --text-text-primary1: var(--basic-black500);
+  --text-text-primary2: var(--blue-blue400);
+  --text-text-primary3: var(--basic-white500);
+  --text-text-secondary1: var(--basic-gray400);
+  --text-text-page-heading: var(--blue-blue900);
+  --text-text-tab-dim: var(--purple-purple300);
+  --surface-surface-primary1: var(--blue-blue400);
+  --surface-surface-primary2: var(--blue-blue200);
+  --surface-surface-primary3: var(--blue-blue100);
+  --surface-surface-primary4: var(--blue-blue900);
+  --surface-surface-primary5: var(--basic-white500);
+  --surface-suface-bg: var(--blue-blue50);
+  --line-line-primary1: var(--basic-gray200);
+  --line-line-primary2: var(--blue-blue200);
+  --line-line-secondary1: var(--blue-blue400);
+  --icon-icon-primary1: var(--basic-black500);
+  --icon-icon-primary2: var(--blue-blue400);
+  --icon-icon-primary3: var(--blue-blue900);
+  --icon-icon-secondary1: var(--basic-white500);
+  --icon-icon-secondary2: var(--basic-gray400);
+}
+
+label:has(:disabled),
+label:has(:disabled) * {
+  cursor: not-allowed !important;
+  filter: grayscale(100%);
+}
+
+input:disabled {
+  cursor: not-allowed !important;
+  filter: grayscale(100%);
+}
+
+.circle-arrow {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icon-icon-secondary2);
+  font-size: 26px;
+  transition: 0.2s all;
+}
+.circle-arrow:hover {
+  color: var(--text-text-primary2);
+}
+.circle-arrow button {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.arrow-link {
+  color: var(--text-text-secondary1);
+  font-size: 16px;
+  align-items: center;
+  display: inline-flex;
+}
+.arrow-link .ico {
+  color: var(--text-text-page-heading);
+  margin-right: 0.625;
+}
+
+input[type="range"] {
+  --pos: 0%;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    rgb(255, 85, 0) var(--pos),
+    rgb(204, 204, 204) var(--pos)
+  );
+  border-radius: 20px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background-color: var(--surface-surface-primary1);
+  padding: 0;
+  margin: 0;
+  transition: 0.2s ease-in-out;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background-color: var(--surface-surface-primary1);
+  padding: 0;
+  margin: 0;
+  transition: 0.2s ease-in-out;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  scale: 1.4;
+}
+input[type="range"]:active::-webkit-slider-thumb {
+  scale: 1.4;
+}
+input[type="range"]::-moz-range-thumb:hover {
+  scale: 1.4;
+}
+input[type="range"]:active::-moz-range-thumb {
+  scale: 1.4;
+}
+
+body,
+html {
+  font-family: Unbounded;
+  padding: 0;
+  margin: 0;
+  color: var(--text-text-primary1);
+}
+
+.hidden {
+  display: none !important;
+}
+
+a {
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  appearance: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  font-family: Unbounded;
+  background: transparent;
+}
+
+#progress-bar {
+  display: none;
+}
+
+.container {
+  min-width: 1000px;
+}
+
+:root {
+  --logo-blk-width: 472px;
+  --header-height: 83px;
+  --nav-width: 72px;
+}
+
+:where(*) {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+:where(*):hover,
+:where(*):focus,
+:where(*):active {
+  outline: none;
+}

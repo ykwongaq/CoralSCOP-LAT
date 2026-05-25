@@ -1,0 +1,77 @@
+/* ============================================================
+   Image Level Statistic View
+   ============================================================ */
+
+.statSection {
+    padding: 18px 22px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.statSectionTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-text-page-heading);
+    margin-bottom: 14px;
+}
+
+/* ============================================================
+   Summary Cards Row
+   ============================================================ */
+
+.statSummaryRow {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+/* ============================================================
+   Charts Row
+   ============================================================ */
+
+.statChartsRow {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    min-height: 200px;
+}
+
+.statChartWrap {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    height: 200px;
+}
+
+.statChartWrap:only-child {
+    height: 250px;
+}
+
+.statChartWrap .recharts-responsive-container {
+    flex: 1;
+    min-height: 0;
+}
+
+.statChartLabel {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-text-secondary1);
+    margin-bottom: 6px;
+    font-family: Roboto;
+}
+
+/* ============================================================
+   Empty State
+   ============================================================ */
+
+.statEmptyHint {
+    font-family: Roboto;
+    font-size: 14px;
+    color: var(--text-text-secondary1);
+    text-align: center;
+    margin-top: 30px;
+}

@@ -1,0 +1,10 @@
+.labelName {
+    flex-grow: 1;
+    font-size: 15px;
+    margin-right: 15px;
+}
+
+.labelName[contenteditable]:focus {
+    color: var(--text-text-primary2);
+    background-color: var(--surface-surface-primary3);
+}

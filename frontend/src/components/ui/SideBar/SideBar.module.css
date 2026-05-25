@@ -1,0 +1,91 @@
+.navList {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.navList .arrowTooltip {
+	--tool-height: 30px;
+	position: absolute;
+	height: 30px;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	border: 1px solid var(--text-text-primary2);
+	padding: 2px 18px;
+	font-size: 13px;
+	background-color: var(--surface-surface-primary3);
+	top: calc(50% - var(--tool-height) / 2);
+	left: calc(100% - 10px);
+	z-index: 12;
+	transition: 0.2s all;
+	opacity: 0;
+	visibility: hidden;
+	transform: translate(-10px, 0);
+	box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.13);
+	border-radius: 4px;
+	pointer-events: none;
+	color: var(--text-text-primary1);
+}
+
+.navListItem {
+	position: relative;
+}
+
+.navListItem .normalDropdown {
+	position: absolute;
+	left: calc(100% + 20px);
+	top: 0;
+	width: max-content;
+}
+
+.navListButton {
+	width: var(--nav-width);
+	aspect-ratio: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--icon-icon-primary1);
+	background-color: #fff;
+	font-size: 32px;
+}
+
+.navListButton * {
+	pointer-events: none;
+}
+
+.navListButton:hover {
+	background-color: #fafafa;
+}
+
+.navListButton:hover .arrowTooltip {
+	opacity: 1;
+	visibility: visible;
+	transform: translate(0, 0);
+}
+
+.navListItem .navListButton.active {
+	color: var(--icon-icon-secondary1);
+	background: var(--surface-surface-primary1);
+}
+
+.normalDropdown {
+	background-color: #fff;
+	border-radius: 18px;
+	box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.12);
+	z-index: 3;
+	padding: 10px 0;
+}
+
+.normalDropdownLink {
+	text-align: left;
+	display: block;
+	width: 100%;
+	font-family: Roboto;
+	padding: 12px 20px;
+	font-size: 14px;
+}
+
+.normalDropdownLink:hover {
+	background-color: var(--surface-surface-primary3);
+}

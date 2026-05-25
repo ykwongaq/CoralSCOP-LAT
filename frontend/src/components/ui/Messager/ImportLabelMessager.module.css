@@ -1,0 +1,180 @@
+.container {
+  margin-top: 24px;
+  text-align: left;
+}
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+.selectionCount {
+  font-family: Roboto;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-text-secondary1);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.textBtn {
+  font-family: Roboto;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-text-primary2);
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.textBtn:hover {
+  background: var(--surface-surface-primary3);
+}
+
+.divider {
+  width: 1px;
+  height: 14px;
+  background: var(--line-line-primary1);
+  display: inline-block;
+}
+
+/* ===== List ===== */
+.list {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--line-line-primary1);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: var(--line-line-primary1);
+  border-radius: 3px;
+}
+
+/* ===== Row ===== */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid var(--line-line-primary1);
+  outline: none;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row:hover {
+  background: var(--blue-blue50);
+}
+
+.rowSelected {
+  background: var(--surface-surface-primary3);
+}
+
+.rowSelected:hover {
+  background: var(--surface-surface-primary3);
+}
+
+/* ===== Checkbox ===== */
+.checkbox {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--line-line-primary1);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  color: #fff;
+}
+
+.checkboxChecked {
+  background: var(--surface-surface-primary1);
+  border-color: var(--surface-surface-primary1);
+}
+
+/* ===== Badge ===== */
+.badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Unbounded;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Label Info ===== */
+.labelInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.labelName {
+  font-family: Unbounded;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-text-primary1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Status Chips ===== */
+.statusList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.statusChip {
+  font-family: Roboto;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-text-primary2);
+  background: var(--blue-blue50);
+  padding: 3px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--blue-blue100);
+  white-space: nowrap;
+}
+
+/* ===== Footer ===== */
+.footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  gap: 12px;
+}

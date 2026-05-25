@@ -1,0 +1,245 @@
+/* ============================================================
+   Label Block
+   ============================================================ */
+
+.labelBlk {
+    display: flex;
+    align-items: center;
+}
+
+.labelBlkLabel {
+    flex-grow: 1;
+    font-size: 15px;
+    margin-right: 15px;
+}
+
+.labelBlkLabel[contenteditable]:focus {
+    color: var(--text-text-primary2);
+    background-color: var(--surface-surface-primary3);
+}
+
+.labelBlkSide {
+    flex-shrink: 0;
+    margin-left: auto;
+    display: flex;
+}
+
+.labelBlkBtn {
+    color: var(--icon-icon-secondary2);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 53px;
+    aspect-ratio: 1;
+    font-size: 18px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.labelBlkBtn * {
+    pointer-events: none;
+}
+
+.labelBlkBtn:hover {
+    color: #000;
+}
+
+/* Chevron expand/collapse button */
+.labelBlkBtnChevron {
+    width: 30px;
+}
+
+.labelBlkChevron {
+    font-size: 14px;
+    display: inline-block;
+    transform: rotate(-90deg);
+    transition: transform 0.2s;
+    color: var(--icon-icon-secondary2);
+}
+
+.labelBlkBtnChevronActive .labelBlkChevron {
+    transform: rotate(0deg);
+}
+
+.labelBlkBtnChevron:hover .labelBlkChevron {
+    color: var(--text-text-primary2);
+}
+
+/* ============================================================
+   Label Container (wraps the label list)
+   ============================================================ */
+
+.labelContainer .labelBlk {
+    padding-inline: var(--side-padding);
+}
+
+/* ============================================================
+   Color Plate List (cycling palette of 20 colors)
+   ============================================================ */
+
+.colorPlateList {
+    --size: 23px;
+    --bg-color: #000;
+    --color: #fff;
+    --def-bg-color--1: #f6c3cb;
+    --def-fs-color--1: #000;
+    --def-bg-color--2: #eb361c;
+    --def-fs-color--2: #fff;
+    --def-bg-color--3: #225437;
+    --def-fs-color--3: #fff;
+    --def-bg-color--4: #f7d941;
+    --def-fs-color--4: #000;
+    --def-bg-color--5: #73fbfe;
+    --def-fs-color--5: #000;
+    --def-bg-color--6: #9efcd6;
+    --def-fs-color--6: #000;
+    --def-bg-color--7: #2b00f7;
+    --def-fs-color--7: #fff;
+    --def-bg-color--8: #f2aa34;
+    --def-fs-color--8: #000;
+    --def-bg-color--9: #ef7c76;
+    --def-fs-color--9: #000;
+    --def-bg-color--10: #badfe5;
+    --def-fs-color--10: #000;
+    --def-bg-color--11: #bed966;
+    --def-fs-color--11: #000;
+    --def-bg-color--12: #cce1fd;
+    --def-fs-color--12: #000;
+    --def-bg-color--13: #f188e9;
+    --def-fs-color--13: #000;
+    --def-bg-color--14: #6cfb45;
+    --def-fs-color--14: #000;
+    --def-bg-color--15: #7fcbac;
+    --def-fs-color--15: #000;
+    --def-bg-color--16: #c9bfb6;
+    --def-fs-color--16: #000;
+    --def-bg-color--17: #163263;
+    --def-fs-color--17: #fff;
+    --def-bg-color--18: #751608;
+    --def-fs-color--18: #fff;
+    --def-bg-color--19: #54afaa;
+    --def-fs-color--19: #fff;
+    --def-bg-color--20: #5f0f63;
+    --def-fs-color--20: #fff;
+    counter-reset: item;
+}
+
+.colorPlateListItem {
+    counter-increment: item;
+}
+
+.colorPlateListItem:nth-child(20n + 1) {
+    --def-bg-color: var(--def-bg-color--1);
+    --def-fs-color: var(--def-fs-color--1);
+}
+
+.colorPlateListItem:nth-child(20n + 2) {
+    --def-bg-color: var(--def-bg-color--2);
+    --def-fs-color: var(--def-fs-color--2);
+}
+
+.colorPlateListItem:nth-child(20n + 3) {
+    --def-bg-color: var(--def-bg-color--3);
+    --def-fs-color: var(--def-fs-color--3);
+}
+
+.colorPlateListItem:nth-child(20n + 4) {
+    --def-bg-color: var(--def-bg-color--4);
+    --def-fs-color: var(--def-fs-color--4);
+}
+
+.colorPlateListItem:nth-child(20n + 5) {
+    --def-bg-color: var(--def-bg-color--5);
+    --def-fs-color: var(--def-fs-color--5);
+}
+
+.colorPlateListItem:nth-child(20n + 6) {
+    --def-bg-color: var(--def-bg-color--6);
+    --def-fs-color: var(--def-fs-color--6);
+}
+
+.colorPlateListItem:nth-child(20n + 7) {
+    --def-bg-color: var(--def-bg-color--7);
+    --def-fs-color: var(--def-fs-color--7);
+}
+
+.colorPlateListItem:nth-child(20n + 8) {
+    --def-bg-color: var(--def-bg-color--8);
+    --def-fs-color: var(--def-fs-color--8);
+}
+
+.colorPlateListItem:nth-child(20n + 9) {
+    --def-bg-color: var(--def-bg-color--9);
+    --def-fs-color: var(--def-fs-color--9);
+}
+
+.colorPlateListItem:nth-child(20n + 10) {
+    --def-bg-color: var(--def-bg-color--10);
+    --def-fs-color: var(--def-fs-color--10);
+}
+
+.colorPlateListItem:nth-child(20n + 11) {
+    --def-bg-color: var(--def-bg-color--11);
+    --def-fs-color: var(--def-fs-color--11);
+}
+
+.colorPlateListItem:nth-child(20n + 12) {
+    --def-bg-color: var(--def-bg-color--12);
+    --def-fs-color: var(--def-fs-color--12);
+}
+
+.colorPlateListItem:nth-child(20n + 13) {
+    --def-bg-color: var(--def-bg-color--13);
+    --def-fs-color: var(--def-fs-color--13);
+}
+
+.colorPlateListItem:nth-child(20n + 14) {
+    --def-bg-color: var(--def-bg-color--14);
+    --def-fs-color: var(--def-fs-color--14);
+}
+
+.colorPlateListItem:nth-child(20n + 15) {
+    --def-bg-color: var(--def-bg-color--15);
+    --def-fs-color: var(--def-fs-color--15);
+}
+
+.colorPlateListItem:nth-child(20n + 16) {
+    --def-bg-color: var(--def-bg-color--16);
+    --def-fs-color: var(--def-fs-color--16);
+}
+
+.colorPlateListItem:nth-child(20n + 17) {
+    --def-bg-color: var(--def-bg-color--17);
+    --def-fs-color: var(--def-fs-color--17);
+}
+
+.colorPlateListItem:nth-child(20n + 18) {
+    --def-bg-color: var(--def-bg-color--18);
+    --def-fs-color: var(--def-fs-color--18);
+}
+
+.colorPlateListItem:nth-child(20n + 19) {
+    --def-bg-color: var(--def-bg-color--19);
+    --def-fs-color: var(--def-fs-color--19);
+}
+
+.colorPlateListItem:nth-child(20n + 20) {
+    --def-bg-color: var(--def-bg-color--20);
+    --def-fs-color: var(--def-fs-color--20);
+}
+
+.colorPlate {
+    aspect-ratio: 1;
+    margin-top: 3px;
+    background-color: var(--def-bg-color);
+    padding-bottom: 2px;
+    color: var(--def-fs-color);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    width: var(--size, 20px);
+    margin-right: 10px;
+}

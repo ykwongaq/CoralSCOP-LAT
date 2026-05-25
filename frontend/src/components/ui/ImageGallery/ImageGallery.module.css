@@ -1,0 +1,11 @@
+.galleryList {
+  display: grid;
+  gap: 20px;
+  padding: 0 0 20px;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+  overflow: auto;
+}
+
+.galleryListFull > * {
+  grid-column: span 1;
+}

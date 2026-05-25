@@ -1,0 +1,26 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main {
+  flex-grow: 1;
+  display: flex;
+  background: var(--blue-blue100);
+}
+
+.mainSection {
+  --gap: 14px;
+  --padding: 40px;
+  flex-grow: 1;
+  min-height: 0;
+  position: relative;
+  /* padding: var(--gap) var(--gap) 0; */
+  display: flex;
+}
+
+.page:not(.activePage) {
+  display: none;
+}

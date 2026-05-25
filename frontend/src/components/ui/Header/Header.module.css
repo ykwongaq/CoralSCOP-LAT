@@ -1,0 +1,5 @@
+.header {
+	height: var(--header-height);
+	display: flex;
+	flex-shrink: 0;
+}

@@ -1,0 +1,7 @@
+.chartWrap {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 60px;
+  max-height: 140px;
+  overflow: hidden;
+}

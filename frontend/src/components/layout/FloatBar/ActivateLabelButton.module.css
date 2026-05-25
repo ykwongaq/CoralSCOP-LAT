@@ -1,0 +1,17 @@
+.colorBlk {
+	width: 20px;
+	background-color: #dedede;
+	margin-right: 8px;
+	font-size: 10px;
+	aspect-ratio: 1;
+	margin-top: 3px;
+	padding-bottom: 2px;
+	border-radius: 3px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.labelSmBlkText {
+	pointer-events: none;
+}

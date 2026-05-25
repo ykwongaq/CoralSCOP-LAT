@@ -1,0 +1,33 @@
+.scaleSidebarIntro {
+  padding: 4px 4px 14px;
+  border-bottom: 1px solid #edf1f5;
+  margin-bottom: 12px;
+}
+
+.scaleSidebarHint {
+  margin: 8px 0 0;
+  color: var(--text-text-secondary1);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.scaleSidebarList {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 2px;
+}
+
+.scaleSidebarEmpty {
+  margin: 0;
+  padding: 14px 12px;
+  border: 1px dashed #d6dde6;
+  border-radius: 10px;
+  color: var(--text-text-secondary1);
+  font-size: 13px;
+  line-height: 1.5;
+  background: #fbfcfd;
+}

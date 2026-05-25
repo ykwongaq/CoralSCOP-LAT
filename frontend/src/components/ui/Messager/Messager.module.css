@@ -1,0 +1,133 @@
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   Modal Backdrop
+   ============================================================ */
+
+.modalPopBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  background-color: #000;
+  opacity: 0.7;
+}
+
+/* ============================================================
+   Modal Pop-up
+   ============================================================ */
+
+.modalPop {
+  transition: 0.3s all;
+  position: fixed;
+  z-index: 15;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalPopInner {
+  border-radius: 10px;
+  background-color: #fff;
+  text-align: center;
+  width: 700px;
+  padding: 80px 55px;
+}
+
+.modalPopLoading {
+  width: 100px;
+  aspect-ratio: 1;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 34px;
+  animation: rotate 2s linear infinite;
+}
+
+.modalPopNumber {
+  font-weight: 700;
+  color: var(--text-text-primary2);
+  font-size: 48px;
+}
+
+.modalPopLgText {
+  color: var(--text-text-primary2);
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.modalPopText {
+  line-height: 1.4;
+  font-size: 20px;
+  font-weight: 300;
+}
+
+.modalPopTextarea {
+  width: 100%;
+  border: 1px solid #ccc;
+  overflow: auto;
+  resize: none;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  margin: 3px;
+  height: 200px;
+  display: block;
+}
+
+.modalPopInput {
+  width: 100%;
+  border: 1px solid #ccc;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  margin: 3px;
+  padding: 8px;
+  display: block;
+  box-sizing: border-box;
+}
+
+.modalPopInputGroup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.modalPopInputWithSuffix {
+  width: auto;
+  flex: 1;
+  max-width: 400px;
+  margin: 0;
+  text-align: left;
+}
+
+.modalPopInputSuffix {
+  font-size: 16px;
+  color: #555;
+  font-weight: 500;
+  user-select: none;
+}
+
+.modalPopRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.messagerButton {
+  width: 158px;
+  margin: 5px;
+}
+
+.modalPopDropZone {
+  margin-top: 20px;
+}

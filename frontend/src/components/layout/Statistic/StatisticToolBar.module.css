@@ -1,0 +1,10 @@
+.toolBar {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 14px;
+	background: #fff;
+	border-bottom: 1px solid var(--line-line-primary1);
+	border-radius: 12px 12px 0 0;
+	flex-shrink: 0;
+}

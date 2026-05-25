@@ -1,0 +1,55 @@
+.galleryListItem {
+  composes: galleryListItem from './ImageBlock.module.css';
+}
+
+.galleryItem {
+  composes: galleryItem from './ImageBlock.module.css';
+}
+
+.galleryItemImgW {
+  composes: galleryItemImgW from './ImageBlock.module.css';
+}
+
+.galleryItemImg {
+  composes: galleryItemImg from './ImageBlock.module.css';
+}
+
+.galleryItemName {
+  composes: galleryItemName from './ImageBlock.module.css';
+}
+
+.galleryItemText {
+  composes: galleryItemText from './ImageBlock.module.css';
+}
+
+.galleryItem:where(label) {
+  cursor: pointer;
+}
+
+.galleryItem:where(label):hover {
+  border-color: var(--surface-surface-primary1);
+}
+
+.galleryItem [type="checkbox"] {
+  opacity: 0;
+  position: absolute;
+}
+
+[type="checkbox"]:checked ~ .galleryItemName::after {
+  background: var(--surface-surface-primary1);
+  content: "+";
+}
+
+.galleryItem:where(label) .galleryItemName::after {
+  content: "";
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line-color);
+  background: #fff;
+  border-radius: 3px;
+  margin-left: 15px;
+  color: #fff;
+  align-items: center;
+  flex-shrink: 0;
+  text-align: center;
+}

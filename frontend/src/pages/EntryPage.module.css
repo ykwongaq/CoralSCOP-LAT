@@ -1,0 +1,52 @@
+/* ============================================================
+   Entry / Home Page
+   ============================================================ */
+
+.home {
+    position: absolute;
+    inset: 0;
+}
+
+.homeContent {
+    width: 56%;
+    margin-left: 0%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    max-width: 1022px;
+}
+
+.bg {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    object-fit: cover;
+}
+
+.title {
+    display: block;
+    margin: auto;
+    max-width: 100%;
+}
+
+.homeContent p {
+    font-size: clamp(20px, 1.7vw, 32px);
+    text-align: center;
+    margin: 0 15% 30px;
+}
+
+.buttonRow {
+    display: flex;
+    gap: 30px;
+    flex-direction: column;
+    padding-block: 18px;
+    align-items: center;
+}
+
+.buttonRow button {
+    --width: 350px;
+    font-size: clamp(17px, 1.4vw, 22px);
+}
