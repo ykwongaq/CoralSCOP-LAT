@@ -4,9 +4,6 @@
 <a href="https://www.sciencedirect.com/science/article/pii/S157495412500411X" target="_blank" rel="noopener noreferrer">
 <img alt="Static Badge" src="https://img.shields.io/badge/paper-Ecological%20Informatics-blue">
 </a>
-<a href="https://hkustconnect-my.sharepoint.com/:f:/g/personal/ykwongaq_connect_ust_hk/Eh3ZxkV2c-lIksa4wCYy1YcBCs5PEORfj1saV-3oYsT0tw" target="_blank" rel="noopener noreferrer">
-<img alt="Static Badge" src="https://img.shields.io/badge/package-Window-green">
-</a> 
 <a href="http://coralscop-lat.hkustvgd.com/" target="_blank" rel="noopener noreferrer">
 <img alt="Static Badge" src="https://img.shields.io/badge/webpage-CoralSCOP_LAT-yellow">
 </a>
