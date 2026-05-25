@@ -166,7 +166,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-models/
 output/
 web/css/fontawesome-free-6.6.0-web/
 web/assets/
