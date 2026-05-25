@@ -29,83 +29,98 @@ CoralSCOP-LAT is a semi-automatic annotation and analysis tool for coral reef im
 </p>
 
 <p align="center">
-  <img src="images/teaser.png" alt="Teaser Image">
+  <img src="readme/teaser.png" alt="Teaser Image">
 </p>
 
-## Installation
+## Project Structure
 
--   [Build From Source](#build-from-source)
--   [Window](#window)
+- **backend/** - FastAPI Python backend with ML models (SAM3, object detection)
+- **frontend/** - React + TypeScript frontend with Vite build system
 
-### Build From Source
+## Prerequisites
 
-It is recommeded to build **CoralSCOP-LAT** from source, if you are confident in configuration of `python` enivornment using `Anaconda`.
+- **Backend**: Python 3.8+ with pip
+- **Frontend**: Node.js 16+ with npm
 
-#### 1. Install Anaconda
+## Backend Setup
 
-Install `Anaconda` from the [link](https://www.anaconda.com/download)
-
-#### 2. Create Environment
-
-Create an `Anaconda` environment by
+### 1. Install Dependencies
 
 ```bash
-conda create -n coralscop-lat python=3.12
-```
-
-Then activate it by
-
-```bash
-conda activate coralscop-lat
-```
-
-Install `torch` and `torchvision` from [PyTorch](https://pytorch.org/get-started/locally/)
-
-Then install the required package by
-
-```bash
-cd <path to CoralSCOP-LAT>
+cd backend
 pip install -r requirements.txt
 ```
 
-#### 3. Download Models
+**Note**: The backend has heavy ML dependencies including PyTorch and SAM3. This may take several minutes to install.
 
-Create `sat/models` folder
+### 2. Download Model Checkpoints
 
-Download three models, `vit_b_coralscop.pth`, `vit_b_decoder_quantized.onnx`, and `vit_b_encoder_quantized.onnx` from [OneDrive](https://hkustconnect-my.sharepoint.com/:f:/g/personal/ykwongaq_connect_ust_hk/EhRCvPn3zYRHjaGm43XYOz8ByFFJr6n9l75Gi7KkoEuVVA?e=PXGTcO), and save them into the models folder.
+Download the [model checkpoints](https://hkust-vgd.nas.ust.hk:5001/sharing/UqZfBF5jF) and extract them into the `backend/checkpoints/` folder.
 
-At the end, the `models` folder should have the following structure:
+### 3. Configuration
 
-```
-models
-|- vit_b_coralscop.pth
-|- vit_b_decoder_quantized.onnx
-|- vit_b_encoder_quantized.onnx
-```
+Edit `backend/config.json` if needed to configure:
 
-#### 4. Launch Application
+- Model checkpoint paths
+- Server host/port settings
+- Other backend configurations
 
-Run the following command to launch the application
+## Frontend Setup
+
+### 1. Install Dependencies
 
 ```bash
-cd sat
-python main.py
+cd frontend
+npm install
 ```
 
-### Window
+### 2. Run Development Server
 
-A distribution package is available for `Windows` users.
+```bash
+npm run dev
+```
 
-Download `CoralSCOP-LAT-Windowe.zip` from [OneDrive](https://hkustconnect-my.sharepoint.com/:f:/g/personal/ykwongaq_connect_ust_hk/Eh3ZxkV2c-lIksa4wCYy1YcBCs5PEORfj1saV-3oYsT0tw).
+The frontend will typically start on `http://localhost:5173` and automatically reload on file changes.
 
-Unzip the file and double click the `CoralSCOP-LAT.exe` file to launch the file.
+### 3. Other Commands
 
-A `macOS` version is planned for future development.
+- **Lint**: `npm run lint` - Check code quality
+- **Build**: `npm run build` - Create production build (output in `dist/`)
+- **Preview**: `npm run preview` - Preview production build locally
 
-## Tutorial
+## Quick Start
 
-Please refer to `tutorial.pdf`
+Open **two terminal windows** and run the following:
 
+**Terminal 1 - Backend:**
+
+```bash
+cd backend
+uvicorn main:app --reload --port 8000
+```
+
+**Terminal 2 - Frontend:**
+
+```bash
+cd frontend
+npm run dev
+```
+
+Then open `http://localhost:5173` in your browser. The backend API docs are available at `http://localhost:8000/docs`.
+
+## Troubleshooting
+
+| Issue                   | Solution                                                     |
+| ----------------------- | ------------------------------------------------------------ |
+| Backend fails to start  | Ensure dependencies are installed: `pip install -r requirements.txt`. Check port 8000 is available. |
+| Frontend fails to start | Run `npm install` in `frontend/`. Check port 5173 is available. Node.js 16+ required. |
+| Checkpoints not found   | Download checkpoints from the link and extract to `backend/checkpoints/` |
+| Port already in use     | Change port in uvicorn command: `--port 9000` (update frontend API calls accordingly) |
+
+## Tech Stack
+
+- **Backend**: Python, FastAPI, PyTorch, SAM3, OpenCV
+- **Frontend**: React 19, TypeScript, Vite, React Router, Recharts
 ## Reference
 
 CoralSCOP-LAT is built on top of the coral segmentation model **[CoralSCOP](https://coralscop.hkustvgd.com/)**.
