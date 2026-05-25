@@ -11,6 +11,12 @@
 	overflow: auto;
 }
 
+.labelContainer {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
 .labelContainer :global(.labelButton) {
 	padding-inline: var(--side-padding);
 }
