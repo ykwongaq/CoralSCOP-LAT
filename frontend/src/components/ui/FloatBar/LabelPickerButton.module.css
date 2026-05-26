@@ -36,6 +36,8 @@
   gap: 8px;
   max-width: 140px;
   grid-template-columns: repeat(auto-fill, minmax(20px, 1fr));
+  max-height: 20vh;
+  overflow-y: auto;
 }
 
 .colorPickerPopup .colorPlate {
