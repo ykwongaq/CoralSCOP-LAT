@@ -3,6 +3,7 @@ from PIL import Image
 from ultralytics import YOLO
 
 from ..utils.logger import get_logger
+from ..utils.gpu_monitor import track_gpu_memory
 from ..utils.masks import encode_masks
 from .modelQueue import ModelQueue
 
@@ -18,6 +19,7 @@ class CoralTankModel:
         self._model_queue = ModelQueue(self.model)
         _logger.info("CoralTankModel loaded")
 
+    @track_gpu_memory
     def predict(self, image: Image.Image) -> Tuple[List[Dict[str, Any]], List[int]]:
         with self._model_queue as model:
             result = model.predict(image, retina_masks=True, classes=[0, 3])[0]

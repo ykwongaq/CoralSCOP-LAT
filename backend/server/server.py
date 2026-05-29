@@ -20,6 +20,7 @@ from .projectHandler import ProjectHandler
 from .utils.logger import get_logger
 from .utils.masks import encode_masks
 from .utils.path import resolve_path
+from .utils.gpu_monitor import log_gpu_memory, log_model_size, track_gpu_memory
 
 _logger = get_logger(__name__)
 
@@ -35,6 +36,7 @@ class Server:
             )
 
         _logger.info("Initializing Server")
+        log_gpu_memory("Server startup")
 
         self.temp_folder = os.path.join(
             tempfile.gettempdir(), "coralscop-lat-online-temp"
@@ -47,7 +49,12 @@ class Server:
         )
         embeddings_dir = os.path.join(data_dir, "embeddings")
 
+        _logger.info("Loading SAM3 model...")
         self.sam3 = SAM3Model(resolve_path(config["sam_model_path"]))
+        log_model_size("SAM3", self.sam3.model)
+        log_gpu_memory("After SAM3 load")
+
+        _logger.info("Loading CoralSCOP model...")
         coralSCOP = CoralSCOPModel(
             model_path=resolve_path(config["CoralSCOP"]["coralSCOP_model_path"]),
             model_type=config["CoralSCOP"]["model_type"],
@@ -56,9 +63,12 @@ class Server:
             max_masks_num=config["CoralSCOP"]["max_masks_num"],
             point_number=config["CoralSCOP"]["point_number"],
         )
+        log_gpu_memory("After CoralSCOP load")
 
+        _logger.info("Loading CoralTank model...")
         coral_tank_path = resolve_path(config["coral_tank_model_path"])
         coral_tank_model = CoralTankModel(coral_tank_path)
+        log_gpu_memory("After CoralTank load")
 
         self.mask_handler = MaskHandler()
         self.embedding_store = EmbeddingStore(base_dir=embeddings_dir)
@@ -77,7 +87,11 @@ class Server:
         self._gpu_cache_max = config.get("gpu_embedding_cache_size", 5)
         self._gpu_cache: OrderedDict = OrderedDict()
         self._gpu_cache_lock = threading.Lock()
-        _logger.info("GPU embedding cache size: %d", self._gpu_cache_max)
+        _logger.info("GPU embedding cache: max %d items (estimated ~%d GB per item @ 200MB)",
+                     self._gpu_cache_max, self._gpu_cache_max * 200 // 1024)
+        final_mem = log_gpu_memory("=== Server initialization complete ===")
+        _logger.info("Total GPU allocated: %d MB, reserved: %d MB, utilization: %d%%",
+                     final_mem['allocated_mb'], final_mem['reserved_mb'], final_mem['utilization_percent'])
 
     def get_zip_path(self, token: str) -> str:
         return self.project_handler.get_zip_path(token)
@@ -142,9 +156,13 @@ class Server:
             if key not in self._gpu_cache:
                 self._gpu_cache[key] = state_gpu
                 self._gpu_cache.move_to_end(key)
+                cache_info = log_gpu_memory(f"GPU cache [{key}] inserted, size={len(self._gpu_cache)}/{self._gpu_cache_max}")
                 while len(self._gpu_cache) > self._gpu_cache_max:
                     evicted_key, _ = self._gpu_cache.popitem(last=False)
-                    _logger.debug("GPU cache LRU evicted %s", evicted_key)
+                    _logger.info(
+                        "GPU cache LRU evicted %s (cache now %d/%d), GPU util: %d%%",
+                        evicted_key, len(self._gpu_cache), self._gpu_cache_max, cache_info['utilization_percent']
+                    )
             else:
                 # Another thread inserted the same key while we were transferring
                 self._gpu_cache.move_to_end(key)
@@ -198,6 +216,7 @@ class Server:
 
         return rle_list
 
+    @track_gpu_memory
     def predict_inst(
         self,
         session_id: str,

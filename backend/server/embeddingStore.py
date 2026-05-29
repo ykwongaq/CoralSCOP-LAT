@@ -182,7 +182,12 @@ class EmbeddingStore:
                 return
             self._hot_cache[key] = state
             self._hot_cache.move_to_end(key)
+            _logger.info(
+                "CPU cache: added %s (now %d/%d entries)",
+                key, len(self._hot_cache), self._hot_cache_size
+            )
             # Evict LRU entries until within limit
             while len(self._hot_cache) > self._hot_cache_size:
                 evicted_key, _ = self._hot_cache.popitem(last=False)
-                _logger.debug("LRU evicted cache entry %s", evicted_key)
+                _logger.info("CPU cache: LRU evicted %s (now %d/%d entries)",
+                            evicted_key, len(self._hot_cache), self._hot_cache_size)
