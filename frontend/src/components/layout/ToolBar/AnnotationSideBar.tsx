@@ -13,7 +13,7 @@ export default function AnnotationSideBar() {
 
 	return (
 		<div className={styles.sideBarSub}>
-			<CollapsibleGroup title="Visualization" defaultExpanded={true}>
+			<CollapsibleGroup title="Visualization" defaultExpanded={false}>
 				<AnnotationSiderBlock
 					name="Mask Opacity"
 					id="mask-opacity"
