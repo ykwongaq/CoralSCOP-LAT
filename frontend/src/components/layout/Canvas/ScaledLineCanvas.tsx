@@ -1,11 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useAnnotationSession, useProject } from "../../../store";
 import { type ScaledLine } from "../../../types";
-type Viewport = {
-	scale: number;
-	originX: number;
-	originY: number;
-};
+import { useCanvasImageDisplay } from "../../../hooks";
 
 type DraftLine = {
 	startX: number;
@@ -223,24 +219,31 @@ export default function ScaledLineCanvas() {
 		projectState.dataList[annotationSessionState.currentDataIndex] ?? null;
 	const scaledLines = data?.scaledLineList ?? [];
 
-	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const containerRef = useRef<HTMLDivElement>(null);
-	const imageRef = useRef<HTMLImageElement | null>(null);
-	const imageSizeRef = useRef({ width: 0, height: 0 });
-	const viewportRef = useRef<Viewport>({ scale: 1, originX: 0, originY: 0 });
+	const imageUrl = data?.imageData.imageUrl ?? null;
+
+	// -------------------------------------------------------------------
+	// Shared image-display hook — manages image loading, white balance,
+	// viewport, zoom, and rAF scheduling.
+	// -------------------------------------------------------------------
+	const {
+		canvasRef,
+		containerRef,
+		imageSizeRef,
+		viewportRef,
+		requestDraw,
+		drawImageToContext,
+	} = useCanvasImageDisplay(imageUrl);
+
 	const interactionRef = useRef<InteractionState>({ phase: "idle" });
 	const draftLineRef = useRef<DraftLine | null>(null);
 	const linesRef = useRef(scaledLines);
 	linesRef.current = scaledLines;
 	const selectedLineIdRef = useRef(annotationSessionState.selectedScaledLineId);
 	selectedLineIdRef.current = annotationSessionState.selectedScaledLineId;
-	const rafRef = useRef(0);
 
-	const [imageSize, setImageSize] = useState<{
-		width: number;
-		height: number;
-	} | null>(null);
-
+	// -------------------------------------------------------------------
+	// Core draw — reads everything from refs, safe to call from rAF
+	// -------------------------------------------------------------------
 	const draw = useCallback(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
@@ -248,13 +251,13 @@ export default function ScaledLineCanvas() {
 		if (!ctx) return;
 
 		const { scale, originX, originY } = viewportRef.current;
+
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.save();
 		ctx.setTransform(scale, 0, 0, scale, -originX * scale, -originY * scale);
 
-		if (imageRef.current) {
-			ctx.drawImage(imageRef.current, 0, 0);
-		}
+		// Image (all viz adjustments handled by the hook)
+		drawImageToContext(ctx);
 
 		for (const line of linesRef.current) {
 			drawStoredLine(ctx, line, selectedLineIdRef.current === line.id, scale);
@@ -265,13 +268,17 @@ export default function ScaledLineCanvas() {
 		}
 
 		ctx.restore();
-	}, []);
+	}, [canvasRef, viewportRef, drawImageToContext]);
 
-	const requestDraw = useCallback(() => {
-		cancelAnimationFrame(rafRef.current);
-		rafRef.current = requestAnimationFrame(draw);
-	}, [draw]);
+	// Stable wrapper that avoids re-creating the rAF callback on every draw change
+	const scheduleDraw = useCallback(
+		() => requestDraw(draw),
+		[requestDraw, draw],
+	);
 
+	// -------------------------------------------------------------------
+	// Coordinate helpers
+	// -------------------------------------------------------------------
 	const toImageCoords = useCallback((clientX: number, clientY: number) => {
 		const canvas = canvasRef.current;
 		if (!canvas) return null;
@@ -281,12 +288,12 @@ export default function ScaledLineCanvas() {
 			x: (clientX - rect.left) / scale + originX,
 			y: (clientY - rect.top) / scale + originY,
 		};
-	}, []);
+	}, [canvasRef, viewportRef]);
 
 	const isInImageBounds = useCallback((imgX: number, imgY: number) => {
 		const { width, height } = imageSizeRef.current;
 		return imgX >= 0 && imgY >= 0 && imgX <= width && imgY <= height;
-	}, []);
+	}, [imageSizeRef]);
 
 	const clampToImageBounds = useCallback((imgX: number, imgY: number) => {
 		const { width, height } = imageSizeRef.current;
@@ -315,25 +322,11 @@ export default function ScaledLineCanvas() {
 		}
 
 		return nearest?.id ?? null;
-	}, []);
+	}, [viewportRef]);
 
-	const resetViewport = useCallback(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-		const rect = canvas.getBoundingClientRect();
-		canvas.width = rect.width;
-		canvas.height = rect.height;
-
-		const { width: imgW, height: imgH } = imageSizeRef.current;
-		if (imgW === 0 || imgH === 0) return;
-
-		const scale = Math.min(rect.width / imgW, rect.height / imgH);
-		const originX = -(rect.width / scale - imgW) / 2;
-		const originY = -(rect.height / scale - imgH) / 2;
-		viewportRef.current = { scale, originX, originY };
-		requestDraw();
-	}, [requestDraw]);
-
+	// -------------------------------------------------------------------
+	// Mouse handlers
+	// -------------------------------------------------------------------
 	const handleMouseDown = useCallback(
 		(e: React.MouseEvent<HTMLCanvasElement>) => {
 			const img = toImageCoords(e.clientX, e.clientY);
@@ -363,7 +356,7 @@ export default function ScaledLineCanvas() {
 				startImgY: img.y,
 			};
 		},
-		[isInImageBounds, toImageCoords],
+		[isInImageBounds, toImageCoords, canvasRef],
 	);
 
 	const handleMouseMove = useCallback(
@@ -385,7 +378,7 @@ export default function ScaledLineCanvas() {
 						endX: interaction.startImgX,
 						endY: interaction.startImgY,
 					};
-					requestDraw();
+					scheduleDraw();
 				}
 				return;
 			}
@@ -396,7 +389,7 @@ export default function ScaledLineCanvas() {
 				const clamped = clampToImageBounds(img.x, img.y);
 				draftLineRef.current.endX = clamped.x;
 				draftLineRef.current.endY = clamped.y;
-				requestDraw();
+				scheduleDraw();
 				return;
 			}
 
@@ -413,10 +406,10 @@ export default function ScaledLineCanvas() {
 					lastClientX: e.clientX,
 					lastClientY: e.clientY,
 				};
-				requestDraw();
+				scheduleDraw();
 			}
 		},
-		[clampToImageBounds, requestDraw, toImageCoords],
+		[clampToImageBounds, scheduleDraw, toImageCoords, viewportRef],
 	);
 
 	const handleMouseUp = useCallback(
@@ -468,7 +461,7 @@ export default function ScaledLineCanvas() {
 			if (canvasRef.current) {
 				canvasRef.current.style.cursor = "crosshair";
 			}
-			requestDraw();
+			scheduleDraw();
 		},
 		[
 			data,
@@ -476,8 +469,9 @@ export default function ScaledLineCanvas() {
 			annotationSessionDispatch,
 			findLineIdAtPoint,
 			isInImageBounds,
-			requestDraw,
+			scheduleDraw,
 			toImageCoords,
+			canvasRef,
 		],
 	);
 
@@ -487,8 +481,8 @@ export default function ScaledLineCanvas() {
 		if (canvasRef.current) {
 			canvasRef.current.style.cursor = "crosshair";
 		}
-		requestDraw();
-	}, [requestDraw]);
+		scheduleDraw();
+	}, [scheduleDraw, canvasRef]);
 
 	const handleContextMenu = useCallback(
 		(e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -497,55 +491,12 @@ export default function ScaledLineCanvas() {
 		[],
 	);
 
-	const handleWheel = useCallback(
-		(e: WheelEvent) => {
-			e.preventDefault();
-			const canvas = canvasRef.current;
-			if (!canvas) return;
-			const rect = canvas.getBoundingClientRect();
-			const mouseX = e.clientX - rect.left;
-			const mouseY = e.clientY - rect.top;
-			const { scale, originX, originY } = viewportRef.current;
-			const zoom = e.deltaY < 0 ? 1.1 : 0.9;
-			const newScale = Math.max(0.05, Math.min(50, scale * zoom));
-			viewportRef.current = {
-				scale: newScale,
-				originX: mouseX / scale + originX - mouseX / newScale,
-				originY: mouseY / scale + originY - mouseY / newScale,
-			};
-			requestDraw();
-		},
-		[requestDraw],
-	);
+	// ==================================================================
+	// Effects (scale-line-specific; image/viewport/zoom effects live in
+	// the useCanvasImageDisplay hook)
+	// ==================================================================
 
-	const imageUrl = data?.imageData.imageUrl ?? null;
-	useEffect(() => {
-		if (!imageUrl) {
-			imageRef.current = null;
-			setImageSize(null);
-			requestDraw();
-			return;
-		}
-
-		const img = new Image();
-		img.onload = () => {
-			imageRef.current = img;
-			const size = { width: img.naturalWidth, height: img.naturalHeight };
-			imageSizeRef.current = size;
-			setImageSize(size);
-		};
-		img.onerror = () => {};
-		img.src = imageUrl;
-	}, [imageUrl, requestDraw]);
-
-	useEffect(() => {
-		if (!imageSize) {
-			requestDraw();
-			return;
-		}
-		resetViewport();
-	}, [imageSize, requestDraw, resetViewport]);
-
+	// Clear selected line when it no longer exists in the data
 	useEffect(() => {
 		const selectedId = annotationSessionState.selectedScaledLineId;
 		if (
@@ -558,31 +509,25 @@ export default function ScaledLineCanvas() {
 			});
 			return;
 		}
-		requestDraw();
+		scheduleDraw();
 	}, [
 		annotationSessionState.selectedScaledLineId,
 		annotationSessionDispatch,
-		requestDraw,
+		scheduleDraw,
 		scaledLines,
 	]);
 
+	// Set initial cursor and ensure canvas ref is ready for the wheel
+	// listener (managed by the hook)
 	useEffect(() => {
-		window.addEventListener("resize", resetViewport);
-		return () => window.removeEventListener("resize", resetViewport);
-	}, [resetViewport]);
+		if (canvasRef.current) {
+			canvasRef.current.style.cursor = "crosshair";
+		}
+	}, [canvasRef]);
 
-	useEffect(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-		canvas.addEventListener("wheel", handleWheel, { passive: false });
-		canvas.style.cursor = "crosshair";
-		return () => canvas.removeEventListener("wheel", handleWheel);
-	}, [handleWheel]);
-
-	useEffect(() => {
-		return () => cancelAnimationFrame(rafRef.current);
-	}, []);
-
+	// -------------------------------------------------------------------
+	// Render
+	// -------------------------------------------------------------------
 	return (
 		<div
 			ref={containerRef}

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useState } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import {
 	useAnnotationSession,
 	useProject,
@@ -13,19 +13,15 @@ import {
 	updatePendingMaskLayer,
 	hitTestMask,
 	maskIntersectsRect,
-	computeDisplayScale,
-	type DisplayScale,
 } from "../../../utils";
-import { useCanvasInteraction, type CanvasAction } from "../../../hooks";
+import {
+	useCanvasInteraction,
+	useCanvasImageDisplay,
+	type CanvasAction,
+} from "../../../hooks";
 
 import { predictInstance } from "../../../services";
 import styles from "./CanvasCommon.module.css";
-
-type Viewport = {
-	scale: number;
-	originX: number;
-	originY: number;
-};
 
 // ---------------------------------------------------------------------------
 // Component
@@ -41,22 +37,29 @@ export default function AnnotationCanvas() {
 	const data =
 		projectState.dataList[annotationSessionState.currentDataIndex] ?? null;
 
-	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const containerRef = useRef<HTMLDivElement>(null);
+	const imageUrl = data?.imageData.imageUrl ?? null;
 
-	// -----------------------------------------------------------------------
+	// -------------------------------------------------------------------
+	// Shared image-display hook — manages image loading, white balance,
+	// viewport, zoom, and rAF scheduling.
+	// -------------------------------------------------------------------
+	const {
+		canvasRef,
+		containerRef,
+		imageSizeRef,
+		displayScaleRef,
+		viewportRef,
+		vizRef,
+		imageSize,
+		requestDraw,
+		drawImageToContext,
+	} = useCanvasImageDisplay(imageUrl);
+
+	// -------------------------------------------------------------------
 	// Rendering refs — updates don't trigger re-renders
-	// -----------------------------------------------------------------------
-	const imageRef = useRef<HTMLImageElement | null>(null);
-	const imageSizeRef = useRef({ width: 0, height: 0 });
-	const displayScaleRef = useRef<DisplayScale>(computeDisplayScale(0, 0));
-	const viewportRef = useRef<Viewport>({ scale: 1, originX: 0, originY: 0 });
+	// -------------------------------------------------------------------
 	const layersRef = useRef<Layers | null>(null);
 	const pixelMasksRef = useRef<Uint8Array[] | null>(null);
-
-	// Live refs so draw() always reads the latest value without re-subscribing
-	const vizRef = useRef(visualizationSettingState);
-	vizRef.current = visualizationSettingState;
 
 	const modeRef = useRef(mode);
 	modeRef.current = mode;
@@ -79,13 +82,6 @@ export default function AnnotationCanvas() {
 	);
 	selectedAnnotationsRef.current = annotationSessionState.selectedAnnotations;
 
-	const rafRef = useRef(0);
-
-	const [imageSize, setImageSize] = useState<{
-		width: number;
-		height: number;
-	} | null>(null);
-
 	// Track previous build dependencies to detect selection-only changes
 	const prevBuildDepsRef = useRef<{
 		data: typeof data;
@@ -93,9 +89,9 @@ export default function AnnotationCanvas() {
 		hiddingLabels: typeof visualizationSettingState.hiddingLabels;
 	} | null>(null);
 
-	// -----------------------------------------------------------------------
+	// -------------------------------------------------------------------
 	// Core draw — reads everything from refs, safe to call from rAF
-	// -----------------------------------------------------------------------
+	// -------------------------------------------------------------------
 	const draw = useCallback(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
@@ -110,10 +106,8 @@ export default function AnnotationCanvas() {
 		ctx.save();
 		ctx.setTransform(scale, 0, 0, scale, -originX * scale, -originY * scale);
 
-		// Image
-		if (imageRef.current) {
-			ctx.drawImage(imageRef.current, 0, 0);
-		}
+		// Image (all viz adjustments handled by the hook)
+		drawImageToContext(ctx);
 
 		// Annotation layers
 		if (viz.showMasks && layersRef.current) {
@@ -158,16 +152,17 @@ export default function AnnotationCanvas() {
 		}
 
 		ctx.restore();
-	}, []);
+	}, [canvasRef, viewportRef, vizRef, displayScaleRef, drawImageToContext]);
 
-	const requestDraw = useCallback(() => {
-		cancelAnimationFrame(rafRef.current);
-		rafRef.current = requestAnimationFrame(draw);
-	}, [draw]);
+	// Stable wrapper that avoids re-creating the rAF callback on every draw change
+	const scheduleDraw = useCallback(
+		() => requestDraw(draw),
+		[requestDraw, draw],
+	);
 
-	// -----------------------------------------------------------------------
+	// -------------------------------------------------------------------
 	// Canvas action handler — translates CanvasAction into state changes
-	// -----------------------------------------------------------------------
+	// -------------------------------------------------------------------
 	const onCanvasAction = useCallback(
 		(action: CanvasAction) => {
 			const masks = pixelMasksRef.current;
@@ -231,7 +226,7 @@ export default function AnnotationCanvas() {
 						type: "ADD_POINT_PROMPT",
 						payload: newPrompt,
 					});
-					requestDraw();
+					scheduleDraw();
 
 					const sessionId = projectStateRef.current.sessionId;
 					if (sessionId && data) {
@@ -267,12 +262,12 @@ export default function AnnotationCanvas() {
 					return;
 			}
 		},
-		[data, annotationSessionDispatch, requestDraw],
+		[data, annotationSessionDispatch, scheduleDraw],
 	);
 
-	// -----------------------------------------------------------------------
+	// -------------------------------------------------------------------
 	// Canvas interaction hook
-	// -----------------------------------------------------------------------
+	// -------------------------------------------------------------------
 	const {
 		selectionRectRef,
 		handleMouseDown,
@@ -285,68 +280,14 @@ export default function AnnotationCanvas() {
 		canvasRef,
 		viewportRef,
 		imageSizeRef,
-		requestDraw,
+		scheduleDraw,
 		onCanvasAction,
 	);
 
-	// -----------------------------------------------------------------------
-	// Viewport reset — fits image into canvas with letterboxing
-	// -----------------------------------------------------------------------
-	const resetViewport = useCallback(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) {
-			return;
-		}
-
-		const rect = canvas.getBoundingClientRect();
-		canvas.width = rect.width;
-		canvas.height = rect.height;
-
-		const { width: imgW, height: imgH } = imageSizeRef.current;
-		if (imgW === 0 || imgH === 0) {
-			return;
-		}
-
-		const scale = Math.min(rect.width / imgW, rect.height / imgH);
-		const originX = -(rect.width / scale - imgW) / 2;
-		const originY = -(rect.height / scale - imgH) / 2;
-
-		viewportRef.current = { scale, originX, originY };
-		requestDraw();
-	}, [requestDraw]);
-
-	// -----------------------------------------------------------------------
-	// Effects
-	// -----------------------------------------------------------------------
-
-	// Load image when URL changes
-	const imageUrl = data?.imageData.imageUrl ?? null;
-	useEffect(() => {
-		if (!imageUrl) {
-			imageRef.current = null;
-			setImageSize(null);
-			return;
-		}
-		const img = new Image();
-		img.onload = () => {
-			imageRef.current = img;
-			displayScaleRef.current = computeDisplayScale(img.naturalWidth, img.naturalHeight);
-			const size = { width: img.naturalWidth, height: img.naturalHeight };
-			imageSizeRef.current = size;
-			setImageSize(size);
-		};
-		img.onerror = () => {};
-		img.src = imageUrl;
-	}, [imageUrl]);
-
-	// Reset viewport after image loads
-	useEffect(() => {
-		if (!imageSize) {
-			requestDraw();
-			return;
-		}
-		resetViewport();
-	}, [imageSize, resetViewport, requestDraw]);
+	// ==================================================================
+	// Effects (annotation-specific; image/viewport/zoom effects live in
+	// the useCanvasImageDisplay hook)
+	// ==================================================================
 
 	// Rebuild layers when data or image size changes
 	useEffect(() => {
@@ -354,7 +295,7 @@ export default function AnnotationCanvas() {
 			layersRef.current = null;
 			pixelMasksRef.current = null;
 			prevBuildDepsRef.current = null;
-			requestDraw();
+			scheduleDraw();
 			return;
 		}
 
@@ -385,7 +326,7 @@ export default function AnnotationCanvas() {
 				pendingAnnotationRef.current,
 				displayScaleRef.current,
 			);
-			requestDraw();
+			scheduleDraw();
 			return;
 		}
 
@@ -401,7 +342,7 @@ export default function AnnotationCanvas() {
 						pendingAnnotationRef.current,
 						displayScaleRef.current,
 					);
-					requestDraw();
+					scheduleDraw();
 				}
 			})
 			.catch((err) => {
@@ -416,7 +357,7 @@ export default function AnnotationCanvas() {
 		imageSize,
 		annotationSessionState.selectedAnnotations,
 		visualizationSettingState.hiddingLabels,
-		requestDraw,
+		scheduleDraw,
 	]);
 
 	// Repaint pending mask layer when it changes (cheap — single RLE decode, no full rebuild)
@@ -427,72 +368,25 @@ export default function AnnotationCanvas() {
 			annotationSessionState.pendingMask,
 			displayScaleRef.current,
 		);
-		requestDraw();
-	}, [annotationSessionState.pendingMask, requestDraw]);
+		scheduleDraw();
+	}, [annotationSessionState.pendingMask, scheduleDraw]);
 
 	// Redraw when visualization settings, point prompts, or mode changes
 	useEffect(() => {
 		if (canvasRef.current) {
 			canvasRef.current.style.cursor = mode === "add" ? "crosshair" : "default";
 		}
-		requestDraw();
+		scheduleDraw();
 	}, [
 		visualizationSettingState,
 		annotationSessionState.pointPrompts,
 		mode,
-		requestDraw,
+		scheduleDraw,
 	]);
 
-	// Window resize
-	useEffect(() => {
-		window.addEventListener("resize", resetViewport);
-		return () => window.removeEventListener("resize", resetViewport);
-	}, [resetViewport]);
-
-	// Cancel pending rAF on unmount
-	useEffect(() => {
-		return () => cancelAnimationFrame(rafRef.current);
-	}, []);
-
-	// -----------------------------------------------------------------------
-	// Wheel zoom — native listener (needs passive:false for preventDefault)
-	// -----------------------------------------------------------------------
-	const handleWheel = useCallback(
-		(e: WheelEvent) => {
-			e.preventDefault();
-			const canvas = canvasRef.current;
-			if (!canvas) {
-				return;
-			}
-
-			const rect = canvas.getBoundingClientRect();
-			const mouseX = e.clientX - rect.left;
-			const mouseY = e.clientY - rect.top;
-
-			const { scale, originX, originY } = viewportRef.current;
-			const zoom = e.deltaY < 0 ? 1.1 : 0.9;
-			const newScale = Math.max(0.05, Math.min(50, scale * zoom));
-
-			viewportRef.current = {
-				scale: newScale,
-				originX: mouseX / scale + originX - mouseX / newScale,
-				originY: mouseY / scale + originY - mouseY / newScale,
-			};
-			requestDraw();
-		},
-		[requestDraw],
-	);
-
-	useEffect(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-		canvas.addEventListener("wheel", handleWheel, { passive: false });
-		return () => canvas.removeEventListener("wheel", handleWheel);
-	}, [handleWheel]);
-
-	// -----------------------------------------------------------------------
+	// -------------------------------------------------------------------
 	// Render
-	// -----------------------------------------------------------------------
+	// -------------------------------------------------------------------
 	return (
 		<div
 			ref={containerRef}

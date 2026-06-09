@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from "react";
+import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 
 import { useVisualizationSetting } from "../../../store";
 import { type Data, type Annotation } from "../../../types";
@@ -8,12 +8,13 @@ import {
 	buildLayersWithCachedMasks,
 	hitTestMask,
 	maskIntersectsRect,
-	computeDisplayScale,
-	type DisplayScale,
 } from "../../../utils";
-import { useCanvasInteraction, type CanvasAction } from "../../../hooks";
+import {
+	useCanvasInteraction,
+	useCanvasImageDisplay,
+	type CanvasAction,
+} from "../../../hooks";
 import styles from "./CanvasCommon.module.css";
-type Viewport = { scale: number; originX: number; originY: number };
 
 interface Props {
 	data: Data | null;
@@ -34,23 +35,28 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 }, ref) {
 	const { visualizationSettingState } = useVisualizationSetting();
 
-	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const containerRef = useRef<HTMLDivElement>(null);
-	const imageRef = useRef<HTMLImageElement | null>(null);
-	const imageSizeRef = useRef({ width: 0, height: 0 });
-	const displayScaleRef = useRef<DisplayScale>(computeDisplayScale(0, 0));
-	const viewportRef = useRef<Viewport>({ scale: 1, originX: 0, originY: 0 });
+	const imageUrl = data?.imageData.imageUrl ?? null;
+
+	// -------------------------------------------------------------------
+	// Shared image-display hook — manages image loading, white balance,
+	// viewport, zoom, and rAF scheduling.
+	// -------------------------------------------------------------------
+	const {
+		canvasRef,
+		containerRef,
+		imageSizeRef,
+		displayScaleRef,
+		viewportRef,
+		vizRef,
+		imageSize,
+		requestDraw,
+		resetViewport,
+		drawImageToContext,
+		zoomAt,
+	} = useCanvasImageDisplay(imageUrl);
+
 	const layersRef = useRef<Layers | null>(null);
 	const pixelMasksRef = useRef<Uint8Array[] | null>(null);
-
-	const vizRef = useRef(visualizationSettingState);
-	vizRef.current = visualizationSettingState;
-
-	const rafRef = useRef(0);
-	const [imageSize, setImageSize] = useState<{
-		width: number;
-		height: number;
-	} | null>(null);
 
 	// Track previous build dependencies to detect selection-only changes
 	const prevBuildDepsRef = useRef<{
@@ -58,6 +64,9 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 		imageSize: typeof imageSize;
 	} | null>(null);
 
+	// -------------------------------------------------------------------
+	// Core draw — reads everything from refs, safe to call from rAF
+	// -------------------------------------------------------------------
 	const draw = useCallback(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
@@ -71,9 +80,8 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 		ctx.save();
 		ctx.setTransform(scale, 0, 0, scale, -originX * scale, -originY * scale);
 
-		if (imageRef.current) {
-			ctx.drawImage(imageRef.current, 0, 0);
-		}
+		// Image (all viz adjustments handled by the hook)
+		drawImageToContext(ctx);
 
 		if (viz.showMasks && layersRef.current) {
 			const { originalWidth: origW, originalHeight: origH } = displayScaleRef.current;
@@ -98,13 +106,17 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 		}
 
 		ctx.restore();
-	}, []);
+	}, [canvasRef, viewportRef, vizRef, displayScaleRef, drawImageToContext]);
 
-	const requestDraw = useCallback(() => {
-		cancelAnimationFrame(rafRef.current);
-		rafRef.current = requestAnimationFrame(draw);
-	}, [draw]);
+	// Stable wrapper that avoids re-creating the rAF callback on every draw change
+	const scheduleDraw = useCallback(
+		() => requestDraw(draw),
+		[requestDraw, draw],
+	);
 
+	// -------------------------------------------------------------------
+	// Canvas action handler
+	// -------------------------------------------------------------------
 	const onCanvasAction = useCallback(
 		(action: CanvasAction) => {
 			const masks = pixelMasksRef.current;
@@ -133,7 +145,7 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 				}
 				case "rect-select": {
 					if (!masks) return;
-					const selectedIds = annotations
+					const ids = annotations
 						.map((ann) => ann.id)
 						.filter((_, i) =>
 							maskIntersectsRect(
@@ -147,7 +159,7 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 							),
 						);
 					// Only select the last (top-most) annotation in the rect
-					const lastId = selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null;
+					const lastId = ids.length > 0 ? ids[ids.length - 1] : null;
 					onSelectIds(lastId ? [lastId] : []);
 					break;
 				}
@@ -158,6 +170,9 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 		[data, onSelectIds],
 	);
 
+	// -------------------------------------------------------------------
+	// Canvas interaction hook
+	// -------------------------------------------------------------------
 	const {
 		selectionRectRef,
 		handleMouseDown,
@@ -170,65 +185,22 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 		canvasRef,
 		viewportRef,
 		imageSizeRef,
-		requestDraw,
+		scheduleDraw,
 		onCanvasAction,
 	);
 
-	const resetViewport = useCallback(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-		const rect = canvas.getBoundingClientRect();
-		const width = Math.round(rect.width);
-		const height = Math.round(rect.height);
+	// ==================================================================
+	// Effects (annotation-specific; image/viewport/zoom effects live in
+	// the useCanvasImageDisplay hook)
+	// ==================================================================
 
-		if (canvas.width !== width || canvas.height !== height) {
-			canvas.width = width;
-			canvas.height = height;
-		}
-
-		const { width: imgW, height: imgH } = imageSizeRef.current;
-		if (imgW === 0 || imgH === 0) return;
-
-		const scale = Math.min(width / imgW, height / imgH);
-		const originX = -(width / scale - imgW) / 2;
-		const originY = -(height / scale - imgH) / 2;
-		viewportRef.current = { scale, originX, originY };
-		requestDraw();
-	}, [requestDraw]);
-
-	const imageUrl = data?.imageData.imageUrl ?? null;
-	useEffect(() => {
-		if (!imageUrl) {
-			imageRef.current = null;
-			setImageSize(null);
-			return;
-		}
-		const img = new Image();
-		img.onload = () => {
-			imageRef.current = img;
-			displayScaleRef.current = computeDisplayScale(img.naturalWidth, img.naturalHeight);
-			const size = { width: img.naturalWidth, height: img.naturalHeight };
-			imageSizeRef.current = size;
-			setImageSize(size);
-		};
-		img.onerror = () => {};
-		img.src = imageUrl;
-	}, [imageUrl]);
-
-	useEffect(() => {
-		if (!imageSize) {
-			requestDraw();
-			return;
-		}
-		resetViewport();
-	}, [imageSize, resetViewport, requestDraw]);
-
+	// Rebuild layers when data or image size changes
 	useEffect(() => {
 		if (!data || !imageSize) {
 			layersRef.current = null;
 			pixelMasksRef.current = null;
 			prevBuildDepsRef.current = null;
-			requestDraw();
+			scheduleDraw();
 			return;
 		}
 
@@ -252,7 +224,7 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 				displayScaleRef.current,
 			);
 			layersRef.current = layers;
-			requestDraw();
+			scheduleDraw();
 			return;
 		}
 
@@ -263,7 +235,7 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 				if (!cancelled) {
 					layersRef.current = layers;
 					pixelMasksRef.current = pixelMasks;
-					requestDraw();
+					scheduleDraw();
 				}
 			})
 			.catch((err) => console.error("Failed to build layers:", err));
@@ -271,90 +243,35 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(function Statistic
 			cancelled = true;
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [data, imageSize, selectedIds, requestDraw]);
+	}, [data, imageSize, selectedIds, scheduleDraw]);
 
+	// Redraw when any visualization setting changes
 	useEffect(() => {
-		requestDraw();
-	}, [visualizationSettingState, requestDraw]);
+		scheduleDraw();
+	}, [visualizationSettingState, scheduleDraw]);
 
-	useEffect(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-
-		const resizeObserver = new ResizeObserver(() => {
-			resetViewport();
-		});
-
-		resizeObserver.observe(canvas);
-		return () => resizeObserver.disconnect();
-	}, [resetViewport]);
-
+	// -------------------------------------------------------------------
+	// Imperative handle (zoom controls for the parent toolbar)
+	// -------------------------------------------------------------------
 	useImperativeHandle(ref, () => ({
 		resetViewport,
 		zoomIn: () => {
 			const canvas = canvasRef.current;
 			if (!canvas) return;
 			const rect = canvas.getBoundingClientRect();
-			const mouseX = rect.width / 2;
-			const mouseY = rect.height / 2;
-			const { scale, originX, originY } = viewportRef.current;
-			const newScale = Math.min(50, scale * 1.2);
-			viewportRef.current = {
-				scale: newScale,
-				originX: mouseX / scale + originX - mouseX / newScale,
-				originY: mouseY / scale + originY - mouseY / newScale,
-			};
-			requestDraw();
+			zoomAt(1.2, rect.width / 2, rect.height / 2);
 		},
 		zoomOut: () => {
 			const canvas = canvasRef.current;
 			if (!canvas) return;
 			const rect = canvas.getBoundingClientRect();
-			const mouseX = rect.width / 2;
-			const mouseY = rect.height / 2;
-			const { scale, originX, originY } = viewportRef.current;
-			const newScale = Math.max(0.05, scale / 1.2);
-			viewportRef.current = {
-				scale: newScale,
-				originX: mouseX / scale + originX - mouseX / newScale,
-				originY: mouseY / scale + originY - mouseY / newScale,
-			};
-			requestDraw();
+			zoomAt(1 / 1.2, rect.width / 2, rect.height / 2);
 		},
-	}), [resetViewport, requestDraw]);
+	}), [resetViewport, zoomAt, canvasRef]);
 
-	useEffect(() => {
-		return () => cancelAnimationFrame(rafRef.current);
-	}, []);
-
-	const handleWheel = useCallback(
-		(e: WheelEvent) => {
-			e.preventDefault();
-			const canvas = canvasRef.current;
-			if (!canvas) return;
-			const rect = canvas.getBoundingClientRect();
-			const mouseX = e.clientX - rect.left;
-			const mouseY = e.clientY - rect.top;
-			const { scale, originX, originY } = viewportRef.current;
-			const zoom = e.deltaY < 0 ? 1.1 : 0.9;
-			const newScale = Math.max(0.05, Math.min(50, scale * zoom));
-			viewportRef.current = {
-				scale: newScale,
-				originX: mouseX / scale + originX - mouseX / newScale,
-				originY: mouseY / scale + originY - mouseY / newScale,
-			};
-			requestDraw();
-		},
-		[requestDraw],
-	);
-
-	useEffect(() => {
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-		canvas.addEventListener("wheel", handleWheel, { passive: false });
-		return () => canvas.removeEventListener("wheel", handleWheel);
-	}, [handleWheel]);
-
+	// -------------------------------------------------------------------
+	// Render
+	// -------------------------------------------------------------------
 	return (
 		<div
 			ref={containerRef}

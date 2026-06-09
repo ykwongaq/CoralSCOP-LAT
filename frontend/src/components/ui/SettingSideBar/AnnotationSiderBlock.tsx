@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import styles from "./AnnotationSiderBlock.module.css";
 
 interface AnnotationSiderBlockProps {
@@ -20,18 +20,28 @@ export default function AnnotationSiderBlock({
 	step,
 	onChange,
 }: AnnotationSiderBlockProps) {
-	const initialValue = Number(defaultValue) || minValue;
+	const initialValue = Number(defaultValue) ?? minValue;
 	const [value, setValue] = useState<number>(initialValue);
 	const [inputText, setInputText] = useState<string>(`${initialValue}%`);
 	const [isValid, setIsValid] = useState<boolean>(true);
 
 	// Sync with external defaultValue changes
 	useEffect(() => {
-		const newValue = Number(defaultValue) || minValue;
+		const newValue = Number(defaultValue) ?? minValue;
 		setValue(newValue);
 		setInputText(`${newValue}%`);
 		setIsValid(true);
 	}, [defaultValue, minValue]);
+
+	// Progress fill percentage for the slider track
+	const fillPercent = useMemo(() => {
+		const pct = ((value - minValue) / (maxValue - minValue)) * 100;
+		return Math.min(100, Math.max(0, pct));
+	}, [value, minValue, maxValue]);
+
+	const sliderTrackStyle = {
+		background: `linear-gradient(to right, #5b8def 0%, #5b8def ${fillPercent}%, #e8eaed ${fillPercent}%, #e8eaed 100%)`,
+	};
 
 	const validateAndSetValue = (newValue: number) => {
 		if (isNaN(newValue)) {
@@ -106,6 +116,7 @@ export default function AnnotationSiderBlock({
 							step={step}
 							type="range"
 							data-suffix="%"
+							style={sliderTrackStyle}
 							onChange={handleSliderChange}
 						/>
 					</div>

@@ -384,6 +384,116 @@ export function updatePendingMaskLayer(
 }
 
 // ---------------------------------------------------------------------------
+// Image display adjustments (brightness, contrast, saturation, white balance)
+// ---------------------------------------------------------------------------
+
+/**
+ * Normalize a setting value that may be in 0–100 range (initial reducer
+ * values) or 0–1 range (after slider interaction).
+ */
+function normalizeDisplayValue(value: number): number {
+	return value > 1 ? value / 100 : value;
+}
+
+/**
+ * Build a CSS filter string for brightness, contrast, and saturation.
+ * Returns an empty string when all values are at their neutral position so
+ * callers can skip the filter overhead.
+ */
+export function getImageDisplayFilter(viz: VisualizationSetting): string {
+	const filters: string[] = [];
+
+	const brightness = normalizeDisplayValue(viz.brightness);
+	if (brightness !== 1) {
+		filters.push(`brightness(${brightness})`);
+	}
+
+	const contrast = normalizeDisplayValue(viz.contrast);
+	if (contrast !== 1) {
+		filters.push(`contrast(${contrast})`);
+	}
+
+	const saturation = normalizeDisplayValue(viz.saturation);
+	if (saturation !== 1) {
+		filters.push(`saturate(${saturation})`);
+	}
+
+	return filters.join(" ");
+}
+
+/**
+ * Returns true when either temperature or tint has been moved from its
+ * neutral position, signalling that the (more expensive) white-balance
+ * path is needed.
+ */
+export function hasWhiteBalanceAdjustment(viz: VisualizationSetting): boolean {
+	return viz.temperature !== 0 || viz.tint !== 0;
+}
+
+/**
+ * Create a new off-screen canvas with white-balance (temperature / tint)
+ * applied to the source image.
+ *
+ * Temperature shifts the blue–amber axis: higher values warm the image
+ * (more red / less blue).  Tint shifts the green–magenta axis: higher
+ * values push toward magenta (more red+blue / less green).
+ *
+ * When both values are 0 the source is drawn unchanged and returned
+ * immediately — callers should guard with {@link hasWhiteBalanceAdjustment}
+ * to avoid unnecessary copies.
+ */
+export function createWhiteBalancedImage(
+	source: CanvasImageSource,
+	width: number,
+	height: number,
+	temperature: number,
+	tint: number,
+): HTMLCanvasElement {
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	const ctx = canvas.getContext("2d")!;
+
+	ctx.drawImage(source, 0, 0);
+
+	if (temperature === 0 && tint === 0) {
+		return canvas;
+	}
+
+	const imageData = ctx.getImageData(0, 0, width, height);
+	const data = imageData.data;
+
+	for (let i = 0; i < data.length; i += 4) {
+		let r = data[i];
+		let g = data[i + 1];
+		let b = data[i + 2];
+
+		// Temperature — warm shift (amber)
+		if (temperature !== 0) {
+			const t = temperature * 0.7;
+			r = Math.min(255, Math.max(0, r + 255 * t * 0.4));
+			g = Math.min(255, Math.max(0, g + 255 * t * 0.1));
+			b = Math.min(255, Math.max(0, b - 255 * t * 0.4));
+		}
+
+		// Tint — magenta shift
+		if (tint !== 0) {
+			const tn = tint * 0.7;
+			r = Math.min(255, Math.max(0, r + 255 * tn * 0.4));
+			g = Math.min(255, Math.max(0, g - 255 * tn * 0.4));
+			b = Math.min(255, Math.max(0, b + 255 * tn * 0.4));
+		}
+
+		data[i] = r;
+		data[i + 1] = g;
+		data[i + 2] = b;
+	}
+
+	ctx.putImageData(imageData, 0, 0);
+	return canvas;
+}
+
+// ---------------------------------------------------------------------------
 // Hit-test helpers
 // ---------------------------------------------------------------------------
 

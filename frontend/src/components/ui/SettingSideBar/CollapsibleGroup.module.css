@@ -1,0 +1,72 @@
+.group {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.group.fill {
+	flex: 1;
+}
+
+.group + .group {
+	border-top: 1px solid #f7f8f9;
+}
+
+.groupHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	padding: 14px 22px 14px 12px;
+	cursor: pointer;
+	background: transparent;
+	border: none;
+	font-family: Unbounded;
+	color: var(--text-text-page-heading);
+	transition: background-color 0.15s ease;
+	flex-shrink: 0;
+}
+
+.groupHeader:hover {
+	background-color: #fafafa;
+}
+
+.groupTitle {
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.groupChevron {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--icon-icon-secondary2);
+	transition: transform 0.25s ease;
+	flex-shrink: 0;
+}
+
+.groupChevron.expanded {
+	transform: rotate(180deg);
+}
+
+.groupContent {
+	overflow: hidden;
+	max-height: 0;
+	opacity: 0;
+	transition:
+		max-height 0.3s ease,
+		opacity 0.25s ease;
+}
+
+.groupContent.expanded {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	max-height: 2000px;
+	opacity: 1;
+	padding-left: 20px;
+}
+
+.group.fill .groupContent.expanded {
+	flex: 1;
+}

@@ -1,44 +1,136 @@
+/* ---- Title ---- */
 .sideBarTitle {
-  color: var(--text-text-page-heading);
-  font-size: 24px;
-  font-weight: 600;
-  padding-inline: var(--side-padding);
+	color: var(--text-text-page-heading);
+	font-size: 13px;
+	font-weight: 500;
+	margin: 0 0 6px 0;
+	line-height: 1.3;
 }
 
+/* ---- Block wrapper ---- */
 .sideBarBlock {
-  padding-block: 20px;
+	margin-bottom: 18px;
 }
 
-.sideBarBlock:has(+ .sideBarBlock) {
-  border-bottom: 1px solid #f7f8f9;
+.sideBarBlock:last-child {
+	margin-bottom: 4px;
 }
 
-.sideBarBlock .sliderBlock {
-  margin-inline: var(--side-padding);
-}
-
+/* ---- Slider row: track + input ---- */
 .sliderBlock {
-  display: flex;
-  align-items: center;
-  gap: 17px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
 }
 
+/* ---- Slider track container ---- */
 .sliderBlockInner {
-  flex: 1;
-  display: flex;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	min-width: 0;
 }
+
+/* ================================
+   Range input (slider track)
+   ================================ */
+
+.sliderBlockInner input[type="range"] {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	height: 4px;
+	border-radius: 2px;
+	outline: none;
+	cursor: pointer;
+	/* background is set via inline style for progress fill */
+	background: #e8eaed;
+}
+
+.sliderBlockInner input[type="range"]:focus-visible {
+	outline: 2px solid rgba(91, 141, 239, 0.3);
+	outline-offset: 4px;
+}
+
+/* Webkit thumb */
+.sliderBlockInner input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #ffffff;
+	border: 2px solid #5b8def;
+	cursor: pointer;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+	transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.sliderBlockInner input[type="range"]::-webkit-slider-thumb:hover {
+	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.22);
+	transform: scale(1.1);
+}
+
+.sliderBlockInner input[type="range"]::-webkit-slider-thumb:active {
+	transform: scale(1.05);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+/* Firefox thumb */
+.sliderBlockInner input[type="range"]::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #ffffff;
+	border: 2px solid #5b8def;
+	cursor: pointer;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Firefox track */
+.sliderBlockInner input[type="range"]::-moz-range-track {
+	height: 4px;
+	border-radius: 2px;
+	background: #e8eaed;
+	border: none;
+}
+
+/* ================================
+   Text / number input
+   ================================ */
 
 .sliderBlock input[type="text"] {
-  flex-shrink: 0;
-  width: 72px;
-  height: 37px;
-  text-align: center;
-  font-family: Roboto;
-  border: 1px solid var(--line-line-primary1);
-  padding: 0;
-  background-color: var(--surface-surface-primary3);
+	flex-shrink: 0;
+	width: 52px;
+	height: 28px;
+	text-align: center;
+	font-size: 12px;
+	font-family: Roboto, sans-serif;
+	font-weight: 500;
+	color: #374151;
+	border: 1px solid var(--line-line-primary1);
+	border-radius: 6px;
+	padding: 0 4px;
+	background-color: #ffffff;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.sliderBlock input[type="text"]:hover {
+	border-color: #c4c7cc;
+}
+
+.sliderBlock input[type="text"]:focus {
+	outline: none;
+	border-color: #5b8def;
+	box-shadow: 0 0 0 2px rgba(91, 141, 239, 0.15);
+}
+
+/* ---- Error state ---- */
 .inputError {
-  border-color: red;
+	border-color: #ef4444 !important;
+}
+
+.inputError:focus {
+	border-color: #ef4444 !important;
+	box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
 }

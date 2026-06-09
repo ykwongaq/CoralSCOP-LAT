@@ -13,3 +13,7 @@ export {
 	type UseImageUploaderResult,
 } from "./useImageUploader";
 export { useToggleInput } from "./useToggleInputOptions";
+export {
+	useCanvasImageDisplay,
+	type Viewport,
+} from "./useCanvasImageDisplay";

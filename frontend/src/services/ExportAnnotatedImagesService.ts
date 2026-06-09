@@ -1,5 +1,10 @@
 import JSZip from "jszip";
-import { buildLayers } from "../utils/canvasLayers";
+import {
+	buildLayers,
+	getImageDisplayFilter,
+	hasWhiteBalanceAdjustment,
+	createWhiteBalancedImage,
+} from "../utils/canvasLayers";
 import triggerDownload from "../utils/download";
 
 import type { ProjectState, Data, VisualizationSetting } from "../types";
@@ -43,9 +48,30 @@ async function renderAnnotatedImage(
 	canvas.height = height;
 	const ctx = canvas.getContext("2d")!;
 
-	// Draw the original image as the base layer.
+	// Load the original image
 	const img = await loadImage(imageUrl);
-	ctx.drawImage(img, 0, 0);
+
+	// Apply CSS filter (brightness, contrast, saturation) — mirrors
+	// useCanvasImageDisplay.drawImageToContext
+	const filter = getImageDisplayFilter(vizSetting);
+	if (filter) {
+		ctx.filter = filter;
+	}
+
+	// Apply white balance (temperature, tint) if the user has adjusted it
+	if (hasWhiteBalanceAdjustment(vizSetting)) {
+		const wbCanvas = createWhiteBalancedImage(
+			img,
+			width,
+			height,
+			vizSetting.temperature,
+			vizSetting.tint,
+		);
+		ctx.drawImage(wbCanvas, 0, 0);
+	} else {
+		ctx.drawImage(img, 0, 0);
+	}
+	ctx.filter = "none";
 
 	if (data.annotations.length > 0) {
 		// buildLayers decodes all RLE masks in parallel via Web Workers.

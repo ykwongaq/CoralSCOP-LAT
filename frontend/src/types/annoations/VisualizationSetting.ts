@@ -15,4 +15,7 @@ export interface VisualizationSetting {
 	contrast: number;
 
 	saturation: number;
+
+	temperature: number;
+	tint: number;
 }
