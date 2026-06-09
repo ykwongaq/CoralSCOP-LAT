@@ -4,8 +4,8 @@ from typing import Dict, List, Set, Tuple
 import numpy as np
 import torch
 
-from ..utils.logger import get_logger
 from ..utils.gpu_monitor import track_gpu_memory
+from ..utils.logger import get_logger
 from ..utils.masks import encode_masks
 from .modelQueue import ModelQueue
 from .segment_anything import SamAutomaticMaskGenerator, sam_model_registry
@@ -51,48 +51,49 @@ class CoralSCOPModel:
         min_confidence: float = 0.5,
         max_iou: float = 0.1,
     ) -> Dict:
-        with self._queue as mask_generator:
-            masks = mask_generator.generate(image)
+        with torch.inference_mode():
+            with self._queue as mask_generator:
+                masks = mask_generator.generate(image)
 
-        _logger.info(
-            f"Generated {len(masks)} masks, returning top {self.max_masks_num} masks"
-        )
+            _logger.info(
+                f"Generated {len(masks)} masks, returning top {self.max_masks_num} masks"
+            )
 
-        # Filter out the masks that the predicted_iou is null
-        masks = [mask for mask in masks if mask["predicted_iou"] is not None]
+            # Filter out the masks that the predicted_iou is null
+            masks = [mask for mask in masks if mask["predicted_iou"] is not None]
 
-        # Sort the masks by the predicted_iou in descending order
-        masks.sort(key=lambda x: x["predicted_iou"], reverse=True)
+            # Sort the masks by the predicted_iou in descending order
+            masks.sort(key=lambda x: x["predicted_iou"], reverse=True)
 
-        """
-        masks is a list of dictionary.
+            """
+            masks is a list of dictionary.
 
-        each dictionary has the following keys
-        - "segmentation": the binary mask of the object (numpy array)
-        - "predicted_iou": the predicted intersection over union (float)
-        - "stability_score": the stability score of the mask (float)
-        - "area": the area of the mask (int)
-        - "bbox": the bounding box of the mask (list of int)
-        """
+            each dictionary has the following keys
+            - "segmentation": the binary mask of the object (numpy array)
+            - "predicted_iou": the predicted intersection over union (float)
+            - "stability_score": the stability score of the mask (float)
+            - "area": the area of the mask (int)
+            - "bbox": the bounding box of the mask (list of int)
+            """
 
-        masks = self.filter(masks, min_area, min_confidence, max_iou)
+            masks = self.filter(masks, min_area, min_confidence, max_iou)
 
-        annotations = {"annotations": []}
+            annotations = {"annotations": []}
 
-        for idx, mask in enumerate(masks[: self.max_masks_num]):
-            annotation = {
-                "id": idx,
-                "segmentation": encode_masks(mask["segmentation"]),
-                "predicted_iou": mask["predicted_iou"],
-                "stability_score": mask["stability_score"],
-                "area": mask["area"],
-                "image_id": 0,
-                "bbox": mask["bbox"],
-                "category_id": 0,
-            }
-            annotations["annotations"].append(annotation)
+            for idx, mask in enumerate(masks[: self.max_masks_num]):
+                annotation = {
+                    "id": idx,
+                    "segmentation": encode_masks(mask["segmentation"]),
+                    "predicted_iou": mask["predicted_iou"],
+                    "stability_score": mask["stability_score"],
+                    "area": mask["area"],
+                    "image_id": 0,
+                    "bbox": mask["bbox"],
+                    "category_id": 0,
+                }
+                annotations["annotations"].append(annotation)
 
-        return annotations
+            return annotations
 
     def filter(
         self, masks: List[Dict], min_area: float, min_confidence: float, max_iou: float
