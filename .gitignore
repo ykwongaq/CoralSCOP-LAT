@@ -171,3 +171,5 @@ web/css/fontawesome-free-6.6.0-web/
 web/assets/
 
 embeddings/
+
+.vscode/
