@@ -28,6 +28,7 @@ import {
 	exportAllImages,
 	exportAllAnnotatedImages,
 	exportAllCocoAnnotations,
+	exportProjectStatisticsSpreadsheet,
 	runModel,
 } from "../services";
 
@@ -217,9 +218,36 @@ function ProjectQuickStartPageContent() {
 		projectDispatch,
 	]);
 
-	function handleStatisticsExport() {
-		throw new Error("Function not implemented.");
-	}
+	const handleStatisticsExport = useCallback(async () => {
+		closeMessage();
+		showLoading({
+			title: "Exporting CSV",
+			content: "Please wait while we prepare your statistics file...",
+			progress: null,
+			buttons: [
+				{
+					label: "Cancel",
+					onClick: closeMessage,
+				},
+			],
+		});
+		try {
+			await exportProjectStatisticsSpreadsheet(projectState, "csv");
+			closeMessage();
+		} catch (error) {
+			showError({
+				title: "Export Failed",
+				content: "Failed to export statistics. Please try again.",
+				errorMessage: error instanceof Error ? error.message : String(error),
+				buttons: [
+					{
+						label: "Close",
+						onClick: closeMessage,
+					},
+				],
+			});
+		}
+	}, [closeMessage, showError, showLoading, projectState]);
 
 	const handleSaveProject = useCallback(() => {
 		showProjectNameInput({
