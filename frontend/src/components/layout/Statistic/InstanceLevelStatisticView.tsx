@@ -55,7 +55,13 @@ export default function InstanceLevelStatisticView({
 			h: number,
 			threshold: number,
 		) => {
-			return computeBleachingPercentages(imageUrl, annotations, w, h, threshold);
+			return computeBleachingPercentages(
+				imageUrl,
+				annotations,
+				w,
+				h,
+				threshold,
+			);
 		},
 		[],
 	);
@@ -103,11 +109,15 @@ export default function InstanceLevelStatisticView({
 		});
 
 		const { imageUrl, width, height } = data.imageData;
-		computeBleaching(imageUrl, [selectedAnnotation], width, height, distanceThreshold).then(
-			(pcts) => {
-				setStats((prev) => (prev ? { ...prev, bleachingPct: pcts[0] } : null));
-			},
-		);
+		computeBleaching(
+			imageUrl,
+			[selectedAnnotation],
+			width,
+			height,
+			distanceThreshold,
+		).then((pcts) => {
+			setStats((prev) => (prev ? { ...prev, bleachingPct: pcts[0] } : null));
+		});
 
 		if (data.coralWatch && data.coralWatch.classPoints.length > 0) {
 			classifyPixelsByColor(
@@ -141,12 +151,17 @@ export default function InstanceLevelStatisticView({
 					{
 						label: "Unbleached",
 						pixels: totalPixels - bleachedPixels,
-						pct: totalPixels > 0 ? ((totalPixels - bleachedPixels) / totalPixels) * 100 : 0,
+						pct:
+							totalPixels > 0
+								? ((totalPixels - bleachedPixels) / totalPixels) * 100
+								: 0,
 						color: { r: 139, g: 79, b: 19 },
 					},
 				];
 				setStats((prev) =>
-					prev ? { ...prev, colorClassification: bleachedClassification } : null,
+					prev
+						? { ...prev, colorClassification: bleachedClassification }
+						: null,
 				);
 			});
 		}

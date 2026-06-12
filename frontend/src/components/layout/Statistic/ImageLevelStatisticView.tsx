@@ -39,9 +39,7 @@ export default function ImageLevelStatisticView({ data, labels }: Props) {
 			<div className={styles.statHeaderRow}>
 				<h3 className={styles.statSectionTitle}>Image Statistics</h3>
 				<div className={styles.statSettingsButtonWrapper}>
-					<SettingsButton
-						onClick={() => setShowDropdown(!showDropdown)}
-					/>
+					<SettingsButton onClick={() => setShowDropdown(!showDropdown)} />
 					{showDropdown && (
 						<DropdownMenu onClose={() => setShowDropdown(false)}>
 							<div className={styles.statMenuPanel}>
@@ -49,19 +47,7 @@ export default function ImageLevelStatisticView({ data, labels }: Props) {
 									className={styles.statMenuBtn}
 									onClick={() => setShowDropdown(false)}
 								>
-									Export Coverage Report
-								</button>
-								<button
-									className={styles.statMenuBtn}
-									onClick={() => setShowDropdown(false)}
-								>
-									Export Per-Label Details
-								</button>
-								<button
-									className={styles.statMenuBtn}
-									onClick={() => setShowDropdown(false)}
-								>
-									Refresh Statistics
+									Exclude Labels
 								</button>
 							</div>
 						</DropdownMenu>
@@ -90,10 +76,7 @@ export default function ImageLevelStatisticView({ data, labels }: Props) {
 				<div className={styles.statChartsRow}>
 					<div className={styles.statChartDonut}>
 						<p className={styles.statChartLabel}>Coverage Breakdown</p>
-						<DonutChart
-							segments={donutSegments}
-							totalPct={coverage.totalPct}
-						/>
+						<DonutChart segments={donutSegments} totalPct={coverage.totalPct} />
 					</div>
 
 					<div className={styles.statChartList}>
