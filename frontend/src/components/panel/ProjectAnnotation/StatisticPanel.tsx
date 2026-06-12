@@ -57,13 +57,24 @@ export function StatisticPanel() {
 
 				<div className={styles.statRight}>
 					<div className={styles.statRightTop}>
-						<ImageLevelStatisticView data={data} labels={projectState.labels} />
+						<ImageLevelStatisticView
+							data={data}
+							labels={projectState.labels}
+							excludedLabelIds={projectState.excludedLabelIds}
+							onExcludedLabelsChange={(labelIds) =>
+								projectDispatch({
+									type: "SET_EXCLUDED_LABELS",
+									payload: { labelIds },
+								})
+							}
+						/>
 					</div>
 					<div className={styles.statRightBottom}>
 						<InstanceLevelStatisticView
 							data={data}
 							labels={projectState.labels}
 							selectedIds={selectedIds}
+							excludedLabelIds={projectState.excludedLabelIds}
 						/>
 					</div>
 				</div>

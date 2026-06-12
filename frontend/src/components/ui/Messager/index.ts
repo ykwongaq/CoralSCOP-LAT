@@ -7,4 +7,5 @@ export { default as LoadingMessager, type LoadingMessagerProps } from "./Loading
 export { default as TextInputMessager, type TextInputMessagerProps } from "./TextInputMessager";
 export { default as ProjectNameMessager, type ProjectNameMessagerProps } from "./ProjectNameMessager";
 export { default as ImportLabelMessager, type ImportLabelMessagerProps } from "./ImportLabelMessager";
+export { default as ExcludeLabelsMessager, type ExcludeLabelsMessagerProps } from "./ExcludeLabelsMessager";
 export { PopMessageProvider, usePopMessage } from "./PopMessageContext";

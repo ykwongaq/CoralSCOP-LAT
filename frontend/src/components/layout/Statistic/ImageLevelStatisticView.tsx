@@ -1,7 +1,7 @@
-import { useState } from "react";
 import DonutChart from "../../ui/Charts/DonutChart";
 import LabelCoverageList from "../../ui/Charts/LabelCoverageList";
-import { SettingsButton, DropdownMenu } from "../../ui/Setting";
+import { SettingsButton } from "../../ui/Setting";
+import { usePopMessage } from "../../ui/Messager";
 
 import styles from "./ImageLevelStatisticView.module.css";
 
@@ -16,13 +16,36 @@ import { SummaryCard } from "../../ui/Statistic";
 interface Props {
 	data: Data | null;
 	labels: Label[];
+	excludedLabelIds: number[];
+	onExcludedLabelsChange: (labelIds: number[]) => void;
 }
 
-export default function ImageLevelStatisticView({ data, labels }: Props) {
-	const coverage = calculateCoverageData(data, labels);
+export default function ImageLevelStatisticView({
+	data,
+	labels,
+	excludedLabelIds,
+	onExcludedLabelsChange,
+}: Props) {
+	const { showExcludeLabels, closeMessage } = usePopMessage();
+
+	const coverage = calculateCoverageData(data, labels, excludedLabelIds);
 	const stats = getImageStatistics(data, coverage);
-	const perLabelStats = getPerLabelStats(data, labels);
-	const [showDropdown, setShowDropdown] = useState(false);
+	const perLabelStats = getPerLabelStats(data, labels, excludedLabelIds);
+
+	const handleOpenExcludeLabels = () => {
+		showExcludeLabels({
+			title: "Exclude Labels",
+			content:
+				"Check labels to exclude them from image-level statistics. Their pixels will be subtracted from the total image area.",
+			labels,
+			excludedLabelIds,
+			onConfirm: (newExcludedLabelIds) => {
+				onExcludedLabelsChange(newExcludedLabelIds);
+				closeMessage();
+			},
+			onCancel: closeMessage,
+		});
+	};
 
 	// Build donut segments: active labels + "Uncovered" remainder
 	const donutSegments = coverage.byLabel
@@ -34,28 +57,25 @@ export default function ImageLevelStatisticView({ data, labels }: Props) {
 		color: "#9ca3af",
 	});
 
+	const excludedCount = excludedLabelIds.length;
+
 	return (
 		<div className={styles.statSection}>
 			<div className={styles.statHeaderRow}>
 				<h3 className={styles.statSectionTitle}>Image Statistics</h3>
 				<div className={styles.statSettingsButtonWrapper}>
-					<SettingsButton onClick={() => setShowDropdown(!showDropdown)} />
-					{showDropdown && (
-						<DropdownMenu onClose={() => setShowDropdown(false)}>
-							<div className={styles.statMenuPanel}>
-								<button
-									className={styles.statMenuBtn}
-									onClick={() => setShowDropdown(false)}
-								>
-									Exclude Labels
-								</button>
-							</div>
-						</DropdownMenu>
-					)}
+					<SettingsButton
+						onClick={handleOpenExcludeLabels}
+						title={
+							excludedCount > 0
+								? `${excludedCount} label${excludedCount === 1 ? "" : "s"} excluded`
+								: "Exclude labels from statistics"
+						}
+					/>
 				</div>
 			</div>
 
-			{/* Summary cards — unchanged */}
+			{/* Summary cards */}
 			<div className={styles.statSummaryRow}>
 				<SummaryCard
 					statistic={`${stats.totalCoveragePct.toFixed(1)}%`}

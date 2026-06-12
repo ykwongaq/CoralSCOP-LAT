@@ -7,6 +7,13 @@ export interface ProjectState {
   projectName: string;
 
   /**
+   * Label IDs that should be excluded from coverage / area statistics.
+   * The pixels belonging to these labels are subtracted from the total
+   * image area when computing percentages.
+   */
+  excludedLabelIds: number[];
+
+  /**
    * Project UUID stored in project_info.json.  For new-format .coral files
    * (no embedded embeddings) this is also the SAM session_id — embeddings
    * are stored persistently on the server under this key.

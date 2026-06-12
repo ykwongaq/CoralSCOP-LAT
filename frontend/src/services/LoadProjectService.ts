@@ -60,6 +60,7 @@ export async function loadProject(
 		const n = imageEntries.length;
 		const labelsMap = new Map<number, Label>();
 		const dataList: Data[] = [];
+		let excludedLabelIds: number[] = [];
 
 		// Phase 1 (10–70 %): parse images and annotations
 		for (let i = 0; i < n; i++) {
@@ -83,6 +84,14 @@ export async function loadProject(
 				) as AnnotationFile;
 				scaledLineList = annoFile.scaledLineList ?? [];
 				coralWatch = annoFile.coralWatch ?? null;
+
+				if (
+					excludedLabelIds.length === 0 &&
+					annoFile.excluded_label_ids &&
+					annoFile.excluded_label_ids.length > 0
+				) {
+					excludedLabelIds = annoFile.excluded_label_ids;
+				}
 
 				for (const cat of annoFile.categories) {
 					if (!labelsMap.has(cat.id)) {
@@ -144,6 +153,7 @@ export async function loadProject(
 			projectId,
 			sessionId,
 			sourceFile: fileBuffer,
+			excludedLabelIds,
 		});
 	} catch (err) {
 		callbacks.onError?.({

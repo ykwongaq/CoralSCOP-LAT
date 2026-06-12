@@ -9,7 +9,11 @@ import type {
 	AnnotationFile,
 } from "../types";
 
-function buildAnnotationFile(data: Data, labels: Label[]): AnnotationFile {
+function buildAnnotationFile(
+	data: Data,
+	labels: Label[],
+	excludedLabelIds: number[],
+): AnnotationFile {
 	return {
 		image: {
 			image_filename: data.imageData.imageName,
@@ -33,6 +37,8 @@ function buildAnnotationFile(data: Data, labels: Label[]): AnnotationFile {
 			...line,
 		})),
 		coralWatch: data.coralWatch ?? undefined,
+		excluded_label_ids:
+			excludedLabelIds.length > 0 ? excludedLabelIds : undefined,
 	};
 }
 
@@ -65,7 +71,11 @@ export async function saveProject(state: ProjectState): Promise<void> {
 		const stem = data.imageData.imageName.replace(/\.[^.]+$/, "");
 		zip.file(
 			`annotations/${stem}.json`,
-			JSON.stringify(buildAnnotationFile(data, state.labels), null, 4),
+			JSON.stringify(
+				buildAnnotationFile(data, state.labels, state.excludedLabelIds),
+				null,
+				4,
+			),
 		);
 	}
 

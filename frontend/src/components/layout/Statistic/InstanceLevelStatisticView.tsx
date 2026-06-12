@@ -4,6 +4,7 @@ import {
 	computeBleachingPercentages,
 	computeBleachedPixelMap,
 	classifyPixelsByColor,
+	calculateEffectiveTotalPixels,
 	type ColorClassificationResult,
 } from "../../../services";
 import CroppedCanvas from "../../ui/Statistic/CroppedCanvas";
@@ -17,6 +18,7 @@ interface Props {
 	data: Data | null;
 	labels: Label[];
 	selectedIds: number[];
+	excludedLabelIds: number[];
 }
 
 interface InstanceStats {
@@ -31,6 +33,7 @@ export default function InstanceLevelStatisticView({
 	data,
 	labels,
 	selectedIds,
+	excludedLabelIds,
 }: Props) {
 	const [stats, setStats] = useState<InstanceStats | null>(null);
 	const [distanceThreshold, setDistanceThreshold] = useState(100);
@@ -67,11 +70,7 @@ export default function InstanceLevelStatisticView({
 	);
 
 	const calculateAreaPercentage = useCallback(
-		(
-			annotation: Annotation,
-			imageWidth: number,
-			imageHeight: number,
-		): number => {
+		(annotation: Annotation, effectiveTotalPixels: number): number => {
 			const rle = annotation.segmentation as RLE;
 			if (!rle || !rle.counts || !rle.size) return 0;
 
@@ -80,24 +79,32 @@ export default function InstanceLevelStatisticView({
 				pixelCount += rle.counts[i];
 			}
 
-			const totalPixels = imageWidth * imageHeight;
-			return totalPixels > 0 ? (pixelCount / totalPixels) * 100 : 0;
+			return effectiveTotalPixels > 0
+				? (pixelCount / effectiveTotalPixels) * 100
+				: 0;
 		},
 		[],
 	);
 
+	const isSelectedLabelExcluded = selectedAnnotation
+		? excludedLabelIds.includes(selectedAnnotation.labelId)
+		: false;
+
 	useEffect(() => {
-		if (!data || !selectedAnnotation) {
+		if (!data || !selectedAnnotation || isSelectedLabelExcluded) {
 			setStats(null);
 			return;
 		}
 
 		const labelMap = new Map(labels.map((l) => [l.id, l]));
 		const label = labelMap.get(selectedAnnotation.labelId);
+		const effectiveTotalPixels = calculateEffectiveTotalPixels(
+			data,
+			excludedLabelIds,
+		);
 		const areaPct = calculateAreaPercentage(
 			selectedAnnotation,
-			data.imageData.width,
-			data.imageData.height,
+			effectiveTotalPixels,
 		);
 
 		setStats({
@@ -172,6 +179,8 @@ export default function InstanceLevelStatisticView({
 		computeBleaching,
 		calculateAreaPercentage,
 		distanceThreshold,
+		excludedLabelIds,
+		isSelectedLabelExcluded,
 	]);
 
 	if (!selectedAnnotation) {
@@ -180,6 +189,18 @@ export default function InstanceLevelStatisticView({
 				<h3 className={styles.statSectionTitle}>Instance Statistics</h3>
 				<p className={styles.statEmptyHint}>
 					Click or drag on the canvas to select annotations.
+				</p>
+			</div>
+		);
+	}
+
+	if (isSelectedLabelExcluded) {
+		return (
+			<div className={`${styles.statSection} ${styles.statSectionInstance}`}>
+				<h3 className={styles.statSectionTitle}>Instance Statistics</h3>
+				<p className={styles.statEmptyHint}>
+					Selected mask has the label excluded. To include it back, check the
+					setting in the image view.
 				</p>
 			</div>
 		);

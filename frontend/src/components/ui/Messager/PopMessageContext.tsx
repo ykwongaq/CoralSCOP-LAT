@@ -16,6 +16,7 @@ import TextInputMessager, { type TextInputMessagerProps } from "./TextInputMessa
 import ProjectNameMessager, { type ProjectNameMessagerProps } from "./ProjectNameMessager";
 import FileUploadMessager, { type FileUploadMessagerProps } from "./FIleUploadMessager";
 import ImportLabelMessager, { type ImportLabelMessagerProps } from "./ImportLabelMessager";
+import ExcludeLabelsMessager, { type ExcludeLabelsMessagerProps } from "./ExcludeLabelsMessager";
 
 type ModalState =
   | { type: "none" }
@@ -25,7 +26,8 @@ type ModalState =
   | { type: "textInput"; props: TextInputMessagerProps }
   | { type: "projectNameInput"; props: ProjectNameMessagerProps }
   | { type: "fileUpload"; props: FileUploadMessagerProps }
-  | { type: "importLabel"; props: ImportLabelMessagerProps };
+  | { type: "importLabel"; props: ImportLabelMessagerProps }
+  | { type: "excludeLabels"; props: ExcludeLabelsMessagerProps };
 
 interface PopMessageContextValue {
   showMessage: (params: PopMessagerProps) => void;
@@ -35,6 +37,7 @@ interface PopMessageContextValue {
   showProjectNameInput: (params: ProjectNameMessagerProps) => void;
   showFileUpload: (params: FileUploadMessagerProps) => void;
   showImportLabel: (params: ImportLabelMessagerProps) => void;
+  showExcludeLabels: (params: ExcludeLabelsMessagerProps) => void;
   updateLoadingProgress: (progress: number | null) => void;
   closeMessage: () => void;
 }
@@ -109,6 +112,15 @@ export function PopMessageProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const showExcludeLabels = useCallback(
+    (props: ExcludeLabelsMessagerProps) =>
+      setModal({
+        type: "excludeLabels",
+        props,
+      }),
+    [],
+  );
+
   const updateLoadingProgress = useCallback((progress: number | null) => {
     setModal((current) => {
       if (current.type === "loading") {
@@ -134,6 +146,8 @@ export function PopMessageProvider({ children }: { children: ReactNode }) {
         return <FileUploadMessager {...state.props} />;
       case "importLabel":
         return <ImportLabelMessager {...state.props} />;
+      case "excludeLabels":
+        return <ExcludeLabelsMessager {...state.props} />;
       default:
         return null;
     }
@@ -149,6 +163,7 @@ export function PopMessageProvider({ children }: { children: ReactNode }) {
         showProjectNameInput,
         showFileUpload,
         showImportLabel,
+        showExcludeLabels,
         updateLoadingProgress,
         closeMessage,
       }}

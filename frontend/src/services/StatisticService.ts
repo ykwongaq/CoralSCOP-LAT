@@ -22,35 +22,63 @@ export function countRLEPixels(rle: RLE): number {
 }
 
 /**
+ * Calculates the total number of image pixels after subtracting pixels that
+ * belong to excluded labels.
+ */
+export function calculateEffectiveTotalPixels(
+	data: Data | null,
+	excludedLabelIds: number[] = [],
+): number {
+	if (!data) return 0;
+	const rawTotal = data.imageData.width * data.imageData.height;
+	if (rawTotal === 0) return 0;
+
+	const excludedSet = new Set(excludedLabelIds);
+	const excludedPixels = data.annotations.reduce((sum, ann) => {
+		if (!excludedSet.has(ann.labelId)) return sum;
+		return sum + countRLEPixels(ann.segmentation);
+	}, 0);
+
+	return Math.max(0, rawTotal - excludedPixels);
+}
+
+/**
  * Calculates coverage statistics for a dataset.
  * Returns the total coverage percentage and per-label breakdown.
+ * Pixels belonging to excluded labels are subtracted from the total image
+ * area and excluded labels are omitted from the breakdown.
  */
 export function calculateCoverageData(
 	data: Data | null,
 	labels: Label[],
+	excludedLabelIds: number[] = [],
 ): CoverageData {
 	if (!data) return { totalPct: 0, byLabel: [] };
-	const total = data.imageData.width * data.imageData.height;
-	if (total === 0) return { totalPct: 0, byLabel: [] };
+	const effectiveTotal = calculateEffectiveTotalPixels(data, excludedLabelIds);
+	if (effectiveTotal === 0) return { totalPct: 0, byLabel: [] };
 
+	const excludedSet = new Set(excludedLabelIds);
 	const byLabelId: Record<number, number> = {};
 	for (const ann of data.annotations) {
+		if (excludedSet.has(ann.labelId)) continue;
 		const px = countRLEPixels(ann.segmentation);
 		byLabelId[ann.labelId] = (byLabelId[ann.labelId] ?? 0) + px;
 	}
 
-	const byLabel = labels.map((label) => {
-		const pixels = byLabelId[label.id] ?? 0;
-		return {
-			name: label.name,
-			pixels,
-			pct: (pixels / total) * 100,
-			color: getLabelColor(label.id),
-		};
-	});
+	const byLabel = labels
+		.filter((label) => !excludedSet.has(label.id))
+		.map((label) => {
+			const pixels = byLabelId[label.id] ?? 0;
+			return {
+				name: label.name,
+				pixels,
+				pct: (pixels / effectiveTotal) * 100,
+				color: getLabelColor(label.id),
+			};
+		});
 
 	const totalPixels = Object.values(byLabelId).reduce((a, b) => a + b, 0);
-	return { totalPct: (totalPixels / total) * 100, byLabel };
+	return { totalPct: (totalPixels / effectiveTotal) * 100, byLabel };
 }
 
 /**
@@ -101,14 +129,18 @@ export interface PerLabelStats {
 export function getPerLabelStats(
 	data: Data | null,
 	labels: Label[],
+	excludedLabelIds: number[] = [],
 ): PerLabelStats[] {
 	if (!data) return [];
-	const total = data.imageData.width * data.imageData.height;
-	if (total === 0) return [];
+	const effectiveTotal = calculateEffectiveTotalPixels(data, excludedLabelIds);
+	if (effectiveTotal === 0) return [];
+
+	const excludedSet = new Set(excludedLabelIds);
 
 	// Accumulate pixels and count per labelId from annotations
 	const byLabelId: Record<number, { pixels: number; count: number }> = {};
 	for (const ann of data.annotations) {
+		if (excludedSet.has(ann.labelId)) continue;
 		const px = countRLEPixels(ann.segmentation);
 		const existing = byLabelId[ann.labelId];
 		if (existing) {
@@ -120,13 +152,14 @@ export function getPerLabelStats(
 	}
 
 	return labels
+		.filter((label) => !excludedSet.has(label.id))
 		.map((label) => {
 			const s = byLabelId[label.id];
 			if (!s || s.pixels === 0) return null;
 			return {
 				name: label.name,
 				color: getLabelColor(label.id),
-				pct: (s.pixels / total) * 100,
+				pct: (s.pixels / effectiveTotal) * 100,
 				pixels: s.pixels,
 				annotationCount: s.count,
 				avgPixels: Math.round(s.pixels / s.count),

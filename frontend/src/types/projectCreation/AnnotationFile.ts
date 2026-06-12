@@ -15,4 +15,9 @@ export interface AnnotationFile {
 	categories: CocoCategory[];
 	scaledLineList?: ScaledLine[];
 	coralWatch?: CoralWatchCard;
+	/**
+	 * Label IDs that should be excluded from coverage / area statistics.
+	 * Stored here so the setting travels with the saved project.
+	 */
+	excluded_label_ids?: number[];
 }

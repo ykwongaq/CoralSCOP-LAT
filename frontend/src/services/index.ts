@@ -48,6 +48,7 @@ export { saveProject } from "./SaveProjectService";
 export {
 	type CoverageData,
 	countRLEPixels,
+	calculateEffectiveTotalPixels,
 	calculateCoverageData,
 	getActiveLabels,
 	getImageStatistics,

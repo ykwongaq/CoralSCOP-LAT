@@ -1,5 +1,9 @@
 import triggerDownload from "../utils/download";
-import { calculatePixelScale, countRLEPixels } from "./StatisticService";
+import {
+	calculatePixelScale,
+	countRLEPixels,
+	calculateEffectiveTotalPixels,
+} from "./StatisticService";
 import type { ProjectState } from "../types";
 
 export type StatisticsExportFormat = "csv" | "excel";
@@ -10,8 +14,11 @@ interface StatisticsExportRow {
 	"label id": number;
 	status: string;
 	"instance count": number;
-	"% of area per label": number;
-	"area per label": number;
+	"pixel count": number;
+	"number of image pixel": number;
+	"number of excluded pixels": number;
+	"% of area over included pixels": number;
+	area: number | "N/A";
 	unit: string;
 }
 
@@ -21,8 +28,11 @@ const COLUMN_HEADERS: Array<keyof StatisticsExportRow> = [
 	"label id",
 	"status",
 	"instance count",
-	"% of area per label",
-	"area per label",
+	"pixel count",
+	"number of image pixel",
+	"number of excluded pixels",
+	"% of area over included pixels",
+	"area",
 	"unit",
 ];
 
@@ -38,6 +48,11 @@ function buildStatisticsRows(state: ProjectState): StatisticsExportRow[] {
 		const pixelScale = calculatePixelScale(data.scaledLineList ?? []);
 		const hasScale = pixelScale.squareMetersPerPixel > 0;
 		const totalPixels = data.imageData.width * data.imageData.height;
+		const effectiveTotalPixels = calculateEffectiveTotalPixels(
+			data,
+			state.excludedLabelIds,
+		);
+		const excludedPixels = totalPixels - effectiveTotalPixels;
 		const byLabelId = new Map<
 			number,
 			{ pixels: number; instanceCount: number }
@@ -57,10 +72,13 @@ function buildStatisticsRows(state: ProjectState): StatisticsExportRow[] {
 			([leftId], [rightId]) => leftId - rightId,
 		)) {
 			const label = labelMap.get(labelId);
-			const areaPct = totalPixels > 0 ? (stats.pixels / totalPixels) * 100 : 0;
-			const areaPerLabel = hasScale
-				? stats.pixels * pixelScale.value
-				: stats.pixels;
+			const areaPct =
+				effectiveTotalPixels > 0
+					? (stats.pixels / effectiveTotalPixels) * 100
+					: 0;
+			const area = hasScale
+				? Number((stats.pixels * pixelScale.value).toFixed(4))
+				: "N/A";
 
 			rows.push({
 				"image name": data.imageData.imageName,
@@ -69,9 +87,12 @@ function buildStatisticsRows(state: ProjectState): StatisticsExportRow[] {
 				status:
 					(label?.status.length ?? 0) > 0 ? label!.status.join(", ") : "N/A",
 				"instance count": stats.instanceCount,
-				"% of area per label": Number(areaPct.toFixed(2)),
-				"area per label": Number(areaPerLabel.toFixed(hasScale ? 4 : 0)),
-				unit: hasScale ? pixelScale.unit : "px²",
+				"pixel count": stats.pixels,
+				"number of image pixel": totalPixels,
+				"number of excluded pixels": excludedPixels,
+				"% of area over included pixels": Number(areaPct.toFixed(2)),
+				area,
+				unit: hasScale ? pixelScale.unit : "N/A",
 			});
 		}
 	}
