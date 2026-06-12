@@ -9,6 +9,7 @@ import {
 import CroppedCanvas from "../../ui/Statistic/CroppedCanvas";
 import InstanceSettingsModal from "./InstanceSettingsModal";
 import ColorClassificationPanel from "./ColorClassificationPanel";
+import { SettingsButton, DropdownMenu } from "../../ui/Setting";
 
 import styles from "./InstanceLevelStatisticView.module.css";
 
@@ -174,47 +175,24 @@ export default function InstanceLevelStatisticView({
 			<div className={styles.statHeaderRow}>
 				<h3 className={styles.statSectionTitle}>Instance Statistics</h3>
 				<div className={styles.statSettingsButtonWrapper}>
-					<button
-						className={styles.statSettingsBtn}
+					<SettingsButton
 						onClick={() => setShowSettingsModal(!showSettingsModal)}
-						title="Settings"
-					>
-						<svg
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						>
-							<path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z" />
-							<path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
-							<path d="M12 2v2" />
-							<path d="M12 20v2" />
-							<path d="m4.93 4.93 1.41 1.41" />
-							<path d="m17.66 17.66 1.41 1.41" />
-							<path d="M2 12h2" />
-							<path d="M20 12h2" />
-							<path d="m6.34 17.66-1.41 1.41" />
-							<path d="m19.07 4.93-1.41 1.41" />
-						</svg>
-					</button>
+					/>
 					{showSettingsModal && (
-						<InstanceSettingsModal
-							showMask={showMask}
-							maskAlpha={maskAlpha}
-							onShowMaskChange={setShowMask}
-							onMaskAlphaChange={setMaskAlpha}
-							workingDistanceThreshold={workingDistanceThreshold}
-							onThresholdChange={setDistanceThreshold}
-							onWorkingThresholdChange={setWorkingDistanceThreshold}
-							hasCoralWatch={!!data?.coralWatch}
-							showUnclassified={showUnclassified}
-							onShowUnclassifiedChange={setShowUnclassified}
-							onClose={() => setShowSettingsModal(false)}
-						/>
+						<DropdownMenu onClose={() => setShowSettingsModal(false)}>
+							<InstanceSettingsModal
+								showMask={showMask}
+								maskAlpha={maskAlpha}
+								onShowMaskChange={setShowMask}
+								onMaskAlphaChange={setMaskAlpha}
+								workingDistanceThreshold={workingDistanceThreshold}
+								onThresholdChange={setDistanceThreshold}
+								onWorkingThresholdChange={setWorkingDistanceThreshold}
+								hasCoralWatch={!!data?.coralWatch}
+								showUnclassified={showUnclassified}
+								onShowUnclassifiedChange={setShowUnclassified}
+							/>
+						</DropdownMenu>
 					)}
 				</div>
 			</div>

@@ -1,0 +1,133 @@
+/* ---- container ---- */
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    padding-right: 2px;
+}
+
+/* custom scrollbar */
+.list::-webkit-scrollbar {
+    width: 4px;
+}
+.list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.list::-webkit-scrollbar-thumb {
+    background: var(--line-line-primary2, #dedede);
+    border-radius: 2px;
+}
+
+/* ---- empty state ---- */
+
+.empty {
+    font-family: Roboto, sans-serif;
+    font-size: 12px;
+    color: var(--text-text-secondary1, #999898);
+    text-align: center;
+    padding: 16px 0;
+}
+
+/* ---- row ---- */
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    background: var(--surface-surface-primary3, #f4f6ff);
+    border: 1px solid var(--line-line-primary1, #dedede);
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+/* ---- label cell (colour dot + name) ---- */
+
+.labelCell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 0 0 100px;
+}
+
+.colorDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.labelName {
+    font-family: Roboto, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-text-primary1, #000);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---- coverage cell (progress bar + pct) ---- */
+
+.coverageCell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+.progressTrack {
+    flex: 1;
+    height: 8px;
+    background: var(--surface-surface-primary5, #fff);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    min-width: 2px;
+}
+
+.pctValue {
+    font-family: Roboto, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-text-primary1, #000);
+    white-space: nowrap;
+    min-width: 42px;
+    text-align: right;
+}
+
+/* ---- stats cell (count + avg size) ---- */
+
+.statsCell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    flex-shrink: 0;
+}
+
+.count {
+    font-family: Roboto, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-text-primary2, #425df9);
+    white-space: nowrap;
+}
+
+.avgSize {
+    font-family: Roboto, sans-serif;
+    font-size: 9px;
+    color: var(--text-text-secondary1, #999898);
+    white-space: nowrap;
+}

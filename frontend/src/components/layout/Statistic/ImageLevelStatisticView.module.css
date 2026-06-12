@@ -11,13 +11,6 @@
     overflow: hidden;
 }
 
-.statSectionTitle {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-text-page-heading);
-    margin-bottom: 14px;
-}
-
 /* ============================================================
    Summary Cards Row
    ============================================================ */
@@ -35,25 +28,24 @@
 .statChartsRow {
     display: flex;
     gap: 16px;
-    flex-wrap: wrap;
+    flex: 1;
     min-height: 200px;
+    overflow: hidden;
 }
 
-.statChartWrap {
-    flex: 1;
-    min-width: 200px;
+.statChartDonut {
+    flex: 0 0 190px;
     display: flex;
     flex-direction: column;
-    height: 200px;
+    align-items: center;
 }
 
-.statChartWrap:only-child {
-    height: 250px;
-}
-
-.statChartWrap .recharts-responsive-container {
+.statChartList {
     flex: 1;
-    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .statChartLabel {
@@ -62,6 +54,65 @@
     color: var(--text-text-secondary1);
     margin-bottom: 6px;
     font-family: Roboto;
+}
+
+/* ============================================================
+   Header Row & Settings
+   ============================================================ */
+
+.statHeaderRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.statSectionTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-text-page-heading);
+    margin: 0;
+}
+
+.statSettingsButtonWrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   Settings Dropdown Menu Items
+   ============================================================ */
+
+.statMenuPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--surface-surface-primary3);
+    border-radius: 8px;
+    border: 1px solid var(--line-line-primary1);
+    padding: 4px;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.statMenuBtn {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-text-primary1);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+}
+
+.statMenuBtn:hover {
+    background: var(--surface-surface-primary5);
 }
 
 /* ============================================================

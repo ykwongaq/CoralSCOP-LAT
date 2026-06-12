@@ -1,4 +1,3 @@
-import { useRef, useEffect } from "react";
 import styles from "./InstanceLevelStatisticView.module.css";
 
 interface Props {
@@ -12,7 +11,6 @@ interface Props {
 	hasCoralWatch: boolean;
 	showUnclassified: boolean;
 	onShowUnclassifiedChange: (value: boolean) => void;
-	onClose: () => void;
 }
 
 export default function InstanceSettingsModal({
@@ -26,28 +24,9 @@ export default function InstanceSettingsModal({
 	hasCoralWatch,
 	showUnclassified,
 	onShowUnclassifiedChange,
-	onClose,
 }: Props) {
-	const settingsRef = useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		function handleClickOutside(event: MouseEvent) {
-			if (
-				settingsRef.current &&
-				!settingsRef.current.contains(event.target as Node)
-			) {
-				onClose();
-			}
-		}
-
-		document.addEventListener("mousedown", handleClickOutside);
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
-		};
-	}, [onClose]);
-
 	return (
-		<div className={styles.statSettingsModal} ref={settingsRef}>
+		<div className={styles.statSettingsPanel}>
 			<div className={styles.statSettingsHeader}>
 				<span className={styles.statSettingsTitle}>
 					Canvas Settings

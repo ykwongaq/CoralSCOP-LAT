@@ -63,43 +63,6 @@ export function getActiveLabels(
 }
 
 /**
- * Prepares data for the pie chart visualization.
- * Includes active labels and an "Uncovered" segment.
- */
-export function preparePieData(coverage: CoverageData): Array<{
-	name: string;
-	pixels?: number;
-	pct: number;
-	color: string;
-}> {
-	const activeLabels = getActiveLabels(coverage);
-	return [
-		...activeLabels,
-		{
-			name: "Uncovered",
-			pct: Math.max(0, 100 - coverage.totalPct),
-			color: "#9ca3af",
-		},
-	];
-}
-
-/**
- * Prepares data for the bar chart visualization.
- */
-export function prepareBarData(coverage: CoverageData): Array<{
-	name: string;
-	coverage: number;
-	color: string;
-}> {
-	const activeLabels = getActiveLabels(coverage);
-	return activeLabels.map((l) => ({
-		name: l.name,
-		coverage: parseFloat(l.pct.toFixed(2)),
-		color: l.color,
-	}));
-}
-
-/**
  * Gets basic image-level statistics.
  */
 export function getImageStatistics(
@@ -115,6 +78,62 @@ export function getImageStatistics(
 		activeLabelCount: getActiveLabels(coverage).length,
 		totalCoveragePct: coverage.totalPct,
 	};
+}
+
+// ---------------------------------------------------------------------------
+// Per-label enriched statistics for image-level display
+// ---------------------------------------------------------------------------
+
+export interface PerLabelStats {
+	name: string;
+	color: string;
+	pct: number;
+	pixels: number;
+	annotationCount: number;
+	avgPixels: number;
+}
+
+/**
+ * Computes per-label statistics including annotation count and average
+ * annotation size in pixels. Only returns labels that have at least one
+ * annotation (pixels > 0), sorted by coverage percentage descending.
+ */
+export function getPerLabelStats(
+	data: Data | null,
+	labels: Label[],
+): PerLabelStats[] {
+	if (!data) return [];
+	const total = data.imageData.width * data.imageData.height;
+	if (total === 0) return [];
+
+	// Accumulate pixels and count per labelId from annotations
+	const byLabelId: Record<number, { pixels: number; count: number }> = {};
+	for (const ann of data.annotations) {
+		const px = countRLEPixels(ann.segmentation);
+		const existing = byLabelId[ann.labelId];
+		if (existing) {
+			existing.pixels += px;
+			existing.count += 1;
+		} else {
+			byLabelId[ann.labelId] = { pixels: px, count: 1 };
+		}
+	}
+
+	return labels
+		.map((label) => {
+			const s = byLabelId[label.id];
+			if (!s || s.pixels === 0) return null;
+			return {
+				name: label.name,
+				color: getLabelColor(label.id),
+				pct: (s.pixels / total) * 100,
+				pixels: s.pixels,
+				annotationCount: s.count,
+				avgPixels: Math.round(s.pixels / s.count),
+			};
+		})
+		.filter((item): item is PerLabelStats => item !== null)
+		.sort((a, b) => b.pct - a.pct);
 }
 
 // ---------------------------------------------------------------------------
