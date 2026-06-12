@@ -42,15 +42,29 @@ export function buildLayersWithCachedMasks(
 	visualizationSetting: VisualizationSetting,
 	displayScale: DisplayScale,
 ): Layers {
-	const { displayWidth: width, displayHeight: height, originalWidth: originalWidthVar, originalHeight: originalHeightVar, scale } = displayScale;
+	const {
+		displayWidth: width,
+		displayHeight: height,
+		originalWidth: originalWidthVar,
+		originalHeight: originalHeightVar,
+		scale,
+	} = displayScale;
 
 	const maskCanvas = document.createElement("canvas");
 	const borderCanvas = document.createElement("canvas");
 	const textCanvas = document.createElement("canvas");
 	const pendingMaskCanvas = document.createElement("canvas");
 
-	maskCanvas.width = borderCanvas.width = textCanvas.width = pendingMaskCanvas.width = width;
-	maskCanvas.height = borderCanvas.height = textCanvas.height = pendingMaskCanvas.height = height;
+	maskCanvas.width =
+		borderCanvas.width =
+		textCanvas.width =
+		pendingMaskCanvas.width =
+			width;
+	maskCanvas.height =
+		borderCanvas.height =
+		textCanvas.height =
+		pendingMaskCanvas.height =
+			height;
 
 	const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true })!;
 	const borderCtx = borderCanvas.getContext("2d")!;
@@ -117,7 +131,8 @@ export function buildLayersWithCachedMasks(
 				(origX > 0 && pixelMask[i - 1] === 0) ||
 				(origX < originalWidthVar - 1 && pixelMask[i + 1] === 0) ||
 				(origY > 0 && pixelMask[i - originalWidthVar] === 0) ||
-				(origY < originalHeightVar - 1 && pixelMask[i + originalWidthVar] === 0);
+				(origY < originalHeightVar - 1 &&
+					pixelMask[i + originalWidthVar] === 0);
 
 			if (isEdge) {
 				edges.push({ x: dispX, y: dispY, r, g, b });
@@ -175,7 +190,7 @@ export function buildLayersWithCachedMasks(
 
 		const color = getLabelColor(labelId);
 		const textColor = getTextColor(labelId);
-		const displayText = String(labelId + 1);
+		const displayText = String(labelId);
 
 		textCtx.beginPath();
 		textCtx.arc(cx, cy, badgeRadius, 0, 2 * Math.PI);
@@ -212,8 +227,7 @@ export async function buildLayers(
 	const originalHeight =
 		data.imageData.height ?? data.annotations[0]?.segmentation.size[0] ?? 0;
 
-	const ds =
-		displayScale ?? computeDisplayScale(originalWidth, originalHeight);
+	const ds = displayScale ?? computeDisplayScale(originalWidth, originalHeight);
 	const width = ds.displayWidth;
 	const height = ds.displayHeight;
 
@@ -288,9 +302,7 @@ export async function buildLayers(
 				});
 			}),
 			// Main thread workers: decode RLE for hit-testing
-			decodeRleMasks(
-				data.annotations.map((ann) => ann.segmentation),
-			),
+			decodeRleMasks(data.annotations.map((ann) => ann.segmentation)),
 		]);
 
 	// Apply transferred buffers to canvases
@@ -318,7 +330,7 @@ export async function buildLayers(
 
 		const color = getLabelColor(labelId);
 		const textColor = getTextColor(labelId);
-		const displayText = String(labelId + 1);
+		const displayText = String(labelId);
 
 		textCtx.beginPath();
 		textCtx.arc(cx, cy, badgeRadius, 0, 2 * Math.PI);
@@ -356,7 +368,12 @@ export function updatePendingMaskLayer(
 	pendingAnnotation: PendingAnnotation | null,
 	displayScale: DisplayScale,
 ): void {
-	const { originalWidth, displayWidth, displayHeight, scale: dsScale } = displayScale;
+	const {
+		originalWidth,
+		displayWidth,
+		displayHeight,
+		scale: dsScale,
+	} = displayScale;
 	const ctx = canvas.getContext("2d")!;
 	ctx.clearRect(0, 0, displayWidth, displayHeight);
 

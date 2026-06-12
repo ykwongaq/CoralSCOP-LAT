@@ -44,9 +44,7 @@ export default function ActivateLabelButton({
 						}}
 					>
 						{activeLabel && (
-							<span className={styles.labelSmBlkText}>
-								{activeLabel.id + 1}
-							</span>
+							<span className={styles.labelSmBlkText}>{activeLabel.id}</span>
 						)}
 					</span>
 					<span>Assign Label (C)</span>

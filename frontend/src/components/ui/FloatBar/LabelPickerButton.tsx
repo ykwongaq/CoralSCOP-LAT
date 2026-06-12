@@ -47,7 +47,7 @@ export default function LabelPickerButton({
 					<p className={styles.colorPickerLabel}>Label</p>
 					<div className={`${styles.colorPlateList} ${styles.colorPickerList}`}>
 						{labels.map((label) => {
-							const text = String(label.id + 1);
+							const text = String(label.id);
 							const textColor = getTextColor(label.id);
 							const backgroundColor = getLabelColor(label.id);
 							return (

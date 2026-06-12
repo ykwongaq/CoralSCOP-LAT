@@ -172,7 +172,7 @@ export default function LabelBlock({ label }: LabelBlockProps) {
 		<div className={styles.colorPlateListItem}>
 			<div className={`${styles.labelBlk} labelButton`}>
 				<LabelButton
-					label={String(labelID + 1)}
+					label={String(labelID)}
 					backgroundColor={labelColor}
 					textColor={textColor}
 				/>
