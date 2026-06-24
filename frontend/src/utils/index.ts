@@ -5,4 +5,5 @@ export * from "./displayScale";
 export * from "./LabelColorMap";
 export * from "./saveBlobWithPicker";
 export * from "./AnnotationCommand";
+export * from "./taxonomy";
 export { default as triggerDownload } from "./download";

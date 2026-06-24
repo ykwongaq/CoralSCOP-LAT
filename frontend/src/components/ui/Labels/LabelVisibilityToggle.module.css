@@ -3,36 +3,36 @@
    ============================================================ */
 
 .labelBlkBtn {
-    color: var(--icon-icon-secondary2);
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 53px;
-    aspect-ratio: 1;
-    font-size: 18px;
-    font-weight: 400;
-    cursor: pointer;
+  color: var(--icon-icon-secondary2);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  aspect-ratio: 1;
+  font-size: 16px;
+  font-weight: 400;
+  cursor: pointer;
 }
 
 .labelBlkBtn * {
-    pointer-events: none;
+  pointer-events: none;
 }
 
 .labelBlkBtn:hover {
-    color: #000;
+  color: #000;
 }
 
 /* Visibility toggle button: default = label visible */
 .labelBlkBtn :global(.ico-hide) {
-    display: none;
+  display: none;
 }
 
 /* Active = label hidden: swap icons */
 .labelBlkBtnActive :global(.ico-eye) {
-    display: none;
+  display: none;
 }
 
 .labelBlkBtnActive :global(.ico-hide) {
-    display: inline;
+  display: inline;
 }

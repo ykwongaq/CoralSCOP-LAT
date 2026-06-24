@@ -17,6 +17,7 @@ import ProjectNameMessager, { type ProjectNameMessagerProps } from "./ProjectNam
 import FileUploadMessager, { type FileUploadMessagerProps } from "./FIleUploadMessager";
 import ImportLabelMessager, { type ImportLabelMessagerProps } from "./ImportLabelMessager";
 import ExcludeLabelsMessager, { type ExcludeLabelsMessagerProps } from "./ExcludeLabelsMessager";
+import TaxonomicMessager, { type TaxonomicMessagerProps } from "./TaxonomicMessager";
 
 type ModalState =
   | { type: "none" }
@@ -27,7 +28,8 @@ type ModalState =
   | { type: "projectNameInput"; props: ProjectNameMessagerProps }
   | { type: "fileUpload"; props: FileUploadMessagerProps }
   | { type: "importLabel"; props: ImportLabelMessagerProps }
-  | { type: "excludeLabels"; props: ExcludeLabelsMessagerProps };
+  | { type: "excludeLabels"; props: ExcludeLabelsMessagerProps }
+  | { type: "taxonomy"; props: TaxonomicMessagerProps };
 
 interface PopMessageContextValue {
   showMessage: (params: PopMessagerProps) => void;
@@ -38,6 +40,7 @@ interface PopMessageContextValue {
   showFileUpload: (params: FileUploadMessagerProps) => void;
   showImportLabel: (params: ImportLabelMessagerProps) => void;
   showExcludeLabels: (params: ExcludeLabelsMessagerProps) => void;
+  showTaxonomy: (params: TaxonomicMessagerProps) => void;
   updateLoadingProgress: (progress: number | null) => void;
   closeMessage: () => void;
 }
@@ -121,6 +124,15 @@ export function PopMessageProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const showTaxonomy = useCallback(
+    (props: TaxonomicMessagerProps) =>
+      setModal({
+        type: "taxonomy",
+        props,
+      }),
+    [],
+  );
+
   const updateLoadingProgress = useCallback((progress: number | null) => {
     setModal((current) => {
       if (current.type === "loading") {
@@ -148,6 +160,8 @@ export function PopMessageProvider({ children }: { children: ReactNode }) {
         return <ImportLabelMessager {...state.props} />;
       case "excludeLabels":
         return <ExcludeLabelsMessager {...state.props} />;
+      case "taxonomy":
+        return <TaxonomicMessager {...state.props} />;
       default:
         return null;
     }
@@ -164,6 +178,7 @@ export function PopMessageProvider({ children }: { children: ReactNode }) {
         showFileUpload,
         showImportLabel,
         showExcludeLabels,
+        showTaxonomy,
         updateLoadingProgress,
         closeMessage,
       }}

@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import triggerDownload from "../utils/download";
+import { toCocoTaxonomy } from "../utils/taxonomy";
 
 import type {
 	ProjectState,
@@ -32,6 +33,8 @@ function buildAnnotationFile(
 			name: l.name,
 			color: "#ffffff",
 			status: l.status,
+			type: l.type ?? "simple",
+			...(l.taxonomy ? { taxonomy: toCocoTaxonomy(l.taxonomy) } : {}),
 		})),
 		scaledLineList: data.scaledLineList.map((line: ScaledLine) => ({
 			...line,

@@ -6,9 +6,10 @@ import {
 	useAnnotationSession,
 	useVisualizationSetting,
 } from "../../../store";
-import type { Label } from "../../../types";
+import type { Label, Taxonomy } from "../../../types";
 import { usePopMessage } from "../../ui/Messager";
 import { getLabelColor, getTextColor } from "../../../utils";
+import { deepestSpecifiedRank } from "../../../utils/taxonomy";
 import LabelButton from "../../ui/Labels/LabelButton";
 import LabelNameBlock from "../../ui/Labels/LabelNameBlock";
 import LabelVisibilityToggle from "../../ui/Labels/LabelVisibilityToggle";
@@ -31,7 +32,13 @@ export default function LabelBlock({ label }: LabelBlockProps) {
 	const { annotationSessionDispatch } = useAnnotationSession();
 	const { visualizationSettingState, visualizationSettingDispatch } =
 		useVisualizationSetting();
-	const { showMessage, closeMessage } = usePopMessage();
+	const { showMessage, closeMessage, showTaxonomy } = usePopMessage();
+
+	const labelType = label.type ?? "simple";
+	const taxonomicLevelTag =
+		labelType === "taxonomic" && label.taxonomy
+			? (deepestSpecifiedRank(label.taxonomy) ?? "taxon")
+			: null;
 
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -104,6 +111,39 @@ export default function LabelBlock({ label }: LabelBlockProps) {
 		}
 	};
 
+	const openTaxonomyModal = () => {
+		handleCloseMenu();
+		showTaxonomy({
+			title: "Assign Taxonomy",
+			content: `Build the taxonomic tree for "${labelName}".`,
+			initialTaxonomy: label.taxonomy,
+			onConfirm: (taxonomy: Taxonomy) => {
+				projectDispatch({
+					type: "SET_LABEL_TAXONOMY",
+					payload: { labelId: label.id, taxonomy },
+				});
+				closeMessage();
+			},
+			onCancel: closeMessage,
+		});
+	};
+
+	const handleSelectCommonName = () => {
+		if (labelType === "simple") return;
+		projectDispatch({
+			type: "SET_LABEL_TYPE",
+			payload: { labelId: label.id, labelType: "simple" },
+		});
+	};
+
+	const handleSelectTaxonomicName = () => {
+		if (labelType === "taxonomic") return;
+		projectDispatch({
+			type: "SET_LABEL_TYPE",
+			payload: { labelId: label.id, labelType: "taxonomic" },
+		});
+	};
+
 	const handleAddStatus = (status: string) => {
 		projectDispatch({
 			type: "ADD_LABEL_STATUS",
@@ -118,55 +158,46 @@ export default function LabelBlock({ label }: LabelBlockProps) {
 		});
 	};
 
-	const menuItems = [
-		{
-			name: "Rename",
-			onClick: () => {
-				setIsEditing(true);
-				handleCloseMenu();
-			},
-		},
-		{
-			name: "Delete",
-			onClick: () => {
-				handleCloseMenu();
-				const isLabelInUse = projectState.dataList.some((data) =>
-					data.annotations.some(
-						(annotation) => annotation.labelId === label.id,
-					),
-				);
-				if (isLabelInUse) {
-					showMessage({
-						title: "Confirm Deletion",
-						content:
-							"This label is used in some annotations. Deleting it will remove all those annotations. Are you sure?",
-						buttons: [
-							{ label: "Cancel", onClick: closeMessage },
-							{
-								label: "Delete",
-								onClick: () => {
-									projectDispatch({
-										type: "DELETE_LABEL",
-										payload: { labelId: label.id },
-									});
-									annotationSessionDispatch({
-										type: "CLEAR_ACTIVE_LABEL",
-									});
-									closeMessage();
-								},
-							},
-						],
-					});
-				} else {
-					projectDispatch({
-						type: "DELETE_LABEL",
-						payload: { labelId: label.id },
-					});
-					annotationSessionDispatch({ type: "CLEAR_ACTIVE_LABEL" });
-				}
-			},
-		},
-	];
+	const handleRename = () => {
+		setIsEditing(true);
+		handleCloseMenu();
+	};
+
+	const handleDelete = () => {
+		handleCloseMenu();
+		const isLabelInUse = projectState.dataList.some((data) =>
+			data.annotations.some((annotation) => annotation.labelId === label.id),
+		);
+		if (isLabelInUse) {
+			showMessage({
+				title: "Confirm Deletion",
+				content:
+					"This label is used in some annotations. Deleting it will remove all those annotations. Are you sure?",
+				buttons: [
+					{ label: "Cancel", onClick: closeMessage },
+					{
+						label: "Delete",
+						onClick: () => {
+							projectDispatch({
+								type: "DELETE_LABEL",
+								payload: { labelId: label.id },
+							});
+							annotationSessionDispatch({
+								type: "CLEAR_ACTIVE_LABEL",
+							});
+							closeMessage();
+						},
+					},
+				],
+			});
+		} else {
+			projectDispatch({
+				type: "DELETE_LABEL",
+				payload: { labelId: label.id },
+			});
+			annotationSessionDispatch({ type: "CLEAR_ACTIVE_LABEL" });
+		}
+	};
 
 	return (
 		<div className={styles.colorPlateListItem}>
@@ -176,12 +207,34 @@ export default function LabelBlock({ label }: LabelBlockProps) {
 					backgroundColor={labelColor}
 					textColor={textColor}
 				/>
-				<LabelNameBlock
-					labelName={labelName}
-					isEditing={isEditing}
-					onCommit={handleCommitRename}
-					onCancelEdit={() => setIsEditing(false)}
-				/>
+				<div className={styles.labelNameWrap}>
+					{taxonomicLevelTag && (
+						<span
+							className={styles.taxonomyRankTag}
+							title={`Rank: ${taxonomicLevelTag}`}
+						>
+							{taxonomicLevelTag}
+						</span>
+					)}
+					<LabelNameBlock
+						labelName={labelName}
+						isEditing={isEditing}
+						onCommit={handleCommitRename}
+						onCancelEdit={() => setIsEditing(false)}
+						className={
+							labelType === "taxonomic" ? styles.taxonomicLabelName : undefined
+						}
+					/>
+				</div>
+				{labelType === "taxonomic" && (
+					<span
+						title="Taxonomic label"
+						aria-label="Taxonomic label"
+						style={{ marginLeft: 4, fontSize: 13, lineHeight: 1 }}
+					>
+						🌿
+					</span>
+				)}
 				<div className={styles.labelBlkSide}>
 					<button
 						className={`${styles.labelBlkBtn} ${styles.labelBlkBtnChevron}${isExpanded ? ` ${styles.labelBlkBtnChevronActive}` : ""}`}
@@ -212,13 +265,44 @@ export default function LabelBlock({ label }: LabelBlockProps) {
 			)}
 			<div ref={menuRef}>
 				<DropDownMenu isOpen={isMenuOpen} position={menuPosition}>
-					{menuItems.map((item) => (
+					<div
+						className={styles.labelTypeTabs}
+						role="tablist"
+						aria-label="Label type"
+					>
+						<button
+							className={`${styles.labelTypeTab}${
+								labelType === "simple" ? ` ${styles.labelTypeTabActive}` : ""
+							}`}
+							onClick={handleSelectCommonName}
+							type="button"
+							role="tab"
+							aria-selected={labelType === "simple"}
+						>
+							Common Name
+						</button>
+						<button
+							className={`${styles.labelTypeTab}${
+								labelType === "taxonomic" ? ` ${styles.labelTypeTabActive}` : ""
+							}`}
+							onClick={handleSelectTaxonomicName}
+							type="button"
+							role="tab"
+							aria-selected={labelType === "taxonomic"}
+						>
+							Taxonomic Name
+						</button>
+					</div>
+					{labelType === "simple" && (
+						<DropDownMenuItem name="Rename" onClick={handleRename} />
+					)}
+					{labelType === "taxonomic" && (
 						<DropDownMenuItem
-							key={item.name}
-							name={item.name}
-							onClick={item.onClick}
+							name="Edit taxonomy"
+							onClick={openTaxonomyModal}
 						/>
-					))}
+					)}
+					<DropDownMenuItem name="Delete" onClick={handleDelete} />
 				</DropDownMenu>
 			</div>
 		</div>

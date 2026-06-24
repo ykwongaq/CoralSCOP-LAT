@@ -1,0 +1,437 @@
+/* Self-contained wider modal shell (MessagerShell is a fixed 700px box). The
+   shared backdrop is provided by PopMessageContext. */
+.modalPop {
+  position: fixed;
+  z-index: 15;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalPopInner {
+  border-radius: 10px;
+  background-color: #fff;
+  width: 920px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 48px 48px 36px;
+  box-sizing: border-box;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(17, 24, 39, 0.16);
+}
+
+.title {
+  color: var(--text-text-primary2);
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+/* ===== Panels ===== */
+.panels {
+  display: flex;
+  gap: 28px;
+  text-align: left;
+  align-items: stretch;
+}
+
+/* ===== Left: image preview ===== */
+.imagePanel {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-line-primary1);
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fbfcfd 0%, #f3f6f8 100%);
+  min-height: 360px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.image {
+  width: 100%;
+  flex: 1;
+  object-fit: cover;
+  min-height: 0;
+}
+
+.imagePlaceholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-text-secondary1);
+  font-size: 14px;
+}
+
+.imagePlaceholderIcon {
+  font-size: 32px;
+  opacity: 0.6;
+}
+
+.searchLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(28, 92, 78, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1c5c4e;
+  font-family: Roboto;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.searchLink:hover {
+  background: color-mix(in srgb, rgba(28, 92, 78, 0.12) 72%, white);
+  border-color: rgba(28, 92, 78, 0.34);
+}
+
+.imageCaption {
+  padding: 10px 14px;
+  font-family: Roboto;
+  font-size: 14px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--text-text-primary1);
+  border-top: 1px solid var(--line-line-primary1);
+  background: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--line-line-primary1);
+  border-top-color: var(--text-text-primary2);
+  border-radius: 50%;
+  animation: rotate 0.8s linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Right: taxonomic pyramid ===== */
+.pyramidPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid rgba(31, 41, 55, 0.08);
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fdfefe 0%, #f8fafc 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  position: relative;
+  overflow: visible;
+}
+
+.pyramidPanel::before {
+  content: none;
+}
+
+.rankRow {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 58px;
+  padding: 4px 0;
+  z-index: 0;
+}
+
+.rankRow:focus-within {
+  z-index: 10;
+}
+
+.rankField {
+  --input-lane-width: min(320px, 100%);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 58px;
+}
+
+.rankTier {
+  display: none;
+}
+
+.rankLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--tier-border, rgba(148, 163, 184, 0.24));
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(6px);
+  font-family: Roboto;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--tier-accent, var(--text-text-secondary1));
+  text-align: right;
+  justify-self: end;
+}
+
+.inputWrap {
+  position: relative;
+  width: var(--input-lane-width);
+  min-width: 0;
+}
+
+.rankInput {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--tier-border, var(--line-line-primary1, #ccc));
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  font-family: Roboto;
+  font-size: 14px;
+  padding: 11px 14px;
+  padding-right: 88px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+.rankInput:focus {
+  outline: none;
+  border-color: var(--tier-accent, var(--text-text-primary2));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tier-tint, #dbeafe) 70%, white);
+}
+
+.rankInputUncertain {
+  background: rgba(250, 250, 250, 0.92);
+  color: var(--text-text-secondary1);
+  border-style: dashed;
+}
+
+.uncertainBadge {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: Roboto;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #b26a00;
+  background: #fff4e0;
+  border: 1px solid #ffd591;
+  border-radius: 100px;
+  padding: 2px 8px;
+  pointer-events: none;
+}
+
+/* ===== Autocomplete dropdown ===== */
+.suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  background: #fff;
+  border: 1px solid var(--tier-border, var(--line-line-primary1));
+  border-radius: 14px;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.14);
+  max-height: 200px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 23, 42, 0.28) transparent;
+  padding: 4px 0;
+}
+
+.suggestions::-webkit-scrollbar {
+  width: 8px;
+}
+
+.suggestions::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.suggestions::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.24);
+  border-radius: 999px;
+}
+
+.suggestions::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.36);
+}
+
+.suggestionLoading {
+  padding: 8px 14px;
+  font-family: Roboto;
+  font-size: 13px;
+  color: var(--text-text-secondary1);
+}
+
+.suggestionItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 14px;
+  font-family: Roboto;
+  font-size: 14px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.suggestionItem:hover {
+  background: color-mix(in srgb, var(--tier-tint, #eef4ff) 75%, white);
+}
+
+.suggestionName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestionRank {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-text-secondary1);
+}
+
+/* ===== Footer ===== */
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.rankRow[data-rank="kingdom"] {
+  --tier-tint: rgba(28, 92, 78, 0.1);
+  --tier-border: rgba(28, 92, 78, 0.22);
+  --tier-accent: #1c5c4e;
+}
+
+.rankRow[data-rank="phylum"] {
+  --tier-tint: rgba(35, 102, 126, 0.1);
+  --tier-border: rgba(35, 102, 126, 0.22);
+  --tier-accent: #23667e;
+}
+
+.rankRow[data-rank="class"] {
+  --tier-tint: rgba(52, 116, 152, 0.1);
+  --tier-border: rgba(52, 116, 152, 0.22);
+  --tier-accent: #347498;
+}
+
+.rankRow[data-rank="order"] {
+  --tier-tint: rgba(86, 116, 167, 0.1);
+  --tier-border: rgba(86, 116, 167, 0.22);
+  --tier-accent: #5674a7;
+}
+
+.rankRow[data-rank="family"] {
+  --tier-tint: rgba(122, 101, 160, 0.1);
+  --tier-border: rgba(122, 101, 160, 0.22);
+  --tier-accent: #7a65a0;
+}
+
+.rankRow[data-rank="genus"] {
+  --tier-tint: rgba(146, 90, 130, 0.1);
+  --tier-border: rgba(146, 90, 130, 0.22);
+  --tier-accent: #925a82;
+}
+
+.rankRow[data-rank="species"] {
+  --tier-tint: rgba(168, 82, 92, 0.1);
+  --tier-border: rgba(168, 82, 92, 0.22);
+  --tier-accent: #a8525c;
+}
+
+@media (max-width: 980px) {
+  .modalPopInner {
+    width: min(920px, calc(100vw - 24px));
+    padding: 32px 24px 28px;
+  }
+
+  .panels {
+    flex-direction: column;
+  }
+
+  .imagePanel {
+    flex-basis: auto;
+    min-height: 280px;
+  }
+}
+
+@media (max-width: 640px) {
+  .rankRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px 0;
+  }
+
+  .rankField {
+    --input-lane-width: min(320px, 100%);
+    min-height: 62px;
+  }
+
+  .rankTier {
+    display: none;
+  }
+
+  .rankLabel {
+    justify-content: flex-start;
+    width: fit-content;
+  }
+
+  .inputWrap {
+    width: min(320px, 100%);
+  }
+
+  .rankInput {
+    padding-right: 78px;
+  }
+
+  .suggestions {
+    max-height: min(180px, calc(100vh - 280px));
+  }
+
+  .footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}

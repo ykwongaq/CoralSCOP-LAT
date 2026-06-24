@@ -9,14 +9,27 @@ interface DropDownMenuProps {
 interface DropDownMenuItemProps {
 	name: string;
 	onClick: () => void;
+	// When provided, reserves space for a leading check and shows it when true.
+	checked?: boolean;
 }
 
-export function DropDownMenuItem({ name, onClick }: DropDownMenuItemProps) {
+export function DropDownMenuItem({
+	name,
+	onClick,
+	checked,
+}: DropDownMenuItemProps) {
 	return (
 		<button className={styles.normalDropdownLink} onClick={onClick}>
+			{checked !== undefined && (
+				<span className={styles.dropdownCheck}>{checked ? "✓" : ""}</span>
+			)}
 			{name}
 		</button>
 	);
+}
+
+export function DropDownMenuHeader({ name }: { name: string }) {
+	return <div className={styles.dropdownHeader}>{name}</div>;
 }
 
 export default function DropDownMenu({ children, isOpen, position }: DropDownMenuProps) {

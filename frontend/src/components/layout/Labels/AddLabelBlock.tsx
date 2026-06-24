@@ -5,12 +5,17 @@ import styles from "./AddLabelBlock.module.css";
 import inputStyles from "../../../components/ui/Labels/InputBlock.module.css";
 import { usePopMessage } from "../../ui/Messager";
 import type { Label } from "../../../types";
+import { parseImportedLabels, toImportedLabelPayload } from "../../../services";
 
 interface AddLabelBlockProps {
 	onAddLabel: (labelName: string) => void;
+	onImportLabels?: (labels: Array<Omit<Label, "id">>) => void;
 }
 
-export default function AddLabelBlock({ onAddLabel }: AddLabelBlockProps) {
+export default function AddLabelBlock({
+	onAddLabel,
+	onImportLabels,
+}: AddLabelBlockProps) {
 	const [inputValue, setInputValue] = useState("");
 	const { isOpen, inputRef, toggle, hide } = useToggleInput();
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -51,40 +56,18 @@ export default function AddLabelBlock({ onAddLabel }: AddLabelBlockProps) {
 		reader.onload = (e) => {
 			try {
 				const result = e.target?.result as string;
-				const parsed = JSON.parse(result);
-
-				if (!Array.isArray(parsed)) {
-					throw new Error("The JSON file must contain an array of labels.");
-				}
-
-				const labels: Label[] = parsed.map(
-					(item: unknown, index: number) => ({
-						id: Number(
-							(item as Record<string, unknown>)?.id ?? index,
-						),
-						name: String(
-							(item as Record<string, unknown>)?.name ?? "",
-						),
-						status: Array.isArray(
-							(item as Record<string, unknown>)?.status,
-						)
-							? ((item as Record<string, unknown>).status as string[])
-							: [],
-					}),
-				);
-
-				const validLabels = labels.filter((l) => l.name.trim() !== "");
-
-				if (validLabels.length === 0) {
-					throw new Error("No valid labels found in the file.");
-				}
+				const validLabels = parseImportedLabels(result);
 
 				showImportLabel({
 					title: "Import Labels",
 					content: `Found ${validLabels.length} label(s). Select which ones to import:`,
 					labels: validLabels,
 					onConfirm: (selected) => {
-						selected.forEach((label) => onAddLabel(label.name));
+						if (onImportLabels) {
+							onImportLabels(toImportedLabelPayload(selected));
+						} else {
+							selected.forEach((label) => onAddLabel(label.name));
+						}
 						closeMessage();
 					},
 					onCancel: closeMessage,

@@ -17,6 +17,8 @@ export async function exportLabels(state: ProjectState): Promise<void> {
 		id: label.id,
 		name: label.name,
 		status: label.status,
+		...(label.type ? { type: label.type } : {}),
+		...(label.taxonomy ? { taxonomy: label.taxonomy } : {}),
 	}));
 
 	const blob = new Blob([JSON.stringify(outputJson, null, 2)], {

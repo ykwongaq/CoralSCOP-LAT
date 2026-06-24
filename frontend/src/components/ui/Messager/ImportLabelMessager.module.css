@@ -171,6 +171,12 @@
   white-space: nowrap;
 }
 
+.taxonomyChip {
+  color: var(--text-text-primary1);
+  background: #eef7f2;
+  border-color: #bcdcc8;
+}
+
 /* ===== Footer ===== */
 .footer {
   display: flex;

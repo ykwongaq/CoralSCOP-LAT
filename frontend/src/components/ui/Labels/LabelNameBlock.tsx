@@ -6,6 +6,7 @@ interface LabelNameBlockProps {
 	isEditing: boolean;
 	onCommit: (newName: string) => void;
 	onCancelEdit: () => void;
+	className?: string;
 }
 
 export default function LabelNameBlock({
@@ -13,6 +14,7 @@ export default function LabelNameBlock({
 	isEditing,
 	onCommit,
 	onCancelEdit,
+	className,
 }: LabelNameBlockProps) {
 	const labelTextRef = useRef<HTMLParagraphElement>(null);
 
@@ -36,7 +38,7 @@ export default function LabelNameBlock({
 	return (
 		<p
 			ref={labelTextRef}
-			className={`${styles.labelName} labelText`}
+			className={`${styles.labelName} ${className ?? ""} labelText`}
 			contentEditable={isEditing}
 			suppressContentEditableWarning={true}
 			onKeyDown={(e) => {

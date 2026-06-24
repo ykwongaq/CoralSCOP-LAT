@@ -36,6 +36,9 @@ export default function LabelBar() {
 				onAddLabel={(labelName) =>
 					projectDispatch({ type: "ADD_LABEL", payload: { labelName } })
 				}
+				onImportLabels={(labels) =>
+					projectDispatch({ type: "ADD_LABELS", payload: { labels } })
+				}
 			/>
 		</>
 	);

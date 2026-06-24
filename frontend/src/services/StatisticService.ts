@@ -223,7 +223,9 @@ export function calculateBleaching(
 	let total = 0;
 	let bleached = 0;
 	const thresholdSq = distanceThreshold * distanceThreshold;
-	const whiteR = 255, whiteG = 255, whiteB = 255;
+	const whiteR = 255,
+		whiteG = 255,
+		whiteB = 255;
 
 	for (let i = 0; i < mask.length; i++) {
 		if (mask[i] !== 1) continue;
@@ -325,7 +327,9 @@ export async function computeBleachedPixelMap(
 	const mask = decodeRLE(annotation.segmentation);
 	const { data } = pixelData;
 	const thresholdSq = distanceThreshold * distanceThreshold;
-	const whiteR = 255, whiteG = 255, whiteB = 255;
+	const whiteR = 255,
+		whiteG = 255,
+		whiteB = 255;
 
 	const pixelMap = new Array(mask.length).fill("");
 	for (let i = 0; i < mask.length; i++) {
@@ -451,7 +455,14 @@ export function calculatePixelScale(
 // Color classification for CoralWatch
 // ---------------------------------------------------------------------------
 
-function colorDistanceSq(r: number, g: number, b: number, cr: number, cg: number, cb: number): number {
+function colorDistanceSq(
+	r: number,
+	g: number,
+	b: number,
+	cr: number,
+	cg: number,
+	cb: number,
+): number {
 	const dr = r - cr;
 	const dg = g - cg;
 	const db = b - cb;
@@ -563,7 +574,9 @@ export async function classifyPixelsByColor(
 
 	results.sort((a, b) => b.pct - a.pct);
 	// Move unclassified to the end if it got sorted differently
-	const unclassifiedIndex = results.findIndex((r) => r.label === "Unclassified");
+	const unclassifiedIndex = results.findIndex(
+		(r) => r.label === "Unclassified",
+	);
 	if (unclassifiedIndex !== -1 && unclassifiedIndex !== results.length - 1) {
 		const [unclassified] = results.splice(unclassifiedIndex, 1);
 		results.push(unclassified);

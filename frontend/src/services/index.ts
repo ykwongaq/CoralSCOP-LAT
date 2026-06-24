@@ -19,6 +19,10 @@ export { exportAllCocoAnnotations } from "./ExportCocoService";
 export { exportAllImages } from "./ExportImagesService";
 export { exportLabels } from "./ExportLabelsService";
 export {
+	parseImportedLabels,
+	toImportedLabelPayload,
+} from "./ImportLabelService";
+export {
 	type StatisticsExportFormat,
 	exportProjectStatisticsSpreadsheet,
 } from "./ExportStatisticService";

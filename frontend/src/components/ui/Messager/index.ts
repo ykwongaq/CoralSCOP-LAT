@@ -8,4 +8,5 @@ export { default as TextInputMessager, type TextInputMessagerProps } from "./Tex
 export { default as ProjectNameMessager, type ProjectNameMessagerProps } from "./ProjectNameMessager";
 export { default as ImportLabelMessager, type ImportLabelMessagerProps } from "./ImportLabelMessager";
 export { default as ExcludeLabelsMessager, type ExcludeLabelsMessagerProps } from "./ExcludeLabelsMessager";
+export { default as TaxonomicMessager, type TaxonomicMessagerProps } from "./TaxonomicMessager";
 export { PopMessageProvider, usePopMessage } from "./PopMessageContext";

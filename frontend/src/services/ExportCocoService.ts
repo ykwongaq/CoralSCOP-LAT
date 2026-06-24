@@ -1,7 +1,13 @@
 import JSZip from "jszip";
 import { apiClient } from "./ApiClient";
 import triggerDownload from "../utils/download";
-import type { ProjectState, RLE, CompressedRLE } from "../types";
+import { toCocoTaxonomy } from "../utils/taxonomy";
+import type {
+	ProjectState,
+	RLE,
+	CompressedRLE,
+	CocoTaxonomy,
+} from "../types";
 
 // ---------------------------------------------------------------------------
 // Export-specific types (segmentation uses CompressedRLE, not the in-memory RLE)
@@ -19,6 +25,8 @@ interface CocoExportCategory {
 	name: string;
 	color: string;
 	status: string[];
+	type: "simple" | "taxonomic";
+	taxonomy?: CocoTaxonomy;
 }
 
 interface CocoExportFile {
@@ -116,6 +124,10 @@ export async function exportAllCocoAnnotations(
 					// color is not retained in the in-memory Label type; use a neutral default
 					color: "#000000",
 					status: label.status,
+					type: label.type ?? "simple",
+					...(label.taxonomy
+						? { taxonomy: toCocoTaxonomy(label.taxonomy) }
+						: {}),
 				};
 			},
 		);

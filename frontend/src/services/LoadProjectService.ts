@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { fromCocoTaxonomy } from "../utils/taxonomy";
 import type {
 	ProjectState,
 	Data,
@@ -99,6 +100,10 @@ export async function loadProject(
 							id: cat.id,
 							name: cat.name,
 							status: cat.status ?? [],
+							type: cat.type ?? "simple",
+							...(cat.taxonomy
+								? { taxonomy: fromCocoTaxonomy(cat.taxonomy) }
+								: {}),
 						});
 					}
 				}
