@@ -5,8 +5,14 @@ import {
 	calculateEffectiveTotalPixels,
 } from "./StatisticService";
 import type { ProjectState } from "../types";
+import {
+	TAXONOMIC_RANKS,
+	type TaxonomicRank,
+} from "../types/annoations/Taxonomy";
 
 export type StatisticsExportFormat = "csv" | "excel";
+
+type TaxonomyColumnHeader = `Taxonomy_${Capitalize<TaxonomicRank>}`;
 
 interface StatisticsExportRow {
 	Unique_Image_name: string;
@@ -24,7 +30,18 @@ interface StatisticsExportRow {
 	Unit: string;
 }
 
-const COLUMN_HEADERS: Array<keyof StatisticsExportRow> = [
+type StatisticsExportRowWithTaxonomy = StatisticsExportRow &
+	Record<TaxonomyColumnHeader, string>;
+
+function toTaxonomyColumnHeader(rank: TaxonomicRank): TaxonomyColumnHeader {
+	return `Taxonomy_${rank[0].toUpperCase()}${rank.slice(1)}` as TaxonomyColumnHeader;
+}
+
+const TAXONOMY_COLUMN_HEADERS: TaxonomyColumnHeader[] = TAXONOMIC_RANKS.map(
+	toTaxonomyColumnHeader,
+);
+
+const COLUMN_HEADERS: Array<keyof StatisticsExportRowWithTaxonomy> = [
 	"Unique_Image_name",
 	"Label",
 	"Label_ID",
@@ -38,16 +55,33 @@ const COLUMN_HEADERS: Array<keyof StatisticsExportRow> = [
 	"Area excluded per image",
 	"Coverage per label based on area",
 	"Unit",
+	...TAXONOMY_COLUMN_HEADERS,
 ];
 
-function buildStatisticsRows(state: ProjectState): StatisticsExportRow[] {
+function buildTaxonomyColumns(
+	label: ProjectState["labels"][number] | undefined,
+): Record<TaxonomyColumnHeader, string> {
+	const taxonomyRanks = label?.taxonomy?.ranks;
+	const taxonomyColumns = {} as Record<TaxonomyColumnHeader, string>;
+
+	for (const rank of TAXONOMIC_RANKS) {
+		const value = taxonomyRanks?.[rank]?.trim();
+		taxonomyColumns[toTaxonomyColumnHeader(rank)] = value ? value : "N/A";
+	}
+
+	return taxonomyColumns;
+}
+
+function buildStatisticsRows(
+	state: ProjectState,
+): StatisticsExportRowWithTaxonomy[] {
 	if (state.dataList.length === 0) {
 		throw new Error("No images available. Load a project first.");
 	}
 
 	const labelMap = new Map(state.labels.map((label) => [label.id, label]));
 	const excludedLabelIdSet = new Set(state.excludedLabelIds);
-	const rows: StatisticsExportRow[] = [];
+	const rows: StatisticsExportRowWithTaxonomy[] = [];
 
 	for (const data of state.dataList) {
 		const pixelScale = calculatePixelScale(data.scaledLineList ?? []);
@@ -125,6 +159,7 @@ function buildStatisticsRows(state: ProjectState): StatisticsExportRow[] {
 				"Area excluded per image": areaExcludedPerImage,
 				"Coverage per label based on area": coverageBasedOnAreaPct,
 				Unit: hasScale ? pixelScale.unit : "no calibration",
+				...buildTaxonomyColumns(label),
 			});
 		}
 	}
@@ -140,7 +175,7 @@ function escapeCsvValue(value: string | number): string {
 	return `"${stringValue.replace(/"/g, '""')}"`;
 }
 
-function buildCsvContent(rows: StatisticsExportRow[]): string {
+function buildCsvContent(rows: StatisticsExportRowWithTaxonomy[]): string {
 	const headerLine = COLUMN_HEADERS.map(escapeCsvValue).join(",");
 	const dataLines = rows.map((row) =>
 		COLUMN_HEADERS.map((header) => escapeCsvValue(row[header])).join(","),
@@ -156,7 +191,7 @@ function escapeHtml(value: string): string {
 		.replaceAll('"', "&quot;");
 }
 
-function buildExcelContent(rows: StatisticsExportRow[]): string {
+function buildExcelContent(rows: StatisticsExportRowWithTaxonomy[]): string {
 	const tableHead = COLUMN_HEADERS.map(
 		(header) => `<th>${escapeHtml(header)}</th>`,
 	).join("");
