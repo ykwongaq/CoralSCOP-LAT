@@ -9,31 +9,35 @@ import type { ProjectState } from "../types";
 export type StatisticsExportFormat = "csv" | "excel";
 
 interface StatisticsExportRow {
-	"image name": string;
-	label: string;
-	"label id": number;
-	status: string;
-	"instance count": number;
-	"pixel count": number;
-	"number of image pixel": number;
-	"number of excluded pixels": number;
-	"% of area over included pixels": number;
-	area: number | "N/A";
-	unit: string;
+	Unique_Image_name: string;
+	Label: string;
+	Label_ID: number;
+	Status: string;
+	"Instance count": number;
+	"Pixel count": number;
+	"Number of pixels per image": number;
+	"Number of excluded pixels": number;
+	"% coverage per label based on pixels": number;
+	"Area per image": number | "N/A";
+	"Area excluded per image": number | "N/A";
+	"Coverage per label based on area": number;
+	Unit: string;
 }
 
 const COLUMN_HEADERS: Array<keyof StatisticsExportRow> = [
-	"image name",
-	"label",
-	"label id",
-	"status",
-	"instance count",
-	"pixel count",
-	"number of image pixel",
-	"number of excluded pixels",
-	"% of area over included pixels",
-	"area",
-	"unit",
+	"Unique_Image_name",
+	"Label",
+	"Label_ID",
+	"Status",
+	"Instance count",
+	"Pixel count",
+	"Number of pixels per image",
+	"Number of excluded pixels",
+	"% coverage per label based on pixels",
+	"Area per image",
+	"Area excluded per image",
+	"Coverage per label based on area",
+	"Unit",
 ];
 
 function buildStatisticsRows(state: ProjectState): StatisticsExportRow[] {
@@ -42,6 +46,7 @@ function buildStatisticsRows(state: ProjectState): StatisticsExportRow[] {
 	}
 
 	const labelMap = new Map(state.labels.map((label) => [label.id, label]));
+	const excludedLabelIdSet = new Set(state.excludedLabelIds);
 	const rows: StatisticsExportRow[] = [];
 
 	for (const data of state.dataList) {
@@ -53,6 +58,12 @@ function buildStatisticsRows(state: ProjectState): StatisticsExportRow[] {
 			state.excludedLabelIds,
 		);
 		const excludedPixels = totalPixels - effectiveTotalPixels;
+		const areaPerImage = hasScale
+			? Number((totalPixels * pixelScale.value).toFixed(4))
+			: "N/A";
+		const areaExcludedPerImage = hasScale
+			? Number((excludedPixels * pixelScale.value).toFixed(4))
+			: "N/A";
 		const byLabelId = new Map<
 			number,
 			{ pixels: number; instanceCount: number }
@@ -71,28 +82,49 @@ function buildStatisticsRows(state: ProjectState): StatisticsExportRow[] {
 		for (const [labelId, stats] of Array.from(byLabelId.entries()).sort(
 			([leftId], [rightId]) => leftId - rightId,
 		)) {
+			if (excludedLabelIdSet.has(labelId)) {
+				continue;
+			}
+
 			const label = labelMap.get(labelId);
-			const areaPct =
+			const pixelCoveragePct =
 				effectiveTotalPixels > 0
 					? (stats.pixels / effectiveTotalPixels) * 100
 					: 0;
-			const area = hasScale
+			const labelArea = hasScale
 				? Number((stats.pixels * pixelScale.value).toFixed(4))
 				: "N/A";
+			const coverageBasedOnAreaPct = hasScale
+				? areaPerImage === "N/A" || areaExcludedPerImage === "N/A"
+					? 0
+					: areaPerImage - areaExcludedPerImage > 0
+						? Number(
+								(
+									(Number(labelArea) /
+										(Number(areaPerImage) - Number(areaExcludedPerImage))) *
+									100
+								).toFixed(2),
+							)
+						: 0
+				: Number(pixelCoveragePct.toFixed(2));
 
 			rows.push({
-				"image name": data.imageData.imageName,
-				label: label?.name ?? `label_${labelId}`,
-				"label id": labelId,
-				status:
+				Unique_Image_name: data.imageData.imageName,
+				Label: label?.name ?? `label_${labelId}`,
+				Label_ID: labelId,
+				Status:
 					(label?.status.length ?? 0) > 0 ? label!.status.join(", ") : "N/A",
-				"instance count": stats.instanceCount,
-				"pixel count": stats.pixels,
-				"number of image pixel": totalPixels,
-				"number of excluded pixels": excludedPixels,
-				"% of area over included pixels": Number(areaPct.toFixed(2)),
-				area,
-				unit: hasScale ? pixelScale.unit : "N/A",
+				"Instance count": stats.instanceCount,
+				"Pixel count": stats.pixels,
+				"Number of pixels per image": totalPixels,
+				"Number of excluded pixels": excludedPixels,
+				"% coverage per label based on pixels": Number(
+					pixelCoveragePct.toFixed(2),
+				),
+				"Area per image": areaPerImage,
+				"Area excluded per image": areaExcludedPerImage,
+				"Coverage per label based on area": coverageBasedOnAreaPct,
+				Unit: hasScale ? pixelScale.unit : "no calibration",
 			});
 		}
 	}
