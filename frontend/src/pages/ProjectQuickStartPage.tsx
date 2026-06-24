@@ -30,6 +30,7 @@ import {
 	exportAllCocoAnnotations,
 	exportProjectStatisticsSpreadsheet,
 	runModel,
+	exportLabels,
 } from "../services";
 
 import {
@@ -442,6 +443,41 @@ function ProjectQuickStartPageContent() {
 							label="Export CSV"
 							onClick={() => {
 								void handleStatisticsExport();
+							}}
+						/>
+						<SideBarDropDownButton
+							id="export-labels-button"
+							label="Export Labels"
+							onClick={async () => {
+								showLoading({
+									title: "Exporting Labels",
+									content: "Please wait while we prepare your annotations...",
+									progress: null,
+									buttons: [
+										{
+											label: "Cancel",
+											onClick: closeMessage,
+										},
+									],
+								});
+								try {
+									await exportLabels(projectState);
+								} catch (error) {
+									showError({
+										title: "Export Failed",
+										content: "Failed to export labels. Please try again.",
+										errorMessage:
+											error instanceof Error ? error.message : String(error),
+										buttons: [
+											{
+												label: "Close",
+												onClick: closeMessage,
+											},
+										],
+									});
+									return;
+								}
+								closeMessage();
 							}}
 						/>
 					</SideBarDropDownList>
