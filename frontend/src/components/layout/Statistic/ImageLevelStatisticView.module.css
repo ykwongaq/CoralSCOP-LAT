@@ -3,12 +3,13 @@
    ============================================================ */
 
 .statSection {
-    padding: 18px 22px;
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  padding: 18px 22px;
+  flex: 1;
+  min-height: 0;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* ============================================================
@@ -16,9 +17,9 @@
    ============================================================ */
 
 .statSummaryRow {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 /* ============================================================
@@ -26,34 +27,34 @@
    ============================================================ */
 
 .statChartsRow {
-    display: flex;
-    gap: 16px;
-    flex: 1;
-    min-height: 200px;
-    overflow: hidden;
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  min-height: 200px;
+  overflow: hidden;
 }
 
 .statChartDonut {
-    flex: 0 0 190px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  flex: 0 0 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .statChartList {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .statChartLabel {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-text-secondary1);
-    margin-bottom: 6px;
-    font-family: Roboto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-text-secondary1);
+  margin-bottom: 6px;
+  font-family: Roboto;
 }
 
 /* ============================================================
@@ -61,23 +62,23 @@
    ============================================================ */
 
 .statHeaderRow {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .statSectionTitle {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-text-page-heading);
-    margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-text-page-heading);
+  margin: 0;
 }
 
 .statSettingsButtonWrapper {
-    position: relative;
-    flex-shrink: 0;
+  position: relative;
+  flex-shrink: 0;
 }
 
 /* ============================================================
@@ -85,34 +86,34 @@
    ============================================================ */
 
 .statMenuPanel {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    background: var(--surface-surface-primary3);
-    border-radius: 8px;
-    border: 1px solid var(--line-line-primary1);
-    padding: 4px;
-    min-width: 200px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface-surface-primary3);
+  border-radius: 8px;
+  border: 1px solid var(--line-line-primary1);
+  padding: 4px;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .statMenuBtn {
-    display: block;
-    width: 100%;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-text-primary1);
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.15s ease;
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-text-primary1);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
 }
 
 .statMenuBtn:hover {
-    background: var(--surface-surface-primary5);
+  background: var(--surface-surface-primary5);
 }
 
 /* ============================================================
@@ -120,9 +121,9 @@
    ============================================================ */
 
 .statEmptyHint {
-    font-family: Roboto;
-    font-size: 14px;
-    color: var(--text-text-secondary1);
-    text-align: center;
-    margin-top: 30px;
+  font-family: Roboto;
+  font-size: 14px;
+  color: var(--text-text-secondary1);
+  text-align: center;
+  margin-top: 30px;
 }
