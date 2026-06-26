@@ -13,6 +13,7 @@ import {
 export type StatisticsExportFormat = "csv" | "excel";
 
 type TaxonomyColumnHeader = `Taxonomy_${Capitalize<TaxonomicRank>}`;
+type AreaUnit = "mm²" | "cm²" | "m²";
 
 interface StatisticsExportRow {
 	Unique_Image_name: string;
@@ -24,8 +25,9 @@ interface StatisticsExportRow {
 	"Number of pixels per image": number;
 	"Number of excluded pixels": number;
 	"% coverage per label based on pixels": number;
-	"Area per image": number | "N/A";
-	"Area excluded per image": number | "N/A";
+	"Label area": number | "N/A";
+	"Image Area": number | "N/A";
+	"Excluded Area": number | "N/A";
 	"Coverage per label based on area": number;
 	Unit: string;
 }
@@ -51,12 +53,61 @@ const COLUMN_HEADERS: Array<keyof StatisticsExportRowWithTaxonomy> = [
 	"Number of pixels per image",
 	"Number of excluded pixels",
 	"% coverage per label based on pixels",
-	"Area per image",
-	"Area excluded per image",
+	"Label area",
+	"Image Area",
+	"Excluded Area",
 	"Coverage per label based on area",
 	"Unit",
 	...TAXONOMY_COLUMN_HEADERS,
 ];
+
+function pickLargestScaledLineUnit(
+	scaledLines: ProjectState["dataList"][number]["scaledLineList"] | undefined,
+): "mm" | "cm" | "m" | null {
+	if (!scaledLines || scaledLines.length === 0) {
+		return null;
+	}
+
+	const priority: Record<"mm" | "cm" | "m", number> = {
+		mm: 0,
+		cm: 1,
+		m: 2,
+	};
+
+	let selected: "mm" | "cm" | "m" | null = null;
+	for (const line of scaledLines) {
+		const pixelLength = Math.hypot(
+			line.end.x - line.start.x,
+			line.end.y - line.start.y,
+		);
+		if (
+			!Number.isFinite(pixelLength) ||
+			pixelLength <= 0 ||
+			!Number.isFinite(line.scale) ||
+			line.scale <= 0
+		) {
+			continue;
+		}
+
+		if (!selected || priority[line.unit] > priority[selected]) {
+			selected = line.unit;
+		}
+	}
+
+	return selected;
+}
+
+function areaUnitFromScaledLineUnit(unit: "mm" | "cm" | "m"): AreaUnit {
+	if (unit === "m") return "m²";
+	if (unit === "cm") return "cm²";
+	return "mm²";
+}
+
+function areaUnitFactor(areaUnit: AreaUnit): number {
+	if (areaUnit === "m²") return 1;
+	if (areaUnit === "cm²") return 1e4;
+	return 1e6;
+}
 
 function buildTaxonomyColumns(
 	label: ProjectState["labels"][number] | undefined,
@@ -86,6 +137,17 @@ function buildStatisticsRows(
 	for (const data of state.dataList) {
 		const pixelScale = calculatePixelScale(data.scaledLineList ?? []);
 		const hasScale = pixelScale.squareMetersPerPixel > 0;
+		const preferredScaledLineUnit = pickLargestScaledLineUnit(
+			data.scaledLineList ?? [],
+		);
+		const exportAreaUnit: AreaUnit | null = hasScale
+			? preferredScaledLineUnit
+				? areaUnitFromScaledLineUnit(preferredScaledLineUnit)
+				: pixelScale.unit
+			: null;
+		const exportAreaFactor = exportAreaUnit
+			? areaUnitFactor(exportAreaUnit)
+			: 0;
 		const totalPixels = data.imageData.width * data.imageData.height;
 		const effectiveTotalPixels = calculateEffectiveTotalPixels(
 			data,
@@ -93,10 +155,22 @@ function buildStatisticsRows(
 		);
 		const excludedPixels = totalPixels - effectiveTotalPixels;
 		const areaPerImage = hasScale
-			? Number((totalPixels * pixelScale.value).toFixed(4))
+			? Number(
+					(
+						totalPixels *
+						pixelScale.squareMetersPerPixel *
+						exportAreaFactor
+					).toFixed(4),
+				)
 			: "N/A";
 		const areaExcludedPerImage = hasScale
-			? Number((excludedPixels * pixelScale.value).toFixed(4))
+			? Number(
+					(
+						excludedPixels *
+						pixelScale.squareMetersPerPixel *
+						exportAreaFactor
+					).toFixed(4),
+				)
 			: "N/A";
 		const byLabelId = new Map<
 			number,
@@ -126,7 +200,13 @@ function buildStatisticsRows(
 					? (stats.pixels / effectiveTotalPixels) * 100
 					: 0;
 			const labelArea = hasScale
-				? Number((stats.pixels * pixelScale.value).toFixed(4))
+				? Number(
+						(
+							stats.pixels *
+							pixelScale.squareMetersPerPixel *
+							exportAreaFactor
+						).toFixed(4),
+					)
 				: "N/A";
 			const coverageBasedOnAreaPct = hasScale
 				? areaPerImage === "N/A" || areaExcludedPerImage === "N/A"
@@ -155,10 +235,11 @@ function buildStatisticsRows(
 				"% coverage per label based on pixels": Number(
 					pixelCoveragePct.toFixed(2),
 				),
-				"Area per image": areaPerImage,
-				"Area excluded per image": areaExcludedPerImage,
+				"Label area": labelArea,
+				"Image Area": areaPerImage,
+				"Excluded Area": areaExcludedPerImage,
 				"Coverage per label based on area": coverageBasedOnAreaPct,
-				Unit: hasScale ? pixelScale.unit : "no calibration",
+				Unit: hasScale && exportAreaUnit ? exportAreaUnit : "no calibration",
 				...buildTaxonomyColumns(label),
 			});
 		}
