@@ -12,6 +12,7 @@ from PIL import Image
 from .models.CoralSCOPModel import CoralSCOPModel
 from .models.CoralTankModel import CoralTankModel
 from .models.SAM3Model import SAM3Model
+from .utils.gpu_monitor import log_gpu_memory
 from .utils.logger import get_logger
 
 _logger = get_logger(__name__)
@@ -350,9 +351,20 @@ class ProjectHandler:
             # Remove the temp directory after zipping (but keep the zip file for download)
             shutil.rmtree(temp_dir, ignore_errors=True)
 
+            # Release CUDA caching allocator memory back to the OS.
+            # During the loop above, gen_embeddings() allocated ~200MB per image
+            # on GPU.  Those tensors are now out of scope, but the CUDA allocator
+            # still holds the reserved memory.  empty_cache() returns it.
+            _logger.info(
+                "Releasing CUDA cache after project creation (token=%s)", token
+            )
+            torch.cuda.empty_cache()
+            log_gpu_memory("After project creation + empty_cache")
+
             yield {"type": "done", "token": token}
 
         except Exception:
             _logger.exception("Project creation failed (token=%s)", token)
             self.clean_up(token)
+            torch.cuda.empty_cache()
             raise

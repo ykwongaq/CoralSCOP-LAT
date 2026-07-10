@@ -10,5 +10,6 @@
          "max_masks_num": 100
     },
     "coral_tank_model_path": "checkpoints/CoralTank/best.pt",
-    "gpu_embedding_cache_size": 3
+    "gpu_embedding_cache_size": 3,
+    "gpu_embedding_cache_ttl_seconds": 900
 }

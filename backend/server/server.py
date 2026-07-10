@@ -3,6 +3,7 @@ import io
 import os
 import tempfile
 import threading
+import time
 import uuid
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional
@@ -17,10 +18,10 @@ from .models.CoralSCOPModel import CoralSCOPModel
 from .models.CoralTankModel import CoralTankModel
 from .models.SAM3Model import SAM3Model
 from .projectHandler import ProjectHandler
+from .utils.gpu_monitor import log_gpu_memory, log_model_size, track_gpu_memory
 from .utils.logger import get_logger
 from .utils.masks import encode_masks
 from .utils.path import resolve_path
-from .utils.gpu_monitor import log_gpu_memory, log_model_size, track_gpu_memory
 
 _logger = get_logger(__name__)
 
@@ -84,14 +85,26 @@ class Server:
         # GPU-side LRU cache for predict_inst: avoids repeated CPU→GPU transfers
         # for the same embedding across multiple clicks on the same image.
         # Each SAM embedding is ~200 MB; default cap of 5 uses ~1 GB of VRAM.
+        # Values are (state_tensor, last_access_timestamp) tuples.
         self._gpu_cache_max = config.get("gpu_embedding_cache_size", 5)
+        self._gpu_cache_ttl_seconds = config.get(
+            "gpu_embedding_cache_ttl_seconds", 900
+        )  # 15 min
         self._gpu_cache: OrderedDict = OrderedDict()
         self._gpu_cache_lock = threading.Lock()
-        _logger.info("GPU embedding cache: max %d items (estimated ~%d GB per item @ 200MB)",
-                     self._gpu_cache_max, self._gpu_cache_max * 200 // 1024)
+        _logger.info(
+            "GPU embedding cache: max %d items, TTL %d s (estimated ~%d GB per item @ 200MB)",
+            self._gpu_cache_max,
+            self._gpu_cache_ttl_seconds,
+            self._gpu_cache_max * 200 // 1024,
+        )
         final_mem = log_gpu_memory("=== Server initialization complete ===")
-        _logger.info("Total GPU allocated: %d MB, reserved: %d MB, utilization: %d%%",
-                     final_mem['allocated_mb'], final_mem['reserved_mb'], final_mem['utilization_percent'])
+        _logger.info(
+            "Total GPU allocated: %d MB, reserved: %d MB, utilization: %d%%",
+            final_mem["allocated_mb"],
+            final_mem["reserved_mb"],
+            final_mem["utilization_percent"],
+        )
 
     def get_zip_path(self, token: str) -> str:
         return self.project_handler.get_zip_path(token)
@@ -105,6 +118,28 @@ class Server:
 
     def save_embedding(self, session_id: str, stem: str, data: bytes) -> None:
         self.embedding_store.save(session_id, stem, data)
+
+    def _evict_stale_gpu_entries(self) -> int:
+        """
+        Remove GPU cache entries that haven't been accessed within the TTL.
+        Must be called while holding ``_gpu_cache_lock``.
+
+        Returns the number of entries evicted.
+        """
+        now = time.monotonic()
+        cutoff = now - self._gpu_cache_ttl_seconds
+        stale_keys = [k for k, (_, ts) in self._gpu_cache.items() if ts < cutoff]
+        for k in stale_keys:
+            del self._gpu_cache[k]
+        if stale_keys:
+            _logger.info(
+                "GPU cache TTL evicted %d stale entries (now %d/%d)",
+                len(stale_keys),
+                len(self._gpu_cache),
+                self._gpu_cache_max,
+            )
+            log_gpu_memory("After TTL eviction")
+        return len(stale_keys)
 
     def delete_embedding_session(self, session_id: str) -> None:
         self.embedding_store.delete_session(session_id)
@@ -134,10 +169,13 @@ class Server:
 
         # Fast path: GPU cache hit
         with self._gpu_cache_lock:
+            self._evict_stale_gpu_entries()
             if key in self._gpu_cache:
+                state_gpu, _ = self._gpu_cache[key]
+                self._gpu_cache[key] = (state_gpu, time.monotonic())
                 self._gpu_cache.move_to_end(key)
                 _logger.debug("GPU cache hit session=%s stem=%s", session_id, stem)
-                return self._gpu_cache[key]
+                return state_gpu
 
         # Slow path: load from CPU cache / disk (outside lock to avoid blocking)
         state_cpu = self.embedding_store.get(session_id, stem)
@@ -153,20 +191,27 @@ class Server:
 
         # Insert into GPU cache, evicting LRU if at capacity
         with self._gpu_cache_lock:
+            self._evict_stale_gpu_entries()
             if key not in self._gpu_cache:
-                self._gpu_cache[key] = state_gpu
+                self._gpu_cache[key] = (state_gpu, time.monotonic())
                 self._gpu_cache.move_to_end(key)
-                cache_info = log_gpu_memory(f"GPU cache [{key}] inserted, size={len(self._gpu_cache)}/{self._gpu_cache_max}")
+                cache_info = log_gpu_memory(
+                    f"GPU cache [{key}] inserted, size={len(self._gpu_cache)}/{self._gpu_cache_max}"
+                )
                 while len(self._gpu_cache) > self._gpu_cache_max:
-                    evicted_key, _ = self._gpu_cache.popitem(last=False)
+                    evicted_key, (_, _) = self._gpu_cache.popitem(last=False)
                     _logger.info(
                         "GPU cache LRU evicted %s (cache now %d/%d), GPU util: %d%%",
-                        evicted_key, len(self._gpu_cache), self._gpu_cache_max, cache_info['utilization_percent']
+                        evicted_key,
+                        len(self._gpu_cache),
+                        self._gpu_cache_max,
+                        cache_info["utilization_percent"],
                     )
             else:
                 # Another thread inserted the same key while we were transferring
+                state_gpu, _ = self._gpu_cache[key]
+                self._gpu_cache[key] = (state_gpu, time.monotonic())
                 self._gpu_cache.move_to_end(key)
-                state_gpu = self._gpu_cache[key]
 
         return state_gpu
 
@@ -298,7 +343,13 @@ class Server:
             "best_mask_logit": best_mask_logit_b64,
         }
 
-    def quick_start(self, image: Image.Image, image_filename: str, config: Dict, sample_id: Optional[str] = None) -> str:
+    def quick_start(
+        self,
+        image: Image.Image,
+        image_filename: str,
+        config: Dict,
+        sample_id: Optional[str] = None,
+    ) -> str:
         """
         Create a single-image project and return the path to the .coral ZIP file.
 
