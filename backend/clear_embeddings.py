@@ -11,7 +11,10 @@ def main(args):
     with open(config_file, "r") as f:
         config = json.load(f)
 
-    embeddings_folder = os.path.join(config["data_dir"], "embeddings")
+    data_dir = os.path.expanduser(
+        config.get("data_dir", "~/.local/share/coralscop-lat")
+    )
+    embeddings_folder = os.path.join(data_dir, "embeddings")
 
     for project_id in project_ids:
         project_folder = os.path.join(embeddings_folder, project_id)
@@ -20,7 +23,7 @@ def main(args):
             print(f"Cleared embeddings for project ID: {project_id}")
         else:
             print(
-                f"No embeddings found for project ID: {project_id} in {embeddings_folder}"
+                f"No embeddings found for project ID: {project_id} in {project_folder}"
             )
 
 
