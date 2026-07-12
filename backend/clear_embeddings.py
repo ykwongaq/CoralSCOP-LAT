@@ -19,7 +19,9 @@ def main(args):
             shutil.rmtree(project_folder)
             print(f"Cleared embeddings for project ID: {project_id}")
         else:
-            print(f"No embeddings found for project ID: {project_id}")
+            print(
+                f"No embeddings found for project ID: {project_id} in {embeddings_folder}"
+            )
 
 
 if __name__ == "__main__":
