@@ -9,6 +9,7 @@ from collections import OrderedDict
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+import torch
 from fastapi import HTTPException
 from PIL import Image
 
@@ -153,6 +154,22 @@ class Server:
                     len(stale),
                     session_id,
                 )
+
+    def generate_embedding(
+        self, session_id: str, stem: str, image: Image.Image
+    ) -> None:
+        """
+        Generate and persist the SAM embedding for an image.
+
+        Used by the frontend to (re)build an embedding when predict_inst
+        reports that none exists for the (session_id, stem) pair.
+        """
+        _logger.info("Generating embedding session=%s stem=%s", session_id, stem)
+        state = self.sam3.gen_embeddings(image)
+
+        buf = io.BytesIO()
+        torch.save(state, buf)
+        self.embedding_store.save(session_id, stem, buf.getvalue())
 
     def _get_state_on_device(self, session_id: str, stem: str):
         """
@@ -301,9 +318,13 @@ class Server:
             )
 
         if state is None:
+            # Signal the frontend to (re)generate the embedding for this image.
             raise HTTPException(
                 status_code=404,
-                detail=f"No embedding for session_id={session_id!r} stem={stem!r}",
+                detail=(
+                    "EMBEDDING_MISSING: "
+                    f"no embedding for session_id={session_id!r} stem={stem!r}"
+                ),
             )
 
         input_points_np = np.array(input_points, dtype=np.float32)

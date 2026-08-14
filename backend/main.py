@@ -294,6 +294,36 @@ async def upload_embedding(session_id: str, stem: str, file: UploadFile = File(.
     return Response(status_code=204)
 
 
+@app.post("/api/sam/sessions/{session_id}/embeddings/{stem}/generate", status_code=204)
+async def generate_embedding(session_id: str, stem: str, image: UploadFile = File(...)):
+    """
+    Generate and persist a SAM embedding for an image.
+
+    The frontend calls this when POST /api/sam/predict returns
+    ``EMBEDDING_MISSING``, re-sending the current image so the server can
+    rebuild the missing embedding.
+
+    Body: multipart/form-data with a single field ``image`` containing the
+    source image file.
+    """
+    try:
+        pil_image = await read_uploaded_image(image, mode="RGB")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    loop = asyncio.get_running_loop()
+    try:
+        await loop.run_in_executor(
+            None, _server.generate_embedding, session_id, stem, pil_image
+        )
+    except MemoryError:
+        raise HTTPException(
+            status_code=503,
+            detail="Server is out of memory. Please try again later.",
+        )
+    return Response(status_code=204)
+
+
 @app.delete("/api/sam/sessions/{session_id}", status_code=204)
 async def delete_sam_session(session_id: str):
     """

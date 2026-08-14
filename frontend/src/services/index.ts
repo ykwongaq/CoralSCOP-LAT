@@ -40,11 +40,16 @@ export {
 export {
 	type CreateSamSessionResponse,
 	type UploadEmbeddingRequest,
+	type GenerateEmbeddingRequest,
 	type PredictInstanceRequest,
 	type PredictInstanceResponse,
+	EMBEDDING_MISSING_MARKER,
 	createSamSession,
 	uploadEmbedding,
+	generateEmbedding,
 	predictInstance,
+	predictInstanceWithRegeneration,
+	isMissingEmbeddingError,
 	releaseSession,
 	releaseSessionOnUnload,
 } from "./SamService";

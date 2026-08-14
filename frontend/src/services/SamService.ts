@@ -1,5 +1,9 @@
 import { apiClient, API_BASE } from "./ApiClient";
-import type { ApiRequestCallbacks, ApiRequestHandle } from "../types/api";
+import type {
+	ApiError,
+	ApiRequestCallbacks,
+	ApiRequestHandle,
+} from "../types/api";
 import type { RLE } from "../types/RLE";
 import type { PointPrompt } from "../types";
 
@@ -17,6 +21,12 @@ export interface UploadEmbeddingRequest {
 	data: ArrayBuffer;
 }
 
+export interface GenerateEmbeddingRequest {
+	sessionId: string;
+	stem: string;
+	image: Blob;
+}
+
 export interface PredictInstanceRequest {
 	sessionId: string;
 	stem: string;
@@ -28,6 +38,12 @@ export interface PredictInstanceResponse {
 	mask: RLE;
 	bestMaskLogit: string; // base64-encoded .npy bytes, shape [1, 256, 256] float32
 }
+
+/**
+ * Marker included in the server's 404 detail when an embedding is missing,
+ * so the client can distinguish it from other prediction errors.
+ */
+export const EMBEDDING_MISSING_MARKER = "EMBEDDING_MISSING";
 
 // ---------------------------------------------------------------------------
 // Service functions
@@ -77,6 +93,45 @@ export function uploadEmbedding(
 	);
 }
 
+/**
+ * Generates and persists a SAM embedding for an image on the server.
+ *
+ * The frontend calls this when {@link predictInstance} reports a missing
+ * embedding, re-sending the current image so the server can rebuild it.
+ *
+ * @param request.sessionId  UUID identifying the embedding session
+ * @param request.stem       Image filename without extension (e.g. "DSC_0001")
+ * @param request.image      The source image blob to embed
+ */
+export function generateEmbedding(
+	request: GenerateEmbeddingRequest,
+	callbacks: ApiRequestCallbacks<void>,
+): ApiRequestHandle {
+	const { sessionId, stem, image } = request;
+	const form = new FormData();
+	form.append("image", image, `${stem}.png`);
+
+	return apiClient.request<void>(
+		`/api/sam/sessions/${encodeURIComponent(sessionId)}/embeddings/${encodeURIComponent(stem)}/generate`,
+		{
+			method: "POST",
+			body: form,
+			onError: callbacks.onError,
+			onComplete: callbacks.onComplete,
+		},
+	);
+}
+
+/**
+ * Returns true when an error indicates the server has no embedding for the
+ * requested image and the client should re-send the image to rebuild it.
+ */
+export function isMissingEmbeddingError(error: ApiError): boolean {
+	return (
+		error.status === 404 && error.message.includes(EMBEDDING_MISSING_MARKER)
+	);
+}
+
 export function predictInstance(
 	request: PredictInstanceRequest,
 	callbacks: ApiRequestCallbacks<PredictInstanceResponse>,
@@ -107,6 +162,57 @@ export function predictInstance(
 			},
 		},
 	);
+}
+
+/**
+ * Runs a prediction, and if the server reports a missing embedding, fetches
+ * the source image from {@link imageUrl}, asks the server to rebuild the
+ * embedding, and transparently retries the prediction.
+ */
+export function predictInstanceWithRegeneration(
+	request: PredictInstanceRequest,
+	imageUrl: string,
+	callbacks: ApiRequestCallbacks<PredictInstanceResponse>,
+): ApiRequestHandle {
+	const run = (): ApiRequestHandle =>
+		predictInstance(request, {
+			onComplete: callbacks.onComplete,
+			onError: (error) => {
+				if (!isMissingEmbeddingError(error)) {
+					callbacks.onError?.(error);
+					return;
+				}
+
+				void (async () => {
+					try {
+						const response = await fetch(imageUrl);
+						if (!response.ok) {
+							throw new Error(
+								`Failed to load image (status ${response.status})`,
+							);
+						}
+						const blob = await response.blob();
+						generateEmbedding(
+							{
+								sessionId: request.sessionId,
+								stem: request.stem,
+								image: blob,
+							},
+							{
+								onComplete: () => run(),
+								onError: callbacks.onError,
+							},
+						);
+					} catch (err) {
+						callbacks.onError?.({
+							message: err instanceof Error ? err.message : String(err),
+						});
+					}
+				})();
+			},
+		});
+
+	return run();
 }
 
 /**

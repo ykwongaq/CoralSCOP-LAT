@@ -20,7 +20,7 @@ import {
 	type CanvasAction,
 } from "../../../hooks";
 
-import { predictInstance } from "../../../services";
+import { predictInstanceWithRegeneration } from "../../../services";
 import styles from "./CanvasCommon.module.css";
 
 // ---------------------------------------------------------------------------
@@ -111,7 +111,8 @@ export default function AnnotationCanvas() {
 
 		// Annotation layers
 		if (viz.showMasks && layersRef.current) {
-			const { originalWidth: origW, originalHeight: origH } = displayScaleRef.current;
+			const { originalWidth: origW, originalHeight: origH } =
+				displayScaleRef.current;
 			ctx.globalAlpha = viz.maskOpacity;
 			ctx.drawImage(layersRef.current.mask, 0, 0, origW, origH);
 			ctx.globalAlpha = 1;
@@ -235,8 +236,9 @@ export default function AnnotationCanvas() {
 						const allPrompts = [...pointPromptsRef.current, newPrompt];
 						const maskInput = pendingAnnotationRef.current?.encodedLogit;
 
-						predictInstance(
+						predictInstanceWithRegeneration(
 							{ sessionId, stem, inputPrompts: allPrompts, maskInput },
+							data.imageData.imageUrl,
 							{
 								onComplete: (response) => {
 									annotationSessionDispatch({
@@ -300,7 +302,8 @@ export default function AnnotationCanvas() {
 		}
 
 		const prev = prevBuildDepsRef.current;
-		const selectionOnlyChanged = prev !== null &&
+		const selectionOnlyChanged =
+			prev !== null &&
 			prev.data === data &&
 			prev.imageSize === imageSize &&
 			prev.hiddingLabels === visualizationSettingState.hiddingLabels;
@@ -332,7 +335,12 @@ export default function AnnotationCanvas() {
 
 		// Full rebuild when data, image size, or hidden labels changed
 		let cancelled = false;
-		buildLayers(data, annotationSessionState.selectedAnnotations, visualizationSettingState, displayScaleRef.current)
+		buildLayers(
+			data,
+			annotationSessionState.selectedAnnotations,
+			visualizationSettingState,
+			displayScaleRef.current,
+		)
 			.then(({ layers, pixelMasks }) => {
 				if (!cancelled) {
 					layersRef.current = layers;
