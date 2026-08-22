@@ -17,6 +17,7 @@ def main(args):
     image_folder = args.image_folder
     output_embedding_folder = args.output_embedding_folder
     config_path = args.config_path
+    project_id = args.project_id if args.project_id else None
 
     os.makedirs(output_embedding_folder, exist_ok=True)
 
@@ -74,7 +75,9 @@ def main(args):
                 Image.open(os.path.join(image_folder, image_filename)).convert("RGB")
             )
 
-    project_handler.create_project(token, images, image_filenames, project_config)
+    project_handler.create_project(
+        token, images, image_filenames, project_config, sample_id=project_id
+    )
     generated_coral_path = project_handler.get_zip_path(token)
 
     if args.output_coral:
@@ -122,6 +125,11 @@ if __name__ == "__main__":
         "--output_coral",
         type=str,
         help="Optional: direct file path for the output .coral file (e.g., /path/to/output.coral). If omitted, the file is kept inside --output_folder/projects/",
+    )
+    parser.add_argument(
+        "--project_id",
+        type=str,
+        help="Optional: specify a project ID for the created project",
     )
     args = parser.parse_args()
 

@@ -9,7 +9,7 @@
          "point_number": 32,
          "max_masks_num": 100
     },
-    "coral_tank_model_path": "checkpoints/CoralTank/best.pt",
+    "coral_tank_model_path": "checkpoints/CoralTank/aug_11.pt",
     "gpu_embedding_cache_size": 3,
     "gpu_embedding_cache_ttl_seconds": 900
 }

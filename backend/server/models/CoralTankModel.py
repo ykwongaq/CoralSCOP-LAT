@@ -2,8 +2,8 @@ import numpy as np
 from PIL import Image
 from ultralytics import YOLO
 
-from ..utils.logger import get_logger
 from ..utils.gpu_monitor import track_gpu_memory
+from ..utils.logger import get_logger
 from ..utils.masks import encode_masks
 from .modelQueue import ModelQueue
 
@@ -22,19 +22,16 @@ class CoralTankModel:
     @track_gpu_memory
     def predict(self, image: Image.Image) -> Tuple[List[Dict[str, Any]], List[int]]:
         with self._model_queue as model:
-            result = model.predict(image, retina_masks=True, classes=[0, 3])[0]
+            result = model.predict(image, retina_masks=True)[0]
             result = result.cpu().numpy()
 
             masks = []
 
             if result.masks is None:
-                return [], []   
-            
+                return [], []
+
             for mask in result.masks.data:
                 masks.append(encode_masks(mask))
 
             class_list = result.boxes.cls.astype(int).tolist()
-
-            # Convert the class id 3 to 1
-            class_list = [1 if cls == 3 else cls for cls in class_list]
             return masks, class_list

@@ -71,6 +71,7 @@ class ProjectHandler:
 
     def run_coral_tank(self, image: Image.Image, config: Dict) -> Dict:
         masks, class_list = self.coralTank_model.predict(image)
+        _logger.info(f"!!!! class_list: {class_list}")
 
         min_area = config.get("min_area", 0.001)
         image_area = image.width * image.height
@@ -115,7 +116,7 @@ class ProjectHandler:
             ],
             "categories": [
                 {"id": 0, "name": "coral", "sub-categories": []},
-                {"id": 1, "name": "base", "sub-categories": []},
+                {"id": 1, "name": "coral_plus_base", "sub-categories": []},
             ],
         }
         return output_json
