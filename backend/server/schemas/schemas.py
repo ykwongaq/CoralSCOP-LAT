@@ -105,6 +105,26 @@ class EncodeMaskResponse(BaseModel):
 
 
 # ============================================================================
+# /api/masks/rasterize - Rasterize Geometry into RLE Mask
+# ============================================================================
+
+
+class RasterizeMaskRequest(BaseModel):
+    """Rasterize polygon/brush geometry into a binary RLE mask."""
+
+    size: List[int]  # [height, width] in image pixel space
+    polygons: List[List[List[float]]] = []  # one or more polygons: [[x, y], ...]
+    strokes: List[List[List[float]]] = []  # one or more brush polylines
+    stroke_width: Optional[float] = None  # brush stroke width in image px
+
+
+class RasterizeMaskResponse(BaseModel):
+    """Binary mask produced by rasterizing the given geometry."""
+
+    mask: RLE
+
+
+# ============================================================================
 # /api/sam/sessions - SAM Session Management
 # ============================================================================
 

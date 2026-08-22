@@ -237,3 +237,51 @@ export function releaseSessionOnUnload(sessionId: string): void {
 		keepalive: true,
 	});
 }
+
+// ---------------------------------------------------------------------------
+// Rasterize polygon/brush geometry into a binary RLE mask (no SAM involved)
+// ---------------------------------------------------------------------------
+
+export interface RasterizeMaskRequest {
+	/** Natural image size in pixels: [height, width]. */
+	size: [number, number];
+	/** One or more polygons, each a list of [x, y] vertices. */
+	polygons?: number[][][];
+	/** One or more brush polylines, each a list of [x, y] points. */
+	strokes?: number[][][];
+	/** Brush stroke width in image pixels (optional). */
+	strokeWidth?: number;
+}
+
+export interface RasterizeMaskResponse {
+	mask: RLE;
+}
+
+/**
+ * Rasterizes polygon/brush geometry into a binary RLE mask on the server.
+ * Used for polygon-based mask creation where no SAM inference is required.
+ * The returned mask has the same shape as a SAM predict response, so it can
+ * be saved identically.
+ */
+export function rasterizeMask(
+	request: RasterizeMaskRequest,
+	callbacks: ApiRequestCallbacks<RasterizeMaskResponse>,
+): ApiRequestHandle {
+	const body: Record<string, unknown> = {
+		size: request.size,
+		polygons: request.polygons ?? [],
+		strokes: request.strokes ?? [],
+	};
+	if (request.strokeWidth !== undefined) {
+		body.stroke_width = request.strokeWidth;
+	}
+
+	return apiClient.request<{ mask: RLE }>("/api/masks/rasterize", {
+		method: "POST",
+		body,
+		onError: callbacks.onError,
+		onComplete: (data) => {
+			callbacks.onComplete?.({ mask: data.mask });
+		},
+	});
+}

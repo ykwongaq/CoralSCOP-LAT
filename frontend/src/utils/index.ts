@@ -3,6 +3,7 @@ export * from "./cocoRle";
 export * from "./color";
 export * from "./displayScale";
 export * from "./LabelColorMap";
+export * from "./polygon";
 export * from "./saveBlobWithPicker";
 export * from "./AnnotationCommand";
 export * from "./taxonomy";

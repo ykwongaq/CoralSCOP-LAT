@@ -26,6 +26,8 @@ from server.schemas import (
     PredictInstRequest,
     PredictInstResponse,
     QuickStartConfig,
+    RasterizeMaskRequest,
+    RasterizeMaskResponse,
     RunModelConfig,
     RunModelResponse,
 )
@@ -253,6 +255,38 @@ async def encode_masks(request: EncodeMaskRequest):
     inputs = [rle.model_dump() for rle in request.inputs]
     result = _server.encode_masks(inputs)
     return EncodeMaskResponse(segmentation=result)
+
+
+@app.post("/api/masks/rasterize", response_model=RasterizeMaskResponse)
+async def rasterize_masks(request: RasterizeMaskRequest):
+    """
+    Rasterize polygon/brush geometry into a binary RLE mask.
+
+    Accepts:
+        {
+            "size": [height, width],
+            "polygons": [[[x, y], ...], ...],
+            "strokes":   [[[x, y], ...], ...],
+            "stroke_width": 20
+        }
+
+    Returns:
+        {"mask": {"size": [height, width], "counts": [...]}}
+        in the same uncompressed COCO RLE format as /api/sam/predict/.
+    """
+    loop = asyncio.get_running_loop()
+    try:
+        result = await loop.run_in_executor(
+            None,
+            _server.rasterize_masks,
+            request.size,
+            request.polygons,
+            request.strokes,
+            request.stroke_width,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    return RasterizeMaskResponse(mask=result)
 
 
 # ---------------------------------------------------------------------------

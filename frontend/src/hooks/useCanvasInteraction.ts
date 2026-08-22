@@ -1,5 +1,6 @@
 import { useRef, useCallback } from "react";
 import type { RefObject } from "react";
+import type { Point } from "../types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -9,7 +10,15 @@ export type CanvasAction =
 	| { type: "hit-test"; imgX: number; imgY: number }
 	| { type: "rect-select"; x0: number; y0: number; x1: number; y1: number }
 	| { type: "positive-prompt"; imgX: number; imgY: number }
-	| { type: "negative-prompt"; imgX: number; imgY: number };
+	| { type: "negative-prompt"; imgX: number; imgY: number }
+	| { type: "add-polygon-vertex"; imgX: number; imgY: number }
+	| {
+			type: "move-edit-vertex";
+			vertexIndex: number;
+			imgX: number;
+			imgY: number;
+	  }
+	| { type: "add-edit-vertex"; edgeIndex: number; imgX: number; imgY: number };
 
 type Viewport = { scale: number; originX: number; originY: number };
 
@@ -24,7 +33,9 @@ type MouseState =
 			startImgY: number;
 	  }
 	| { phase: "selecting"; startImgX: number; startImgY: number }
-	| { phase: "rightPanning"; lastClientX: number; lastClientY: number };
+	| { phase: "rightPanning"; lastClientX: number; lastClientY: number }
+	| { phase: "editDragging"; vertexIndex: number }
+	| { phase: "editAddOnUp"; edgeIndex: number; imgX: number; imgY: number };
 
 // Selection rect in image coordinates (exposed for drawing)
 export type SelectionRect = {
@@ -35,6 +46,63 @@ export type SelectionRect = {
 };
 
 const DRAG_THRESHOLD = 5; // pixels before a click becomes a drag
+const EDIT_HIT_RADIUS_PX = 8; // screen pixels for vertex/edge hit-testing
+
+function distanceToSegment(
+	px: number,
+	py: number,
+	ax: number,
+	ay: number,
+	bx: number,
+	by: number,
+): number {
+	const dx = bx - ax;
+	const dy = by - ay;
+	const lenSq = dx * dx + dy * dy;
+	if (lenSq === 0) return Math.hypot(px - ax, py - ay);
+	const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));
+	return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+function hitTestVertex(
+	points: Point[],
+	x: number,
+	y: number,
+	radius: number,
+): number {
+	let best = -1;
+	let bestDist = radius;
+	for (let i = 0; i < points.length; i++) {
+		const d = Math.hypot(points[i].x - x, points[i].y - y);
+		if (d <= bestDist) {
+			bestDist = d;
+			best = i;
+		}
+	}
+	return best;
+}
+
+function nearestEdge(
+	points: Point[],
+	x: number,
+	y: number,
+	radius: number,
+): number {
+	const n = points.length;
+	if (n < 2) return -1;
+	let best = -1;
+	let bestDist = radius;
+	for (let i = 0; i < n; i++) {
+		const a = points[i];
+		const b = points[(i + 1) % n];
+		const d = distanceToSegment(x, y, a.x, a.y, b.x, b.y);
+		if (d <= bestDist) {
+			bestDist = d;
+			best = i;
+		}
+	}
+	return best;
+}
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -49,15 +117,22 @@ const DRAG_THRESHOLD = 5; // pixels before a click becomes a drag
  *   - Right drag          → pan
  *
  * Add mode:
- *   - Left click          → positive point prompt
- *   - Right click         → negative point prompt
+ *   - point prompt: Left click  → positive point prompt
+ *                   Right click → negative point prompt
+ *   - polygon prompt: Left click → add polygon vertex
  *   - Dragging disabled
+ *
+ * Edit mode:
+ *   - Left click/drag on a vertex → move that vertex
+ *   - Left click on an edge       → add a vertex at the clicked position
  *
  * Scroll-to-zoom is handled separately in AnnotationCanvas via a native
  * wheel listener (needs passive:false), so it is not part of this hook.
  */
 export function useCanvasInteraction(
-	mode: "select" | "add",
+	mode: "select" | "add" | "edit",
+	promptMode: "point" | "polygon",
+	editPointsRef: RefObject<Point[]>,
 	canvasRef: RefObject<HTMLCanvasElement | null>,
 	viewportRef: RefObject<Viewport>,
 	imageSizeRef: RefObject<{ width: number; height: number }>,
@@ -105,10 +180,45 @@ export function useCanvasInteraction(
 
 			if (mode === "add") {
 				if (!isInImageBounds(img.x, img.y)) return;
+				if (promptMode === "polygon") {
+					if (isLeftClick(e))
+						onAction({
+							type: "add-polygon-vertex",
+							imgX: img.x,
+							imgY: img.y,
+						});
+					return;
+				}
 				if (isLeftClick(e))
 					onAction({ type: "positive-prompt", imgX: img.x, imgY: img.y });
 				if (isRightClick(e))
 					onAction({ type: "negative-prompt", imgX: img.x, imgY: img.y });
+				return;
+			}
+
+			// Edit mode: drag a vertex or click an edge to add a vertex
+			if (mode === "edit") {
+				if (!isLeftClick(e)) return;
+				if (!isInImageBounds(img.x, img.y)) return;
+				const pts = editPointsRef.current;
+				const hitRadius = EDIT_HIT_RADIUS_PX / viewportRef.current.scale;
+
+				const vertexIndex = hitTestVertex(pts, img.x, img.y, hitRadius);
+				if (vertexIndex >= 0) {
+					mouseStateRef.current = { phase: "editDragging", vertexIndex };
+					if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
+					return;
+				}
+
+				const edgeIndex = nearestEdge(pts, img.x, img.y, hitRadius);
+				if (edgeIndex >= 0) {
+					mouseStateRef.current = {
+						phase: "editAddOnUp",
+						edgeIndex,
+						imgX: img.x,
+						imgY: img.y,
+					};
+				}
 				return;
 			}
 
@@ -131,7 +241,16 @@ export function useCanvasInteraction(
 				if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
 			}
 		},
-		[mode, canvasRef, toImageCoords, isInImageBounds, onAction],
+		[
+			mode,
+			promptMode,
+			editPointsRef,
+			canvasRef,
+			viewportRef,
+			toImageCoords,
+			isInImageBounds,
+			onAction,
+		],
 	);
 
 	const handleMouseMove = useCallback(
@@ -170,6 +289,18 @@ export function useCanvasInteraction(
 					selectionRectRef.current.endY = img.y;
 					requestDraw();
 				}
+			} else if (ms.phase === "editDragging") {
+				const img = toImageCoords(e.clientX, e.clientY);
+				if (!img) return;
+				const { width, height } = imageSizeRef.current;
+				const cx = Math.max(0, Math.min(width, img.x));
+				const cy = Math.max(0, Math.min(height, img.y));
+				onAction({
+					type: "move-edit-vertex",
+					vertexIndex: ms.vertexIndex,
+					imgX: cx,
+					imgY: cy,
+				});
 			} else if (ms.phase === "rightPanning") {
 				const dx = e.clientX - ms.lastClientX;
 				const dy = e.clientY - ms.lastClientY;
@@ -184,7 +315,15 @@ export function useCanvasInteraction(
 				requestDraw();
 			}
 		},
-		[canvasRef, toImageCoords, viewportRef, requestDraw],
+		[
+			canvasRef,
+			toImageCoords,
+			viewportRef,
+			requestDraw,
+			onAction,
+			imageSizeRef,
+			isInImageBounds,
+		],
 	);
 
 	const handleMouseUp = useCallback(
@@ -208,6 +347,15 @@ export function useCanvasInteraction(
 				}
 				selectionRectRef.current = null;
 				requestDraw();
+			} else if (ms.phase === "editDragging") {
+				// Vertex drag completed — the position was already applied per-move.
+			} else if (ms.phase === "editAddOnUp") {
+				onAction({
+					type: "add-edit-vertex",
+					edgeIndex: ms.edgeIndex,
+					imgX: ms.imgX,
+					imgY: ms.imgY,
+				});
 			}
 
 			mouseStateRef.current = { phase: "idle" };

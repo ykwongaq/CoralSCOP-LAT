@@ -3,6 +3,7 @@ import { useAnnotationCommands } from "../../../hooks";
 
 import FlowBar from "./FlowBar";
 import ActivateLabelButton from "./ActivateLabelButton";
+import PromptModeToggle from "./PromptModeToggle";
 import ActionButton from "../../ui/FloatBar/FloatBarButton";
 
 interface ModeBarProps {
@@ -21,6 +22,7 @@ export default function AddModeBar({ children }: ModeBarProps) {
 				isOpen={isActivateLabelOpen}
 				onToggle={() => setIsActivateLabelOpen((prev) => !prev)}
 			/>
+			<PromptModeToggle />
 			<ActionButton
 				name=""
 				icon="ico-rotate icon"

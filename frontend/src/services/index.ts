@@ -52,6 +52,9 @@ export {
 	isMissingEmbeddingError,
 	releaseSession,
 	releaseSessionOnUnload,
+	type RasterizeMaskRequest,
+	type RasterizeMaskResponse,
+	rasterizeMask,
 } from "./SamService";
 export { saveProject } from "./SaveProjectService";
 export {

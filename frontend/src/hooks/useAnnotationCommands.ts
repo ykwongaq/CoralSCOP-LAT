@@ -12,7 +12,12 @@ import {
 	useProject,
 	useVisualizationSetting,
 } from "../store";
-import { type AnnotationCommand } from "../utils";
+import { rasterizeMask } from "../services";
+import {
+	type AnnotationCommand,
+	decodeRLE,
+	extractPolygonFromMask,
+} from "../utils";
 
 /**
  * Owns all annotation command logic and the UI state for label pickers.
@@ -55,6 +60,7 @@ function useCreateAnnotationCommands() {
 
 	const handleClearPrompts = useCallback(() => {
 		annotationSessionDispatch({ type: "CLEAR_POINT_PROMPTS" });
+		annotationSessionDispatch({ type: "CLEAR_POLYGON_VERTICES" });
 		annotationSessionDispatch({ type: "CLEAR_PENDING_MASK" });
 	}, [annotationSessionDispatch]);
 
@@ -62,6 +68,41 @@ function useCreateAnnotationCommands() {
 		const labelId = annotationSessionState.activateLabel
 			? annotationSessionState.activateLabel.id
 			: -1;
+
+		if (annotationSessionState.promptMode === "polygon") {
+			const polygon = annotationSessionState.polygonPoints;
+			if (polygon.length < 3) return;
+
+			const data =
+				projectState.dataList[annotationSessionState.currentDataIndex];
+			if (!data) return;
+
+			rasterizeMask(
+				{
+					size: [data.imageData.height, data.imageData.width],
+					polygons: [polygon.map((p) => [p.x, p.y])],
+				},
+				{
+					onComplete: (response) => {
+						projectDispatch({
+							type: "ADD_ANNOTATION",
+							payload: {
+								dataId: annotationSessionState.currentDataIndex,
+								segmentation: response.mask,
+								labelId,
+							},
+						});
+						annotationSessionDispatch({
+							type: "CLEAR_POLYGON_VERTICES",
+						});
+					},
+					onError: (error) => {
+						console.error("Polygon rasterization failed:", error);
+					},
+				},
+			);
+			return;
+		}
 
 		projectDispatch({
 			type: "ADD_ANNOTATION",
@@ -77,6 +118,9 @@ function useCreateAnnotationCommands() {
 		annotationSessionState.activateLabel,
 		annotationSessionState.currentDataIndex,
 		annotationSessionState.pendingMask,
+		annotationSessionState.promptMode,
+		annotationSessionState.polygonPoints,
+		projectState.dataList,
 		projectDispatch,
 		annotationSessionDispatch,
 	]);
@@ -88,11 +132,114 @@ function useCreateAnnotationCommands() {
 	const handleSwitchToSelect = useCallback(() => {
 		annotationSessionDispatch({ type: "CLEAR_PENDING_MASK" });
 		annotationSessionDispatch({ type: "CLEAR_POINT_PROMPTS" });
+		annotationSessionDispatch({ type: "CLEAR_POLYGON_VERTICES" });
 		annotationSessionDispatch({
 			type: "SET_ANNOTATION_MODE",
 			payload: "select",
 		});
 	}, [annotationSessionDispatch]);
+
+	const handleStartEdit = useCallback(() => {
+		const selected = annotationSessionState.selectedAnnotations;
+		if (selected.length !== 1) {
+			console.warn(
+				"Edit Mask requires exactly one selected annotation",
+				selected,
+			);
+			return;
+		}
+
+		const data = projectState.dataList[annotationSessionState.currentDataIndex];
+		if (!data) return;
+
+		const annotation = data.annotations.find((ann) => ann.id === selected[0]);
+		if (!annotation) {
+			console.warn("Selected annotation not found", selected[0]);
+			return;
+		}
+
+		const [height, width] = annotation.segmentation.size;
+		const mask = decodeRLE(annotation.segmentation);
+		const points = extractPolygonFromMask(mask, width, height);
+		if (points.length < 3) {
+			console.warn(
+				"Could not extract an editable polygon from the annotation",
+				annotation.segmentation,
+			);
+			return;
+		}
+
+		annotationSessionDispatch({
+			type: "START_EDIT_POLYGON",
+			payload: {
+				annotationId: annotation.id,
+				points,
+				originalPoints: points,
+			},
+		});
+		annotationSessionDispatch({ type: "SET_ANNOTATION_MODE", payload: "edit" });
+	}, [
+		annotationSessionState.selectedAnnotations,
+		annotationSessionState.currentDataIndex,
+		projectState.dataList,
+		annotationSessionDispatch,
+	]);
+
+	const handleConfirmEdit = useCallback(() => {
+		const editPolygon = annotationSessionState.editPolygon;
+		if (!editPolygon || editPolygon.points.length < 3) return;
+
+		const data = projectState.dataList[annotationSessionState.currentDataIndex];
+		if (!data) return;
+
+		rasterizeMask(
+			{
+				size: [data.imageData.height, data.imageData.width],
+				polygons: [editPolygon.points.map((p) => [p.x, p.y])],
+			},
+			{
+				onComplete: (response) => {
+					projectDispatch({
+						type: "UPDATE_ANNOTATION_SEGMENTATION",
+						payload: {
+							dataId: annotationSessionState.currentDataIndex,
+							annotationId: editPolygon.annotationId,
+							segmentation: response.mask,
+						},
+					});
+					annotationSessionDispatch({
+						type: "SET_ANNOTATION_MODE",
+						payload: "select",
+					});
+				},
+				onError: (error) => {
+					console.error("Polygon edit rasterization failed:", error);
+				},
+			},
+		);
+	}, [
+		annotationSessionState.editPolygon,
+		annotationSessionState.currentDataIndex,
+		projectState.dataList,
+		projectDispatch,
+		annotationSessionDispatch,
+	]);
+
+	const handleCancelEdit = useCallback(() => {
+		annotationSessionDispatch({
+			type: "SET_ANNOTATION_MODE",
+			payload: "select",
+		});
+	}, [annotationSessionDispatch]);
+
+	const handleResetEdit = useCallback(() => {
+		const editPolygon = annotationSessionState.editPolygon;
+		if (!editPolygon) return;
+		annotationSessionDispatch({
+			type: "SET_EDIT_POLYGON_POINTS",
+			payload: editPolygon.originalPoints.map((p) => ({ ...p })),
+		});
+	}, [annotationSessionState.editPolygon, annotationSessionDispatch]);
 
 	const handleToggleLabels = useCallback(() => {
 		if (mode === "select") setIsLabelPanelOpen((prev) => !prev);
@@ -165,6 +312,10 @@ function useCreateAnnotationCommands() {
 			"confirm-mask": handleConfirmMask,
 			"switch-to-add": handleSwitchToAdd,
 			"switch-to-select": handleSwitchToSelect,
+			"start-edit": handleStartEdit,
+			"confirm-edit": handleConfirmEdit,
+			"cancel-edit": handleCancelEdit,
+			"reset-edit": handleResetEdit,
 			"toggle-labels": handleToggleLabels,
 			"select-label-0": () => handleSelectLabelByIndex(0),
 			"select-label-1": () => handleSelectLabelByIndex(1),
@@ -185,6 +336,10 @@ function useCreateAnnotationCommands() {
 			handleConfirmMask,
 			handleSwitchToAdd,
 			handleSwitchToSelect,
+			handleStartEdit,
+			handleConfirmEdit,
+			handleCancelEdit,
+			handleResetEdit,
 			handleToggleLabels,
 			handleSelectLabelByIndex,
 			handlePrevImage,

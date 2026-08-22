@@ -16,10 +16,15 @@ export type AnnotationCommand =
 	// Select mode
 	| "remove"
 	| "switch-to-add"
+	| "start-edit"
 	// Add mode
 	| "clear-prompts"
 	| "confirm-mask"
-	| "switch-to-select";
+	| "switch-to-select"
+	// Edit mode
+	| "confirm-edit"
+	| "cancel-edit"
+	| "reset-edit";
 
 // Normalise a KeyboardEvent into a lookup key, e.g. "ctrl+z", "tab", "r"
 export function normalizeKey(e: KeyboardEvent): string {
@@ -43,13 +48,14 @@ const sharedCommands: Partial<Record<string, AnnotationCommand>> = {
 };
 
 export const KEYMAP: Record<
-	"select" | "add",
+	"select" | "add" | "edit",
 	Partial<Record<string, AnnotationCommand>>
 > = {
 	select: {
 		tab: "toggle-masks",
 		r: "remove",
 		w: "switch-to-add",
+		e: "start-edit",
 		...sharedCommands,
 	},
 	add: {
@@ -58,5 +64,13 @@ export const KEYMAP: Record<
 		"ctrl+z": "clear-prompts",
 		w: "switch-to-select",
 		...sharedCommands,
+	},
+	edit: {
+		tab: "toggle-masks",
+		" ": "confirm-edit",
+		enter: "confirm-edit",
+		r: "reset-edit",
+		w: "cancel-edit",
+		escape: "cancel-edit",
 	},
 };

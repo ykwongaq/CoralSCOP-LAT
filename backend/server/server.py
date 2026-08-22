@@ -278,6 +278,27 @@ class Server:
 
         return rle_list
 
+    def rasterize_masks(
+        self,
+        size: List[int],
+        polygons: List[List[List[float]]],
+        strokes: List[List[List[float]]],
+        stroke_width: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """
+        Rasterize polygon/brush geometry into a binary mask and return it
+        as an uncompressed COCO RLE dict — the same mask format returned
+        by predict_inst.
+        """
+        _logger.info(
+            "Rasterizing masks (size=%s, polygons=%d, strokes=%d, stroke_width=%s)",
+            size,
+            len(polygons),
+            len(strokes),
+            stroke_width,
+        )
+        return self.mask_handler.rasterize_masks(size, polygons, strokes, stroke_width)
+
     @track_gpu_memory
     def predict_inst(
         self,

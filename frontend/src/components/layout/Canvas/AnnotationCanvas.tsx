@@ -4,7 +4,7 @@ import {
 	useProject,
 	useVisualizationSetting,
 } from "../../../store";
-import type { Annotation, PointPrompt } from "../../../types";
+import type { Annotation, Point, PointPrompt } from "../../../types";
 
 import {
 	type Layers,
@@ -34,6 +34,7 @@ export default function AnnotationCanvas() {
 	const { visualizationSettingState } = useVisualizationSetting();
 
 	const mode = annotationSessionState.annotationMode;
+	const promptMode = annotationSessionState.promptMode;
 	const data =
 		projectState.dataList[annotationSessionState.currentDataIndex] ?? null;
 
@@ -66,6 +67,17 @@ export default function AnnotationCanvas() {
 
 	const pointPromptsRef = useRef(annotationSessionState.pointPrompts);
 	pointPromptsRef.current = annotationSessionState.pointPrompts;
+
+	const promptModeRef = useRef(promptMode);
+	promptModeRef.current = promptMode;
+
+	const polygonPointsRef = useRef(annotationSessionState.polygonPoints);
+	polygonPointsRef.current = annotationSessionState.polygonPoints;
+
+	const editPointsRef = useRef<Point[]>(
+		annotationSessionState.editPolygon?.points ?? [],
+	);
+	editPointsRef.current = annotationSessionState.editPolygon?.points ?? [];
 
 	const pendingAnnotationRef = useRef(annotationSessionState.pendingMask);
 	pendingAnnotationRef.current = annotationSessionState.pendingMask;
@@ -147,6 +159,90 @@ export default function AnnotationCanvas() {
 				ctx.fill();
 				ctx.strokeStyle = "#ffffff";
 				ctx.lineWidth = 1.5 / scale;
+				ctx.stroke();
+				ctx.closePath();
+			}
+		}
+
+		// Polygon vertices & edges (add mode, polygon prompt)
+		if (currentMode === "add" && promptModeRef.current === "polygon") {
+			const pts = polygonPointsRef.current;
+			if (pts.length > 1) {
+				const start = pts[0];
+
+				// Live preview of the resulting mask: fill the closed polygon.
+				// Canvas fill() is GPU-accelerated and O(vertices) — effectively
+				// free even when redrawn every frame, unlike a backend round-trip
+				// + RLE decode + layer rebuild.
+				if (pts.length >= 3) {
+					ctx.beginPath();
+					ctx.moveTo(start.x, start.y);
+					for (let i = 1; i < pts.length; i++) {
+						ctx.lineTo(pts[i].x, pts[i].y);
+					}
+					ctx.closePath();
+					ctx.fillStyle = "rgba(20, 145, 255, 0.4)"; // pending-mask blue
+					ctx.fill();
+				}
+
+				// Polygon outline
+				ctx.beginPath();
+				ctx.moveTo(start.x, start.y);
+				for (let i = 1; i < pts.length; i++) {
+					ctx.lineTo(pts[i].x, pts[i].y);
+				}
+				ctx.strokeStyle = "#00cc44";
+				ctx.lineWidth = 2 / scale;
+				ctx.stroke();
+			}
+			const radius = 5 / scale;
+			for (const p of pts) {
+				ctx.beginPath();
+				ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
+				ctx.fillStyle = "#00cc44";
+				ctx.fill();
+				ctx.strokeStyle = "#ffffff";
+				ctx.lineWidth = 1.5 / scale;
+				ctx.stroke();
+				ctx.closePath();
+			}
+		}
+
+		// Editable polygon (edit mode)
+		if (currentMode === "edit") {
+			const pts = editPointsRef.current;
+			if (pts.length > 1) {
+				const start = pts[0];
+
+				if (pts.length >= 3) {
+					ctx.beginPath();
+					ctx.moveTo(start.x, start.y);
+					for (let i = 1; i < pts.length; i++) {
+						ctx.lineTo(pts[i].x, pts[i].y);
+					}
+					ctx.closePath();
+					ctx.fillStyle = "rgba(20, 145, 255, 0.25)";
+					ctx.fill();
+				}
+
+				ctx.beginPath();
+				ctx.moveTo(start.x, start.y);
+				for (let i = 1; i < pts.length; i++) {
+					ctx.lineTo(pts[i].x, pts[i].y);
+				}
+				ctx.strokeStyle = "#1491ff";
+				ctx.lineWidth = 2 / scale;
+				ctx.stroke();
+			}
+
+			const radius = 6 / scale;
+			for (const p of pts) {
+				ctx.beginPath();
+				ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
+				ctx.fillStyle = "#ffffff";
+				ctx.fill();
+				ctx.strokeStyle = "#1491ff";
+				ctx.lineWidth = 2 / scale;
 				ctx.stroke();
 				ctx.closePath();
 			}
@@ -259,6 +355,37 @@ export default function AnnotationCanvas() {
 					}
 					break;
 				}
+				case "add-polygon-vertex": {
+					annotationSessionDispatch({
+						type: "ADD_POLYGON_VERTEX",
+						payload: { x: action.imgX, y: action.imgY },
+					});
+					scheduleDraw();
+					break;
+				}
+				case "move-edit-vertex": {
+					const next = editPointsRef.current.slice();
+					next[action.vertexIndex] = { x: action.imgX, y: action.imgY };
+					annotationSessionDispatch({
+						type: "SET_EDIT_POLYGON_POINTS",
+						payload: next,
+					});
+					scheduleDraw();
+					break;
+				}
+				case "add-edit-vertex": {
+					const next = editPointsRef.current.slice();
+					next.splice(action.edgeIndex + 1, 0, {
+						x: action.imgX,
+						y: action.imgY,
+					});
+					annotationSessionDispatch({
+						type: "SET_EDIT_POLYGON_POINTS",
+						payload: next,
+					});
+					scheduleDraw();
+					break;
+				}
 				default:
 					console.warn("Unknown canvas action:", action);
 					return;
@@ -279,6 +406,8 @@ export default function AnnotationCanvas() {
 		handleContextMenu,
 	} = useCanvasInteraction(
 		mode,
+		promptMode,
+		editPointsRef,
 		canvasRef,
 		viewportRef,
 		imageSizeRef,

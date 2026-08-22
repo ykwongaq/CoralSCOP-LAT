@@ -3,10 +3,11 @@ Pydantic models for API request/response schemas.
 """
 
 from .schemas import (
+    RLE,
     Annotation,
     Category,
-    CompressedRLE,
     CompleteEvent,
+    CompressedRLE,
     CreateProjectConfig,
     CreateProjectResponse,
     CreateSamSessionResponse,
@@ -18,7 +19,8 @@ from .schemas import (
     PredictInstResponse,
     ProgressEvent,
     QuickStartConfig,
-    RLE,
+    RasterizeMaskRequest,
+    RasterizeMaskResponse,
     RLEInput,
     RunModelConfig,
     RunModelResponse,
@@ -37,6 +39,8 @@ __all__ = [
     "EncodeMaskResponse",
     "CreateSamSessionResponse",
     "QuickStartConfig",
+    "RasterizeMaskRequest",
+    "RasterizeMaskResponse",
     "PredictInstRequest",
     "PredictInstResponse",
     "RunModelConfig",

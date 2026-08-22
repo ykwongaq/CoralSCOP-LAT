@@ -10,7 +10,7 @@ import { normalizeKey, KEYMAP } from "../utils";
  * this hook only handles the key → command translation.
  */
 export function useAnnotationKeyboard(
-	mode: "select" | "add",
+	mode: "select" | "add" | "edit",
 	execute: (cmd: AnnotationCommand) => void,
 ) {
 	useEffect(() => {

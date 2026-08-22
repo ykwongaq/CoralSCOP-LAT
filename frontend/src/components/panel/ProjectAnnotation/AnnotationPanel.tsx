@@ -5,6 +5,7 @@ import {
 	AnnotationCanvas,
 	FlowBarSelectMode,
 	FlowBarAddMode,
+	FlowBarEditMode,
 } from "../../layout";
 import styles from "./AnnotationPanel.module.css";
 interface AnnotationPanelProps {
@@ -36,6 +37,7 @@ export default function AnnotationPanel({
 				<AnnotationCanvas />
 				<FlowBarSelectMode>{selectModeChildren}</FlowBarSelectMode>
 				<FlowBarAddMode>{addModeChildren}</FlowBarAddMode>
+				<FlowBarEditMode />
 			</div>
 		</>
 	);

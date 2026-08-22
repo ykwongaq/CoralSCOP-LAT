@@ -14,6 +14,9 @@ export default function SelectModeBar({ children }: ModeBarProps) {
 	const { execute, isLabelPanelOpen, setIsLabelPanelOpen } =
 		useAnnotationCommands();
 
+	const hasSingleSelection =
+		annotationSessionState.selectedAnnotations.length === 1;
+
 	return (
 		<FlowBar hidden={mode !== "select"}>
 			<AssignLabelButton
@@ -29,6 +32,12 @@ export default function SelectModeBar({ children }: ModeBarProps) {
 				name="Add Mask (W)"
 				icon="ico-shape icon"
 				onClick={() => execute["switch-to-add"]()}
+			/>
+			<ActionButton
+				name="Edit Mask (E)"
+				icon="ico-drag icon"
+				onClick={() => execute["start-edit"]()}
+				disabled={!hasSingleSelection}
 			/>
 			{children}
 		</FlowBar>

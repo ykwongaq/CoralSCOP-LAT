@@ -75,6 +75,10 @@ export type ProjectAction =
 			payload: { dataId: number; segmentation: RLE; labelId: number };
 	  }
 	| {
+			type: "UPDATE_ANNOTATION_SEGMENTATION";
+			payload: { dataId: number; annotationId: number; segmentation: RLE };
+	  }
+	| {
 			type: "ADD_MODEL_OUTPUT";
 			payload: {
 				dataId: number;
@@ -272,6 +276,28 @@ function addAnnotation(
 		dataList: state.dataList.map((data) =>
 			data.id === dataId
 				? { ...data, annotations: [...data.annotations, newAnnotation] }
+				: data,
+		),
+	};
+}
+function updateAnnotationSegmentation(
+	state: ProjectState,
+	dataId: number,
+	annotationId: number,
+	segmentation: RLE,
+): ProjectState {
+	return {
+		...state,
+		dataList: state.dataList.map((data) =>
+			data.id === dataId
+				? {
+						...data,
+						annotations: data.annotations.map((annotation) =>
+							annotation.id === annotationId
+								? { ...annotation, segmentation }
+								: annotation,
+						),
+					}
 				: data,
 		),
 	};
@@ -571,6 +597,13 @@ export function projectReducer(
 				action.payload.dataId,
 				action.payload.segmentation,
 				action.payload.labelId,
+			);
+		case "UPDATE_ANNOTATION_SEGMENTATION":
+			return updateAnnotationSegmentation(
+				state,
+				action.payload.dataId,
+				action.payload.annotationId,
+				action.payload.segmentation,
 			);
 		case "ADD_MODEL_OUTPUT":
 			return addModelOutput(
