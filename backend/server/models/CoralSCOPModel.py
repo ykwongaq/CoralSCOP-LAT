@@ -4,7 +4,6 @@ from typing import Dict, List, Set, Tuple
 import numpy as np
 import torch
 
-from ..utils.gpu_monitor import track_gpu_memory
 from ..utils.logger import get_logger
 from ..utils.masks import encode_masks
 from .modelQueue import ModelQueue
@@ -43,7 +42,6 @@ class CoralSCOPModel:
         self._queue = ModelQueue(mask_generator, max_concurrent=1)
         _logger.info("CoralSCOP model loaded (device=%s)", self.device)
 
-    @track_gpu_memory
     def gen_annotations(
         self,
         image: np.ndarray,

@@ -19,7 +19,6 @@ from .models.CoralSCOPModel import CoralSCOPModel
 from .models.CoralTankModel import CoralTankModel
 from .models.SAM3Model import SAM3Model
 from .projectHandler import ProjectHandler
-from .utils.gpu_monitor import log_gpu_memory, log_model_size, track_gpu_memory
 from .utils.logger import get_logger
 from .utils.masks import encode_masks
 from .utils.path import resolve_path
@@ -38,7 +37,6 @@ class Server:
             )
 
         _logger.info("Initializing Server")
-        log_gpu_memory("Server startup")
 
         self.temp_folder = os.path.join(
             tempfile.gettempdir(), "coralscop-lat-online-temp"
@@ -53,8 +51,6 @@ class Server:
 
         _logger.info("Loading SAM3 model...")
         self.sam3 = SAM3Model(resolve_path(config["sam_model_path"]))
-        log_model_size("SAM3", self.sam3.model)
-        log_gpu_memory("After SAM3 load")
 
         _logger.info("Loading CoralSCOP model...")
         coralSCOP = CoralSCOPModel(
@@ -65,12 +61,10 @@ class Server:
             max_masks_num=config["CoralSCOP"]["max_masks_num"],
             point_number=config["CoralSCOP"]["point_number"],
         )
-        log_gpu_memory("After CoralSCOP load")
 
         _logger.info("Loading CoralTank model...")
         coral_tank_path = resolve_path(config["coral_tank_model_path"])
         coral_tank_model = CoralTankModel(coral_tank_path)
-        log_gpu_memory("After CoralTank load")
 
         self.mask_handler = MaskHandler()
         self.embedding_store = EmbeddingStore(base_dir=embeddings_dir)
@@ -98,13 +92,6 @@ class Server:
             self._gpu_cache_max,
             self._gpu_cache_ttl_seconds,
             self._gpu_cache_max * 200 // 1024,
-        )
-        final_mem = log_gpu_memory("=== Server initialization complete ===")
-        _logger.info(
-            "Total GPU allocated: %d MB, reserved: %d MB, utilization: %d%%",
-            final_mem["allocated_mb"],
-            final_mem["reserved_mb"],
-            final_mem["utilization_percent"],
         )
 
     def get_zip_path(self, token: str) -> str:
@@ -139,7 +126,6 @@ class Server:
                 len(self._gpu_cache),
                 self._gpu_cache_max,
             )
-            log_gpu_memory("After TTL eviction")
         return len(stale_keys)
 
     def delete_embedding_session(self, session_id: str) -> None:
@@ -212,17 +198,13 @@ class Server:
             if key not in self._gpu_cache:
                 self._gpu_cache[key] = (state_gpu, time.monotonic())
                 self._gpu_cache.move_to_end(key)
-                cache_info = log_gpu_memory(
-                    f"GPU cache [{key}] inserted, size={len(self._gpu_cache)}/{self._gpu_cache_max}"
-                )
                 while len(self._gpu_cache) > self._gpu_cache_max:
                     evicted_key, (_, _) = self._gpu_cache.popitem(last=False)
                     _logger.info(
-                        "GPU cache LRU evicted %s (cache now %d/%d), GPU util: %d%%",
+                        "GPU cache LRU evicted %s (cache now %d/%d)",
                         evicted_key,
                         len(self._gpu_cache),
                         self._gpu_cache_max,
-                        cache_info["utilization_percent"],
                     )
             else:
                 # Another thread inserted the same key while we were transferring
@@ -299,7 +281,6 @@ class Server:
         )
         return self.mask_handler.rasterize_masks(size, polygons, strokes, stroke_width)
 
-    @track_gpu_memory
     def predict_inst(
         self,
         session_id: str,

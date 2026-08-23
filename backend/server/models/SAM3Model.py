@@ -7,7 +7,6 @@ from PIL import Image
 from sam3.model.sam3_image_processor import Sam3Processor
 from sam3.model_builder import build_sam3_image_model
 
-from ..utils.gpu_monitor import track_gpu_memory
 from ..utils.logger import get_logger
 from .modelQueue import ModelQueue
 
@@ -33,7 +32,6 @@ class SAM3Model:
         self._model_queue = ModelQueue(self.model, semaphore=self._gpu_semaphore)
         _logger.info("SAM model loaded (device=%s)", self.device)
 
-    @track_gpu_memory
     def gen_embeddings(self, image: Image.Image) -> torch.Tensor:
         with torch.autocast(
             self.device.type, dtype=torch.bfloat16
@@ -41,7 +39,6 @@ class SAM3Model:
             with self._processor_queue as processor:
                 return processor.set_image(image)
 
-    @track_gpu_memory
     def predict_inst(
         self,
         state: torch.Tensor,

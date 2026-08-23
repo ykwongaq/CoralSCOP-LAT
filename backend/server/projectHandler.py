@@ -12,7 +12,6 @@ from PIL import Image
 from .models.CoralSCOPModel import CoralSCOPModel
 from .models.CoralTankModel import CoralTankModel
 from .models.SAM3Model import SAM3Model
-from .utils.gpu_monitor import log_gpu_memory
 from .utils.logger import get_logger
 
 _logger = get_logger(__name__)
@@ -360,7 +359,6 @@ class ProjectHandler:
                 "Releasing CUDA cache after project creation (token=%s)", token
             )
             torch.cuda.empty_cache()
-            log_gpu_memory("After project creation + empty_cache")
 
             yield {"type": "done", "token": token}
 
