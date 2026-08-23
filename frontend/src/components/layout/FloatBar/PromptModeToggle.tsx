@@ -6,7 +6,7 @@ export default function PromptModeToggle() {
 		useAnnotationSession();
 	const mode = annotationSessionState.promptMode;
 
-	const setMode = (next: "point" | "polygon") => {
+	const setMode = (next: "point" | "polygon" | "brush") => {
 		if (next !== mode) {
 			annotationSessionDispatch({ type: "SET_PROMPT_MODE", payload: next });
 		}
@@ -27,6 +27,13 @@ export default function PromptModeToggle() {
 				onClick={() => setMode("polygon")}
 			>
 				Polygon
+			</button>
+			<button
+				type="button"
+				className={`${styles.option} ${mode === "brush" ? styles.active : ""}`}
+				onClick={() => setMode("brush")}
+			>
+				Brush
 			</button>
 		</div>
 	);

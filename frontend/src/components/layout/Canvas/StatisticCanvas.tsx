@@ -61,6 +61,7 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(
 		const layersRef = useRef<Layers | null>(null);
 		const pixelMasksRef = useRef<Uint8Array[] | null>(null);
 		const editPointsRef = useRef<Point[]>([]);
+		const brushCursorRef = useRef<{ x: number; y: number } | null>(null);
 
 		// Track previous build dependencies to detect selection-only changes
 		const prevBuildDepsRef = useRef<{
@@ -188,7 +189,10 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(
 		} = useCanvasInteraction(
 			"select",
 			"point",
+			"vertex",
+			20,
 			editPointsRef,
+			brushCursorRef,
 			canvasRef,
 			viewportRef,
 			imageSizeRef,

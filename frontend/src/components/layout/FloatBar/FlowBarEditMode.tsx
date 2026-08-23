@@ -1,6 +1,7 @@
 import { useAnnotationSession } from "../../../store";
 import { useAnnotationCommands } from "../../../hooks";
 import FlowBar from "./FlowBar";
+import EditToolToggle from "./EditToolToggle";
 import ActionButton from "../../ui/FloatBar/FloatBarButton";
 
 interface ModeBarProps {
@@ -14,6 +15,7 @@ export default function EditModeBar({ children }: ModeBarProps) {
 
 	return (
 		<FlowBar hidden={mode !== "edit"}>
+			<EditToolToggle />
 			<ActionButton
 				name="Reset (R)"
 				icon="ico-rotate icon"

@@ -4,7 +4,12 @@ import {
 	useProject,
 	useVisualizationSetting,
 } from "../../../store";
-import type { Annotation, Point, PointPrompt } from "../../../types";
+import type {
+	Annotation,
+	BrushStroke,
+	Point,
+	PointPrompt,
+} from "../../../types";
 
 import {
 	type Layers,
@@ -79,6 +84,23 @@ export default function AnnotationCanvas() {
 	);
 	editPointsRef.current = annotationSessionState.editPolygon?.points ?? [];
 
+	const editToolRef = useRef(annotationSessionState.editTool);
+	editToolRef.current = annotationSessionState.editTool;
+
+	const brushSizeRef = useRef(annotationSessionState.brushSize);
+	brushSizeRef.current = annotationSessionState.brushSize;
+
+	const brushStrokesRef = useRef(annotationSessionState.brushStrokes);
+	brushStrokesRef.current = annotationSessionState.brushStrokes;
+
+	const editBrushStrokesRef = useRef(
+		annotationSessionState.editPolygon?.brushStrokes ?? [],
+	);
+	editBrushStrokesRef.current =
+		annotationSessionState.editPolygon?.brushStrokes ?? [];
+
+	const brushCursorRef = useRef<{ x: number; y: number } | null>(null);
+
 	const pendingAnnotationRef = useRef(annotationSessionState.pendingMask);
 	pendingAnnotationRef.current = annotationSessionState.pendingMask;
 
@@ -113,6 +135,32 @@ export default function AnnotationCanvas() {
 		const { scale, originX, originY } = viewportRef.current;
 		const viz = vizRef.current;
 		const currentMode = modeRef.current;
+
+		const paintStrokes = (strokes: BrushStroke[]) => {
+			if (strokes.length === 0) return;
+			ctx.lineCap = "round";
+			ctx.lineJoin = "round";
+			ctx.strokeStyle = "rgba(20, 145, 255, 0.7)";
+			ctx.fillStyle = "rgba(20, 145, 255, 0.7)";
+			for (const stroke of strokes) {
+				const w = stroke.width;
+				const pts = stroke.points;
+				if (pts.length === 0) continue;
+				if (pts.length === 1) {
+					ctx.beginPath();
+					ctx.arc(pts[0].x, pts[0].y, w / 2, 0, Math.PI * 2);
+					ctx.fill();
+					continue;
+				}
+				ctx.beginPath();
+				ctx.moveTo(pts[0].x, pts[0].y);
+				for (let i = 1; i < pts.length; i++) {
+					ctx.lineTo(pts[i].x, pts[i].y);
+				}
+				ctx.lineWidth = w;
+				ctx.stroke();
+			}
+		};
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.save();
@@ -235,17 +283,52 @@ export default function AnnotationCanvas() {
 				ctx.stroke();
 			}
 
-			const radius = 6 / scale;
-			for (const p of pts) {
-				ctx.beginPath();
-				ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
-				ctx.fillStyle = "#ffffff";
-				ctx.fill();
-				ctx.strokeStyle = "#1491ff";
-				ctx.lineWidth = 2 / scale;
-				ctx.stroke();
-				ctx.closePath();
+			// Vertex handles are shown only in the vertex tool; in brush tool the
+			// polygon outline stays but the draggable vertices hide.
+			if (editToolRef.current === "vertex") {
+				const radius = 6 / scale;
+				for (const p of pts) {
+					ctx.beginPath();
+					ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
+					ctx.fillStyle = "#ffffff";
+					ctx.fill();
+					ctx.strokeStyle = "#1491ff";
+					ctx.lineWidth = 2 / scale;
+					ctx.stroke();
+					ctx.closePath();
+				}
 			}
+		}
+
+		// Brush strokes (add mode, brush prompt)
+		if (currentMode === "add" && promptModeRef.current === "brush") {
+			paintStrokes(brushStrokesRef.current);
+		}
+
+		// Brush strokes painted while editing
+		if (currentMode === "edit") {
+			paintStrokes(editBrushStrokesRef.current);
+		}
+
+		// Brush size cursor
+		const brushActive =
+			(currentMode === "add" && promptModeRef.current === "brush") ||
+			(currentMode === "edit" && editToolRef.current === "brush");
+		if (brushActive && brushCursorRef.current) {
+			const w = brushSizeRef.current;
+			ctx.beginPath();
+			ctx.arc(
+				brushCursorRef.current.x,
+				brushCursorRef.current.y,
+				w / 2,
+				0,
+				Math.PI * 2,
+			);
+			ctx.strokeStyle = "#1491ff";
+			ctx.lineWidth = 1.5 / scale;
+			ctx.setLineDash([4 / scale, 4 / scale]);
+			ctx.stroke();
+			ctx.setLineDash([]);
 		}
 
 		ctx.restore();
@@ -386,6 +469,44 @@ export default function AnnotationCanvas() {
 					scheduleDraw();
 					break;
 				}
+				case "brush-stroke-start": {
+					const stroke: BrushStroke = {
+						points: [{ x: action.imgX, y: action.imgY }],
+						width: brushSizeRef.current,
+					};
+					if (modeRef.current === "edit") {
+						annotationSessionDispatch({
+							type: "ADD_EDIT_BRUSH_STROKE",
+							payload: stroke,
+						});
+					} else {
+						annotationSessionDispatch({
+							type: "ADD_BRUSH_STROKE",
+							payload: stroke,
+						});
+					}
+					scheduleDraw();
+					break;
+				}
+				case "brush-stroke-move": {
+					const point = { x: action.imgX, y: action.imgY };
+					if (modeRef.current === "edit") {
+						annotationSessionDispatch({
+							type: "APPEND_EDIT_BRUSH_POINT",
+							payload: point,
+						});
+					} else {
+						annotationSessionDispatch({
+							type: "APPEND_BRUSH_POINT",
+							payload: point,
+						});
+					}
+					scheduleDraw();
+					break;
+				}
+				case "brush-stroke-end":
+					// Stroke already committed incrementally; nothing more to do.
+					break;
 				default:
 					console.warn("Unknown canvas action:", action);
 					return;
@@ -407,7 +528,10 @@ export default function AnnotationCanvas() {
 	} = useCanvasInteraction(
 		mode,
 		promptMode,
+		annotationSessionState.editTool,
+		annotationSessionState.brushSize,
 		editPointsRef,
+		brushCursorRef,
 		canvasRef,
 		viewportRef,
 		imageSizeRef,
@@ -508,18 +632,54 @@ export default function AnnotationCanvas() {
 		scheduleDraw();
 	}, [annotationSessionState.pendingMask, scheduleDraw]);
 
-	// Redraw when visualization settings, point prompts, or mode changes
+	// Redraw when visualization settings, prompts, brush size, or mode change
 	useEffect(() => {
+		const brushActive =
+			(mode === "add" && promptMode === "brush") ||
+			(mode === "edit" && annotationSessionState.editTool === "brush");
 		if (canvasRef.current) {
-			canvasRef.current.style.cursor = mode === "add" ? "crosshair" : "default";
+			canvasRef.current.style.cursor = brushActive
+				? "none"
+				: mode === "add"
+					? "crosshair"
+					: "default";
 		}
 		scheduleDraw();
 	}, [
 		visualizationSettingState,
 		annotationSessionState.pointPrompts,
+		annotationSessionState.brushSize,
+		annotationSessionState.editTool,
 		mode,
+		promptMode,
 		scheduleDraw,
 	]);
+
+	// Adjust brush size with the mouse wheel while a brush tool is active.
+	// Capture-phase listener on the container runs before the canvas zoom
+	// wheel handler and stops propagation so painting mode scales the brush
+	// instead of zooming the image.
+	useEffect(() => {
+		const container = containerRef.current;
+		if (!container) return;
+		const onWheel = (e: WheelEvent) => {
+			const brushActive =
+				modeRef.current === "edit"
+					? editToolRef.current === "brush"
+					: modeRef.current === "add" && promptModeRef.current === "brush";
+			if (!brushActive) return;
+			e.preventDefault();
+			e.stopPropagation();
+			const delta = e.deltaY < 0 ? 2 : -2;
+			const next = Math.max(2, Math.min(200, brushSizeRef.current + delta));
+			annotationSessionDispatch({ type: "SET_BRUSH_SIZE", payload: next });
+		};
+		container.addEventListener("wheel", onWheel, {
+			capture: true,
+			passive: false,
+		});
+		return () => container.removeEventListener("wheel", onWheel);
+	}, [annotationSessionDispatch, containerRef]);
 
 	// -------------------------------------------------------------------
 	// Render
@@ -534,7 +694,13 @@ export default function AnnotationCanvas() {
 					ref={canvasRef}
 					className={styles.canvas}
 					style={{
-						cursor: mode === "add" ? "crosshair" : "default",
+						cursor:
+							(mode === "add" && promptMode === "brush") ||
+							(mode === "edit" && annotationSessionState.editTool === "brush")
+								? "none"
+								: mode === "add"
+									? "crosshair"
+									: "default",
 						display: "block",
 					}}
 					onMouseDown={handleMouseDown}

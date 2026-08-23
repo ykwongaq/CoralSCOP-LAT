@@ -282,7 +282,7 @@ class Server:
         self,
         size: List[int],
         polygons: List[List[List[float]]],
-        strokes: List[List[List[float]]],
+        strokes: List[Dict],
         stroke_width: Optional[float] = None,
     ) -> Dict[str, Any]:
         """

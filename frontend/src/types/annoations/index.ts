@@ -1,5 +1,6 @@
 export { type Annotation } from "./Annotation";
 export { type default as AnnotationSessionState } from "./AnnotationSession";
+export { type BrushStroke } from "./BrushStroke";
 export { type Data } from "./Data";
 export { type EditPolygon } from "./EditPolygon";
 export { type Label, type LabelType } from "./Label";

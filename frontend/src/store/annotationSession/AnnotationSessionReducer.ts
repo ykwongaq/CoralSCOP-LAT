@@ -1,6 +1,7 @@
 import type {
 	Label,
 	AnnotationSessionState,
+	BrushStroke,
 	EditPolygon,
 	PendingAnnotation,
 	Point,
@@ -19,12 +20,20 @@ export type AnnotationSessionAction =
 	| { type: "ADD_POINT_PROMPT"; payload: PointPrompt }
 	| { type: "CLEAR_POINT_PROMPTS" }
 	| { type: "UNDO_POINT_PROMPT" }
-	| { type: "SET_PROMPT_MODE"; payload: "point" | "polygon" }
+	| { type: "SET_PROMPT_MODE"; payload: "point" | "polygon" | "brush" }
 	| { type: "ADD_POLYGON_VERTEX"; payload: Point }
 	| { type: "CLEAR_POLYGON_VERTICES" }
 	| { type: "UNDO_POLYGON_VERTEX" }
+	| { type: "SET_BRUSH_SIZE"; payload: number }
+	| { type: "ADD_BRUSH_STROKE"; payload: BrushStroke }
+	| { type: "APPEND_BRUSH_POINT"; payload: Point }
+	| { type: "CLEAR_BRUSH_STROKES" }
+	| { type: "SET_EDIT_TOOL"; payload: "vertex" | "brush" }
 	| { type: "START_EDIT_POLYGON"; payload: EditPolygon }
 	| { type: "SET_EDIT_POLYGON_POINTS"; payload: Point[] }
+	| { type: "ADD_EDIT_BRUSH_STROKE"; payload: BrushStroke }
+	| { type: "APPEND_EDIT_BRUSH_POINT"; payload: Point }
+	| { type: "CLEAR_EDIT_BRUSH_STROKES" }
 	| { type: "CLEAR_EDIT_POLYGON" }
 	| { type: "SELECT_SCALED_LINE_ID"; payload: number | null };
 
@@ -37,6 +46,9 @@ export const initialAnnotationSessionState: AnnotationSessionState = {
 	currentDataIndex: 0,
 	pointPrompts: [],
 	polygonPoints: [],
+	brushStrokes: [],
+	brushSize: 20,
+	editTool: "vertex",
 	editPolygon: null,
 	selectedScaledLineId: null,
 };
@@ -75,6 +87,7 @@ function setCurrentDataIndex(
 		currentDataIndex: index,
 		pointPrompts: [],
 		polygonPoints: [],
+		brushStrokes: [],
 		pendingMask: null,
 		editPolygon: null,
 		selectedAnnotations: [],
@@ -123,6 +136,7 @@ export function annotationSessionReducer(
 				promptMode: action.payload,
 				pointPrompts: [],
 				polygonPoints: [],
+				brushStrokes: [],
 				pendingMask: null,
 			};
 		case "ADD_POLYGON_VERTEX":
@@ -134,6 +148,28 @@ export function annotationSessionReducer(
 			return { ...state, polygonPoints: [] };
 		case "UNDO_POLYGON_VERTEX":
 			return { ...state, polygonPoints: state.polygonPoints.slice(0, -1) };
+		case "SET_BRUSH_SIZE":
+			return { ...state, brushSize: action.payload };
+		case "ADD_BRUSH_STROKE":
+			return {
+				...state,
+				brushStrokes: [...state.brushStrokes, action.payload],
+			};
+		case "APPEND_BRUSH_POINT": {
+			if (state.brushStrokes.length === 0) return state;
+			const last = state.brushStrokes[state.brushStrokes.length - 1];
+			return {
+				...state,
+				brushStrokes: [
+					...state.brushStrokes.slice(0, -1),
+					{ ...last, points: [...last.points, action.payload] },
+				],
+			};
+		}
+		case "CLEAR_BRUSH_STROKES":
+			return { ...state, brushStrokes: [] };
+		case "SET_EDIT_TOOL":
+			return { ...state, editTool: action.payload };
 		case "START_EDIT_POLYGON":
 			return { ...state, editPolygon: action.payload };
 		case "SET_EDIT_POLYGON_POINTS":
@@ -141,6 +177,39 @@ export function annotationSessionReducer(
 				? {
 						...state,
 						editPolygon: { ...state.editPolygon, points: action.payload },
+					}
+				: state;
+		case "ADD_EDIT_BRUSH_STROKE":
+			return state.editPolygon
+				? {
+						...state,
+						editPolygon: {
+							...state.editPolygon,
+							brushStrokes: [...state.editPolygon.brushStrokes, action.payload],
+						},
+					}
+				: state;
+		case "APPEND_EDIT_BRUSH_POINT": {
+			if (!state.editPolygon || state.editPolygon.brushStrokes.length === 0)
+				return state;
+			const strokes = state.editPolygon.brushStrokes;
+			const last = strokes[strokes.length - 1];
+			return {
+				...state,
+				editPolygon: {
+					...state.editPolygon,
+					brushStrokes: [
+						...strokes.slice(0, -1),
+						{ ...last, points: [...last.points, action.payload] },
+					],
+				},
+			};
+		}
+		case "CLEAR_EDIT_BRUSH_STROKES":
+			return state.editPolygon
+				? {
+						...state,
+						editPolygon: { ...state.editPolygon, brushStrokes: [] },
 					}
 				: state;
 		case "CLEAR_EDIT_POLYGON":

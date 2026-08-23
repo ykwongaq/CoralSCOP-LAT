@@ -109,13 +109,20 @@ class EncodeMaskResponse(BaseModel):
 # ============================================================================
 
 
+class BrushStroke(BaseModel):
+    """A brush stroke polyline with an optional per-stroke width."""
+
+    points: List[List[float]]  # [[x, y], ...]
+    width: Optional[float] = None  # per-stroke width; overrides stroke_width
+
+
 class RasterizeMaskRequest(BaseModel):
     """Rasterize polygon/brush geometry into a binary RLE mask."""
 
     size: List[int]  # [height, width] in image pixel space
     polygons: List[List[List[float]]] = []  # one or more polygons: [[x, y], ...]
-    strokes: List[List[List[float]]] = []  # one or more brush polylines
-    stroke_width: Optional[float] = None  # brush stroke width in image px
+    strokes: List[BrushStroke] = []  # one or more brush strokes
+    stroke_width: Optional[float] = None  # default brush stroke width in image px
 
 
 class RasterizeMaskResponse(BaseModel):

@@ -12,6 +12,9 @@ export type CanvasAction =
 	| { type: "positive-prompt"; imgX: number; imgY: number }
 	| { type: "negative-prompt"; imgX: number; imgY: number }
 	| { type: "add-polygon-vertex"; imgX: number; imgY: number }
+	| { type: "brush-stroke-start"; imgX: number; imgY: number }
+	| { type: "brush-stroke-move"; imgX: number; imgY: number }
+	| { type: "brush-stroke-end" }
 	| {
 			type: "move-edit-vertex";
 			vertexIndex: number;
@@ -33,9 +36,18 @@ type MouseState =
 			startImgY: number;
 	  }
 	| { phase: "selecting"; startImgX: number; startImgY: number }
-	| { phase: "rightPanning"; lastClientX: number; lastClientY: number }
+	| {
+			phase: "rightPanning";
+			lastClientX: number;
+			lastClientY: number;
+			startClientX: number;
+			startClientY: number;
+			startImgX: number;
+			startImgY: number;
+	  }
 	| { phase: "editDragging"; vertexIndex: number }
-	| { phase: "editAddOnUp"; edgeIndex: number; imgX: number; imgY: number };
+	| { phase: "editAddOnUp"; edgeIndex: number; imgX: number; imgY: number }
+	| { phase: "brushPainting"; lastX: number; lastY: number };
 
 // Selection rect in image coordinates (exposed for drawing)
 export type SelectionRect = {
@@ -120,19 +132,24 @@ function nearestEdge(
  *   - point prompt: Left click  → positive point prompt
  *                   Right click → negative point prompt
  *   - polygon prompt: Left click → add polygon vertex
- *   - Dragging disabled
+ *   - brush prompt: Left drag → paint a brush stroke
+ *   - Dragging disabled for point/polygon prompts
  *
  * Edit mode:
- *   - Left click/drag on a vertex → move that vertex
- *   - Left click on an edge       → add a vertex at the clicked position
+ *   - vertex tool: Left click/drag on a vertex → move it
+ *                  Left click on an edge       → add a vertex
+ *   - brush tool:  Left drag → paint additional regions
  *
  * Scroll-to-zoom is handled separately in AnnotationCanvas via a native
  * wheel listener (needs passive:false), so it is not part of this hook.
  */
 export function useCanvasInteraction(
 	mode: "select" | "add" | "edit",
-	promptMode: "point" | "polygon",
+	promptMode: "point" | "polygon" | "brush",
+	editTool: "vertex" | "brush",
+	brushSize: number,
 	editPointsRef: RefObject<Point[]>,
+	brushCursorRef: RefObject<{ x: number; y: number } | null>,
 	canvasRef: RefObject<HTMLCanvasElement | null>,
 	viewportRef: RefObject<Viewport>,
 	imageSizeRef: RefObject<{ width: number; height: number }>,
@@ -178,28 +195,61 @@ export function useCanvasInteraction(
 				return e.button === 0;
 			}
 
-			if (mode === "add") {
-				if (!isInImageBounds(img.x, img.y)) return;
-				if (promptMode === "polygon") {
-					if (isLeftClick(e))
-						onAction({
-							type: "add-polygon-vertex",
-							imgX: img.x,
-							imgY: img.y,
-						});
-					return;
-				}
-				if (isLeftClick(e))
-					onAction({ type: "positive-prompt", imgX: img.x, imgY: img.y });
-				if (isRightClick(e))
-					onAction({ type: "negative-prompt", imgX: img.x, imgY: img.y });
+			if (!isLeftClick(e) && !isRightClick(e)) return;
+
+			// Right-drag pans the canvas in every mode. A right-click without
+			// dragging is resolved on mouse-up (negative point prompt in
+			// point-prompt add mode).
+			if (isRightClick(e)) {
+				mouseStateRef.current = {
+					phase: "rightPanning",
+					lastClientX: e.clientX,
+					lastClientY: e.clientY,
+					startClientX: e.clientX,
+					startClientY: e.clientY,
+					startImgX: img.x,
+					startImgY: img.y,
+				};
+				if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
 				return;
 			}
 
-			// Edit mode: drag a vertex or click an edge to add a vertex
-			if (mode === "edit") {
-				if (!isLeftClick(e)) return;
+			// Only left-clicks reach the mode-specific handling below.
+			if (mode === "add") {
 				if (!isInImageBounds(img.x, img.y)) return;
+				if (promptMode === "polygon") {
+					onAction({
+						type: "add-polygon-vertex",
+						imgX: img.x,
+						imgY: img.y,
+					});
+					return;
+				}
+				if (promptMode === "brush") {
+					mouseStateRef.current = {
+						phase: "brushPainting",
+						lastX: img.x,
+						lastY: img.y,
+					};
+					onAction({ type: "brush-stroke-start", imgX: img.x, imgY: img.y });
+					return;
+				}
+				onAction({ type: "positive-prompt", imgX: img.x, imgY: img.y });
+				return;
+			}
+
+			// Edit mode: drag a vertex, click an edge to add a vertex, or paint
+			if (mode === "edit") {
+				if (!isInImageBounds(img.x, img.y)) return;
+				if (editTool === "brush") {
+					mouseStateRef.current = {
+						phase: "brushPainting",
+						lastX: img.x,
+						lastY: img.y,
+					};
+					onAction({ type: "brush-stroke-start", imgX: img.x, imgY: img.y });
+					return;
+				}
 				const pts = editPointsRef.current;
 				const hitRadius = EDIT_HIT_RADIUS_PX / viewportRef.current.scale;
 
@@ -222,28 +272,20 @@ export function useCanvasInteraction(
 				return;
 			}
 
-			// Select mode
-			if (isLeftClick(e)) {
-				if (!isInImageBounds(img.x, img.y)) return;
-				mouseStateRef.current = {
-					phase: "leftDown",
-					startClientX: e.clientX,
-					startClientY: e.clientY,
-					startImgX: img.x,
-					startImgY: img.y,
-				};
-			} else if (isRightClick(e)) {
-				mouseStateRef.current = {
-					phase: "rightPanning",
-					lastClientX: e.clientX,
-					lastClientY: e.clientY,
-				};
-				if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
-			}
+			// Select mode: left click/drag selects
+			if (!isInImageBounds(img.x, img.y)) return;
+			mouseStateRef.current = {
+				phase: "leftDown",
+				startClientX: e.clientX,
+				startClientY: e.clientY,
+				startImgX: img.x,
+				startImgY: img.y,
+			};
 		},
 		[
 			mode,
 			promptMode,
+			editTool,
 			editPointsRef,
 			canvasRef,
 			viewportRef,
@@ -255,6 +297,16 @@ export function useCanvasInteraction(
 
 	const handleMouseMove = useCallback(
 		(e: React.MouseEvent) => {
+			const img = toImageCoords(e.clientX, e.clientY);
+			if (img) brushCursorRef.current = { x: img.x, y: img.y };
+
+			// Keep the brush-size cursor following the pointer while a brush
+			// tool is active (the actual stroke points are emitted below).
+			const brushCursorActive =
+				(mode === "add" && promptMode === "brush") ||
+				(mode === "edit" && editTool === "brush");
+			if (brushCursorActive) requestDraw();
+
 			const ms = mouseStateRef.current;
 
 			if (ms.phase === "leftDown") {
@@ -301,6 +353,18 @@ export function useCanvasInteraction(
 					imgX: cx,
 					imgY: cy,
 				});
+			} else if (ms.phase === "brushPainting") {
+				const img = toImageCoords(e.clientX, e.clientY);
+				if (!img) return;
+				const { width, height } = imageSizeRef.current;
+				const cx = Math.max(0, Math.min(width, img.x));
+				const cy = Math.max(0, Math.min(height, img.y));
+				const spacing = Math.max(1, brushSize / 4);
+				if (Math.hypot(cx - ms.lastX, cy - ms.lastY) >= spacing) {
+					ms.lastX = cx;
+					ms.lastY = cy;
+					onAction({ type: "brush-stroke-move", imgX: cx, imgY: cy });
+				}
 			} else if (ms.phase === "rightPanning") {
 				const dx = e.clientX - ms.lastClientX;
 				const dy = e.clientY - ms.lastClientY;
@@ -323,6 +387,11 @@ export function useCanvasInteraction(
 			onAction,
 			imageSizeRef,
 			isInImageBounds,
+			brushCursorRef,
+			brushSize,
+			mode,
+			promptMode,
+			editTool,
 		],
 	);
 
@@ -356,6 +425,26 @@ export function useCanvasInteraction(
 					imgX: ms.imgX,
 					imgY: ms.imgY,
 				});
+			} else if (ms.phase === "brushPainting") {
+				onAction({ type: "brush-stroke-end" });
+			} else if (ms.phase === "rightPanning") {
+				// A right-click (no drag) in point-prompt add mode is a negative
+				// prompt; otherwise the right-drag just panned the canvas.
+				const dist = Math.hypot(
+					e.clientX - ms.startClientX,
+					e.clientY - ms.startClientY,
+				);
+				if (
+					dist <= DRAG_THRESHOLD &&
+					mode === "add" &&
+					promptMode === "point"
+				) {
+					onAction({
+						type: "negative-prompt",
+						imgX: ms.startImgX,
+						imgY: ms.startImgY,
+					});
+				}
 			}
 
 			mouseStateRef.current = { phase: "idle" };
@@ -364,18 +453,19 @@ export function useCanvasInteraction(
 					mode === "add" ? "crosshair" : "default";
 			}
 		},
-		[mode, canvasRef, toImageCoords, onAction, requestDraw],
+		[mode, promptMode, canvasRef, toImageCoords, onAction, requestDraw],
 	);
 
 	// Cancel any in-progress gesture when the pointer leaves the canvas
 	const handleMouseLeave = useCallback(() => {
 		mouseStateRef.current = { phase: "idle" };
 		selectionRectRef.current = null;
+		brushCursorRef.current = null;
 		if (canvasRef.current) {
 			canvasRef.current.style.cursor = mode === "add" ? "crosshair" : "default";
 		}
 		requestDraw();
-	}, [mode, canvasRef, requestDraw]);
+	}, [mode, canvasRef, requestDraw, brushCursorRef]);
 
 	// Prevent the browser context menu so right-click works in add mode
 	const handleContextMenu = useCallback((e: React.MouseEvent) => {

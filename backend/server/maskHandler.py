@@ -38,7 +38,7 @@ def _decode_single_rle(rle: Dict) -> str:
 def _rasterize_geometry(
     size: List[int],
     polygons: List[List[List[float]]],
-    strokes: List[List[List[float]]],
+    strokes: List[Dict],
     stroke_width: Optional[float] = None,
 ) -> np.ndarray:
     """
@@ -47,8 +47,9 @@ def _rasterize_geometry(
     Args:
         size: [height, width] of the output mask in image pixel space.
         polygons: list of polygons, each a list of [x, y] vertices.
-        strokes: list of brush polylines, each a list of [x, y] points.
-        stroke_width: brush stroke width in image px (default 20).
+        strokes: list of brush strokes, each {"points": [[x, y], ...], "width": optional}.
+        stroke_width: default brush stroke width in image px (used when a
+            stroke has no "width").
 
     Returns:
         (H, W) uint8 binary mask (0/1) with all geometry unioned.
@@ -67,11 +68,18 @@ def _rasterize_geometry(
         draw.polygon(pts, fill=255)
 
     if strokes:
-        width = max(1, int(round(stroke_width if stroke_width is not None else 20)))
+        default_width = stroke_width if stroke_width is not None else 20
         for stroke in strokes:
-            if len(stroke) == 0:
+            points = stroke["points"] if isinstance(stroke, dict) else stroke
+            if not points:
                 continue
-            pts = [(float(p[0]), float(p[1])) for p in stroke]
+            w = (
+                stroke.get("width", default_width)
+                if isinstance(stroke, dict)
+                else default_width
+            )
+            width = max(1, int(round(w if w is not None else 20)))
+            pts = [(float(p[0]), float(p[1])) for p in points]
             if len(pts) == 1:
                 # A single tap: draw a filled disc of the stroke width.
                 x, y = pts[0]
@@ -120,7 +128,7 @@ class MaskHandler:
         self,
         size: List[int],
         polygons: List[List[List[float]]],
-        strokes: List[List[List[float]]],
+        strokes: List[Dict],
         stroke_width: Optional[float] = None,
     ) -> Dict:
         """

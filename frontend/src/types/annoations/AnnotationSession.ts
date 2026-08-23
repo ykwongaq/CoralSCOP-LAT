@@ -1,4 +1,5 @@
 import { type Label } from "./Label";
+import type { BrushStroke } from "./BrushStroke";
 import type { EditPolygon } from "./EditPolygon";
 import type { PendingAnnotation } from "./PendingAnnotation";
 import type { Point } from "../Point";
@@ -18,7 +19,7 @@ export default interface AnnotationSessionState {
 	annotationMode: "select" | "add" | "edit";
 
 	// Prompt mode for mask creation in add mode
-	promptMode: "point" | "polygon";
+	promptMode: "point" | "polygon" | "brush";
 
 	currentDataIndex: number;
 
@@ -27,6 +28,16 @@ export default interface AnnotationSessionState {
 
 	// Vertices of the polygon being drawn (add mode, polygon prompt)
 	polygonPoints: Point[];
+
+	// Brush strokes drawn in add mode (brush prompt), each a polyline
+	brushStrokes: BrushStroke[];
+
+	// Brush diameter in image pixels
+	brushSize: number;
+
+	// Tool used while editing a polygon ("vertex" = drag/add vertices,
+	// "brush" = paint additional regions)
+	editTool: "vertex" | "brush";
 
 	// Polygon currently being edited (edit mode)
 	editPolygon: EditPolygon | null;

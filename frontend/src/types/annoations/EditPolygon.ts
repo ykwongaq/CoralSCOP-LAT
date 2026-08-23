@@ -1,4 +1,5 @@
 import type { Point } from "../Point";
+import type { BrushStroke } from "./BrushStroke";
 
 /**
  * An annotation currently being edited as a polygon.
@@ -12,4 +13,7 @@ export interface EditPolygon {
 
 	/** Vertices as extracted at the start of editing, for "reset". */
 	originalPoints: Point[];
+
+	/** Brush strokes painted while editing, each with its own width. */
+	brushStrokes: BrushStroke[];
 }

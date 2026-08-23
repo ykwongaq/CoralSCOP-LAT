@@ -266,7 +266,7 @@ async def rasterize_masks(request: RasterizeMaskRequest):
         {
             "size": [height, width],
             "polygons": [[[x, y], ...], ...],
-            "strokes":   [[[x, y], ...], ...],
+            "strokes":   [{"points": [[x, y], ...], "width": 20}, ...],
             "stroke_width": 20
         }
 
@@ -281,7 +281,7 @@ async def rasterize_masks(request: RasterizeMaskRequest):
             _server.rasterize_masks,
             request.size,
             request.polygons,
-            request.strokes,
+            [s.model_dump() for s in request.strokes],
             request.stroke_width,
         )
     except ValueError as exc:

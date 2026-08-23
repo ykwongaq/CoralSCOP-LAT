@@ -61,6 +61,7 @@ function useCreateAnnotationCommands() {
 	const handleClearPrompts = useCallback(() => {
 		annotationSessionDispatch({ type: "CLEAR_POINT_PROMPTS" });
 		annotationSessionDispatch({ type: "CLEAR_POLYGON_VERTICES" });
+		annotationSessionDispatch({ type: "CLEAR_BRUSH_STROKES" });
 		annotationSessionDispatch({ type: "CLEAR_PENDING_MASK" });
 	}, [annotationSessionDispatch]);
 
@@ -104,6 +105,42 @@ function useCreateAnnotationCommands() {
 			return;
 		}
 
+		if (annotationSessionState.promptMode === "brush") {
+			const strokes = annotationSessionState.brushStrokes;
+			if (strokes.length === 0) return;
+
+			const data =
+				projectState.dataList[annotationSessionState.currentDataIndex];
+			if (!data) return;
+
+			rasterizeMask(
+				{
+					size: [data.imageData.height, data.imageData.width],
+					strokes: strokes.map((s) => ({
+						points: s.points.map((p) => [p.x, p.y]),
+						width: s.width,
+					})),
+				},
+				{
+					onComplete: (response) => {
+						projectDispatch({
+							type: "ADD_ANNOTATION",
+							payload: {
+								dataId: annotationSessionState.currentDataIndex,
+								segmentation: response.mask,
+								labelId,
+							},
+						});
+						annotationSessionDispatch({ type: "CLEAR_BRUSH_STROKES" });
+					},
+					onError: (error) => {
+						console.error("Brush rasterization failed:", error);
+					},
+				},
+			);
+			return;
+		}
+
 		projectDispatch({
 			type: "ADD_ANNOTATION",
 			payload: {
@@ -120,6 +157,7 @@ function useCreateAnnotationCommands() {
 		annotationSessionState.pendingMask,
 		annotationSessionState.promptMode,
 		annotationSessionState.polygonPoints,
+		annotationSessionState.brushStrokes,
 		projectState.dataList,
 		projectDispatch,
 		annotationSessionDispatch,
@@ -133,6 +171,7 @@ function useCreateAnnotationCommands() {
 		annotationSessionDispatch({ type: "CLEAR_PENDING_MASK" });
 		annotationSessionDispatch({ type: "CLEAR_POINT_PROMPTS" });
 		annotationSessionDispatch({ type: "CLEAR_POLYGON_VERTICES" });
+		annotationSessionDispatch({ type: "CLEAR_BRUSH_STROKES" });
 		annotationSessionDispatch({
 			type: "SET_ANNOTATION_MODE",
 			payload: "select",
@@ -175,6 +214,7 @@ function useCreateAnnotationCommands() {
 				annotationId: annotation.id,
 				points,
 				originalPoints: points,
+				brushStrokes: [],
 			},
 		});
 		annotationSessionDispatch({ type: "SET_ANNOTATION_MODE", payload: "edit" });
@@ -196,6 +236,10 @@ function useCreateAnnotationCommands() {
 			{
 				size: [data.imageData.height, data.imageData.width],
 				polygons: [editPolygon.points.map((p) => [p.x, p.y])],
+				strokes: editPolygon.brushStrokes.map((s) => ({
+					points: s.points.map((p) => [p.x, p.y]),
+					width: s.width,
+				})),
 			},
 			{
 				onComplete: (response) => {
@@ -239,6 +283,7 @@ function useCreateAnnotationCommands() {
 			type: "SET_EDIT_POLYGON_POINTS",
 			payload: editPolygon.originalPoints.map((p) => ({ ...p })),
 		});
+		annotationSessionDispatch({ type: "CLEAR_EDIT_BRUSH_STROKES" });
 	}, [annotationSessionState.editPolygon, annotationSessionDispatch]);
 
 	const handleToggleLabels = useCallback(() => {

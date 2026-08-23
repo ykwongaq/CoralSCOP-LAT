@@ -242,14 +242,21 @@ export function releaseSessionOnUnload(sessionId: string): void {
 // Rasterize polygon/brush geometry into a binary RLE mask (no SAM involved)
 // ---------------------------------------------------------------------------
 
+export interface RasterizeStroke {
+	/** A brush polyline, each point [x, y] in image pixels. */
+	points: number[][];
+	/** Per-stroke width in image pixels; overrides strokeWidth. */
+	width?: number;
+}
+
 export interface RasterizeMaskRequest {
 	/** Natural image size in pixels: [height, width]. */
 	size: [number, number];
 	/** One or more polygons, each a list of [x, y] vertices. */
 	polygons?: number[][][];
-	/** One or more brush polylines, each a list of [x, y] points. */
-	strokes?: number[][][];
-	/** Brush stroke width in image pixels (optional). */
+	/** One or more brush strokes. */
+	strokes?: RasterizeStroke[];
+	/** Default brush stroke width in image pixels (optional). */
 	strokeWidth?: number;
 }
 
