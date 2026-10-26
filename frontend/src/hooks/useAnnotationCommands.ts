@@ -17,7 +17,39 @@ import {
 	type AnnotationCommand,
 	decodeRLE,
 	extractPolygonFromMask,
+	rleArea,
+	unionRLEs,
 } from "../utils";
+import type { Annotation } from "../types";
+
+/**
+ * Pick the label for a merged mask: the label used by the most masks wins,
+ * ties go to the label covering the larger area. Unlabeled masks (labelId < 0)
+ * only win when none of the masks has a label.
+ */
+function pickMergedLabel(annotations: Annotation[]): number {
+	const stats = new Map<number, { count: number; area: number }>();
+	for (const ann of annotations) {
+		if (ann.labelId < 0) continue;
+		const entry = stats.get(ann.labelId) ?? { count: 0, area: 0 };
+		entry.count += 1;
+		entry.area += rleArea(ann.segmentation);
+		stats.set(ann.labelId, entry);
+	}
+
+	let best = -1;
+	let bestStats = { count: 0, area: -1 };
+	for (const [labelId, s] of stats) {
+		if (
+			s.count > bestStats.count ||
+			(s.count === bestStats.count && s.area > bestStats.area)
+		) {
+			best = labelId;
+			bestStats = s;
+		}
+	}
+	return best;
+}
 
 /**
  * Owns all annotation command logic and the UI state for label pickers.
@@ -226,6 +258,42 @@ function useCreateAnnotationCommands() {
 		annotationSessionDispatch,
 	]);
 
+	const handleMerge = useCallback(() => {
+		const selected = new Set(annotationSessionState.selectedAnnotations);
+		if (selected.size < 2) return;
+
+		const data = projectState.dataList[annotationSessionState.currentDataIndex];
+		if (!data) return;
+
+		const toMerge = data.annotations.filter((ann) => selected.has(ann.id));
+		if (toMerge.length < 2) return;
+
+		let segmentation;
+		try {
+			segmentation = unionRLEs(toMerge.map((ann) => ann.segmentation));
+		} catch (error) {
+			console.error("Mask merge failed:", error);
+			return;
+		}
+
+		projectDispatch({
+			type: "MERGE_ANNOTATIONS",
+			payload: {
+				dataId: annotationSessionState.currentDataIndex,
+				annotationIds: toMerge.map((ann) => ann.id),
+				segmentation,
+				labelId: pickMergedLabel(toMerge),
+			},
+		});
+		annotationSessionDispatch({ type: "CLEAR_SELECTION" });
+	}, [
+		annotationSessionState.selectedAnnotations,
+		annotationSessionState.currentDataIndex,
+		projectState.dataList,
+		projectDispatch,
+		annotationSessionDispatch,
+	]);
+
 	const handleConfirmEdit = useCallback(() => {
 		const editPolygon = annotationSessionState.editPolygon;
 		if (!editPolygon || editPolygon.points.length < 3) return;
@@ -362,6 +430,7 @@ function useCreateAnnotationCommands() {
 			"switch-to-add": handleSwitchToAdd,
 			"switch-to-select": handleSwitchToSelect,
 			"start-edit": handleStartEdit,
+			merge: handleMerge,
 			"confirm-edit": handleConfirmEdit,
 			"cancel-edit": handleCancelEdit,
 			"reset-edit": handleResetEdit,
@@ -386,6 +455,7 @@ function useCreateAnnotationCommands() {
 			handleSwitchToAdd,
 			handleSwitchToSelect,
 			handleStartEdit,
+			handleMerge,
 			handleConfirmEdit,
 			handleCancelEdit,
 			handleResetEdit,

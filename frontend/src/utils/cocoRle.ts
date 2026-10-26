@@ -167,3 +167,50 @@ export async function decodeRleMasks(rles: RLE[]): Promise<Uint8Array[]> {
 
 	return results;
 }
+
+/** Number of foreground pixels in a COCO uncompressed RLE. */
+export function rleArea(rle: RLE): number {
+	let area = 0;
+	for (let i = 1; i < rle.counts.length; i += 2) area += rle.counts[i];
+	return area;
+}
+
+/**
+ * Pixel-wise union (OR) of several same-sized COCO uncompressed RLE masks.
+ * Works directly in column-major order, so no transpose is needed.
+ */
+export function unionRLEs(rles: RLE[]): RLE {
+	if (rles.length === 0) throw new Error("unionRLEs needs at least one mask");
+	const [height, width] = rles[0].size;
+	const total = height * width;
+
+	const merged = new Uint8Array(total);
+	for (const rle of rles) {
+		if (rle.size[0] !== height || rle.size[1] !== width) {
+			throw new Error("unionRLEs: masks must have the same size");
+		}
+		let pos = 0;
+		for (let i = 0; i < rle.counts.length; i++) {
+			const cnt = rle.counts[i];
+			if (i & 1 && cnt > 0) merged.fill(1, pos, pos + cnt);
+			pos += cnt;
+		}
+	}
+
+	// Re-encode: counts alternate background/foreground, starting with background.
+	const counts: number[] = [];
+	let current = 0;
+	let run = 0;
+	for (let p = 0; p < total; p++) {
+		if (merged[p] === current) {
+			run++;
+		} else {
+			counts.push(run);
+			current = merged[p];
+			run = 1;
+		}
+	}
+	counts.push(run);
+
+	return { size: [height, width], counts };
+}

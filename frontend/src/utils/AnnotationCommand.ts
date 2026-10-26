@@ -17,6 +17,7 @@ export type AnnotationCommand =
 	| "remove"
 	| "switch-to-add"
 	| "start-edit"
+	| "merge"
 	// Add mode
 	| "clear-prompts"
 	| "confirm-mask"
@@ -56,6 +57,7 @@ export const KEYMAP: Record<
 		r: "remove",
 		w: "switch-to-add",
 		e: "start-edit",
+		m: "merge",
 		...sharedCommands,
 	},
 	add: {

@@ -79,6 +79,15 @@ export type ProjectAction =
 			payload: { dataId: number; annotationId: number; segmentation: RLE };
 	  }
 	| {
+			type: "MERGE_ANNOTATIONS";
+			payload: {
+				dataId: number;
+				annotationIds: number[];
+				segmentation: RLE;
+				labelId: number;
+			};
+	  }
+	| {
 			type: "ADD_MODEL_OUTPUT";
 			payload: {
 				dataId: number;
@@ -505,6 +514,43 @@ function deleteAnnotations(
 	};
 }
 
+/**
+ * Replace several annotations with one merged annotation. The merged mask
+ * takes the place of the first of them (in list order); the rest are removed
+ * and ids are re-indexed, matching deleteAnnotations.
+ */
+function mergeAnnotations(
+	state: ProjectState,
+	dataId: number,
+	annotationIds: number[],
+	segmentation: RLE,
+	labelId: number,
+): ProjectState {
+	const idsToMerge = new Set(annotationIds);
+	return {
+		...state,
+		dataList: state.dataList.map((data) => {
+			if (data.id !== dataId) return data;
+
+			let placed = false;
+			const annotations = data.annotations.flatMap((annotation) => {
+				if (!idsToMerge.has(annotation.id)) return [annotation];
+				if (placed) return [];
+				placed = true;
+				return [{ ...annotation, segmentation, labelId }];
+			});
+
+			return {
+				...data,
+				annotations: annotations.map((annotation, index) => ({
+					...annotation,
+					id: index,
+				})),
+			};
+		}),
+	};
+}
+
 function excludeLabel(state: ProjectState, labelId: number): ProjectState {
 	if (state.excludedLabelIds.includes(labelId)) return state;
 	return {
@@ -604,6 +650,14 @@ export function projectReducer(
 				action.payload.dataId,
 				action.payload.annotationId,
 				action.payload.segmentation,
+			);
+		case "MERGE_ANNOTATIONS":
+			return mergeAnnotations(
+				state,
+				action.payload.dataId,
+				action.payload.annotationIds,
+				action.payload.segmentation,
+				action.payload.labelId,
 			);
 		case "ADD_MODEL_OUTPUT":
 			return addModelOutput(

@@ -4,6 +4,7 @@ import { useAnnotationCommands } from "../../../hooks";
 import FlowBar from "./FlowBar";
 import AssignLabelButton from "./AssignLabelButton";
 import ActionButton from "../../ui/FloatBar/FloatBarButton";
+import { MergeIcon } from "../../ui/FloatBar/icons";
 
 interface ModeBarProps {
 	/** Extra controls (e.g. Run Model), placed right after Add Mask. */
@@ -19,6 +20,7 @@ export default function SelectModeBar({ children }: ModeBarProps) {
 	const selectedCount = annotationSessionState.selectedAnnotations.length;
 	const hasSelection = selectedCount > 0;
 	const hasSingleSelection = selectedCount === 1;
+	const hasMultiSelection = selectedCount >= 2;
 
 	// Close the label picker if the selection is cleared while it's open.
 	useEffect(() => {
@@ -58,6 +60,15 @@ export default function SelectModeBar({ children }: ModeBarProps) {
 				disabledHint={
 					hasSelection ? "Select only one mask to edit" : "Select a mask first"
 				}
+				iconOnly
+			/>
+			<ActionButton
+				name="Combine masks"
+				shortcut="M"
+				icon={<MergeIcon />}
+				onClick={() => execute["merge"]()}
+				disabled={!hasMultiSelection}
+				disabledHint="Select two or more masks to combine"
 				iconOnly
 			/>
 		</FlowBar>

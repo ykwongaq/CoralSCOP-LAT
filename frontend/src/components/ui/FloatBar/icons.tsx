@@ -28,3 +28,18 @@ export function RunModelIcon() {
 		</svg>
 	);
 }
+
+export function MergeIcon() {
+	return (
+		<svg {...svgProps}>
+			{/* Outline of two overlapping masks joined into one */}
+			<path d="M12 6.8A6 6 0 1 0 12 17.2A6 6 0 1 0 12 6.8z" />
+			{/* Dashed seam where the two masks used to meet */}
+			<path
+				d="M12 6.8A6 6 0 0 0 12 17.2M12 6.8A6 6 0 0 1 12 17.2"
+				strokeDasharray="1.6 1.8"
+				opacity={0.55}
+			/>
+		</svg>
+	);
+}
