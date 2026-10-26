@@ -1,0 +1,70 @@
+.section {
+	padding: 10px 0 6px;
+	transition: opacity 0.15s ease;
+}
+
+.section + .section {
+	border-top: 1px solid #f0f1f3;
+}
+
+.section.disabled {
+	opacity: 0.45;
+	pointer-events: none;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	min-height: 24px;
+}
+
+.title {
+	margin: 0;
+	font-family: Roboto, sans-serif;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-text-page-heading);
+}
+
+.actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.resetButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--text-text-secondary1);
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.resetButton:hover {
+	background-color: var(--surface-surface-primary3);
+	color: var(--surface-surface-primary1);
+}
+
+.resetButton:focus-visible {
+	outline: 2px solid rgba(66, 93, 249, 0.35);
+	outline-offset: 1px;
+}
+
+.body {
+	padding-top: 2px;
+}
+
+/* Section switched off: keep it visible but greyed out and inactive */
+.bodyDisabled {
+	opacity: 0.45;
+	pointer-events: none;
+}

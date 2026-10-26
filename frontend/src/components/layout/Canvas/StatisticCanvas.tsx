@@ -12,6 +12,7 @@ import {
 	type Layers,
 	buildLayers,
 	buildLayersWithCachedMasks,
+	drawAnnotationLayers,
 	hitTestMask,
 	maskIntersectsRect,
 } from "../../../utils";
@@ -88,14 +89,10 @@ const StatisticCanvas = forwardRef<StatisticCanvasRef, Props>(
 			// Image (all viz adjustments handled by the hook)
 			drawImageToContext(ctx);
 
-			if (viz.showMasks && layersRef.current) {
+			if (layersRef.current) {
 				const { originalWidth: origW, originalHeight: origH } =
 					displayScaleRef.current;
-				ctx.globalAlpha = viz.maskOpacity;
-				ctx.drawImage(layersRef.current.mask, 0, 0, origW, origH);
-				ctx.globalAlpha = 1;
-				ctx.drawImage(layersRef.current.border, 0, 0, origW, origH);
-				ctx.drawImage(layersRef.current.text, 0, 0, origW, origH);
+				drawAnnotationLayers(ctx, layersRef.current, viz, origW, origH);
 			}
 
 			if (selectionRectRef.current) {

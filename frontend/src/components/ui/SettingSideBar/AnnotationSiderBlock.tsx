@@ -1,135 +1,135 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import styles from "./AnnotationSiderBlock.module.css";
 
 interface AnnotationSiderBlockProps {
 	name: string;
 	id: string;
-	defaultValue: number;
+	/** Current value, in slider units. */
+	value: number;
 	minValue: number;
 	maxValue: number;
 	step: number;
+	/** Suffix shown after the number, e.g. "%". */
+	unit?: string;
+	/** Value restored when the slider is double-clicked. */
+	resetValue?: number;
+	disabled?: boolean;
 	onChange?: (value: number) => void;
 }
 
 export default function AnnotationSiderBlock({
 	name,
 	id,
-	defaultValue,
+	value,
 	minValue,
 	maxValue,
 	step,
+	unit = "%",
+	resetValue,
+	disabled = false,
 	onChange,
 }: AnnotationSiderBlockProps) {
-	const initialValue = Number(defaultValue) ?? minValue;
-	const [value, setValue] = useState<number>(initialValue);
-	const [inputText, setInputText] = useState<string>(`${initialValue}%`);
-	const [isValid, setIsValid] = useState<boolean>(true);
+	const format = (v: number) => `${v}${unit}`;
+	const parse = (text: string) => {
+		const trimmed = text.trim();
+		const raw =
+			unit && trimmed.endsWith(unit)
+				? trimmed.slice(0, -unit.length)
+				: trimmed;
+		return raw.trim() === "" ? NaN : Number(raw);
+	};
+	const inRange = (v: number) => v >= minValue && v <= maxValue;
 
-	// Sync with external defaultValue changes
-	useEffect(() => {
-		const newValue = Number(defaultValue) ?? minValue;
-		setValue(newValue);
-		setInputText(`${newValue}%`);
-		setIsValid(true);
-	}, [defaultValue, minValue]);
+	// Text typed into the value box; null when the user is not editing it
+	const [draft, setDraft] = useState<string | null>(null);
+	const inputText = draft ?? format(value);
+	const isValid = draft === null || inRange(parse(draft));
 
-	// Progress fill percentage for the slider track
-	const fillPercent = useMemo(() => {
-		const pct = ((value - minValue) / (maxValue - minValue)) * 100;
-		return Math.min(100, Math.max(0, pct));
+	// Track fill. Sliders whose range spans zero (e.g. white balance) fill
+	// from the centre so it is clear which way they were moved.
+	const sliderTrackStyle = useMemo(() => {
+		const toPct = (v: number) =>
+			Math.min(100, Math.max(0, ((v - minValue) / (maxValue - minValue)) * 100));
+		const fill = "var(--slider-fill)";
+		const track = "var(--slider-track)";
+		const from = minValue < 0 && maxValue > 0 ? toPct(0) : 0;
+		const to = toPct(value);
+		const [lo, hi] = from <= to ? [from, to] : [to, from];
+		return {
+			background: `linear-gradient(to right, ${track} 0%, ${track} ${lo}%, ${fill} ${lo}%, ${fill} ${hi}%, ${track} ${hi}%, ${track} 100%)`,
+		};
 	}, [value, minValue, maxValue]);
-
-	const sliderTrackStyle = {
-		background: `linear-gradient(to right, #5b8def 0%, #5b8def ${fillPercent}%, #e8eaed ${fillPercent}%, #e8eaed 100%)`,
-	};
-
-	const validateAndSetValue = (newValue: number) => {
-		if (isNaN(newValue)) {
-			setIsValid(false);
-			return false;
-		}
-		if (newValue < minValue || newValue > maxValue) {
-			setIsValid(false);
-			return false;
-		}
-		setIsValid(true);
-		setValue(newValue);
-		setInputText(`${newValue}%`);
-		onChange?.(newValue);
-		return true;
-	};
 
 	const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const text = e.target.value;
-		setInputText(text);
-
-		// Strip % suffix for parsing if present
-		const rawText = text.replace(/%$/, "");
-		const numValue = Number(rawText);
-
-		if (text === "" || isNaN(numValue)) {
-			setIsValid(false);
-			return;
-		}
-
-		if (numValue >= minValue && numValue <= maxValue) {
-			setIsValid(true);
-			setValue(numValue);
-			onChange?.(numValue);
-		} else {
-			setIsValid(false);
-		}
+		setDraft(text);
+		const numValue = parse(text);
+		if (inRange(numValue)) onChange?.(numValue);
 	};
 
 	const handleTextBlur = () => {
-		const rawText = inputText.replace(/%$/, "");
-		const numValue = Number(rawText);
+		if (draft !== null) {
+			const numValue = parse(draft);
+			if (!isNaN(numValue)) {
+				onChange?.(Math.min(maxValue, Math.max(minValue, numValue)));
+			}
+		}
+		setDraft(null);
+	};
 
-		if (isNaN(numValue) || rawText === "") {
-			setInputText(`${value}%`);
-			setIsValid(true);
-		} else if (numValue < minValue) {
-			validateAndSetValue(minValue);
-		} else if (numValue > maxValue) {
-			validateAndSetValue(maxValue);
-		} else {
-			validateAndSetValue(numValue);
+	const handleTextKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter") e.currentTarget.blur();
+		if (e.key === "Escape") {
+			setDraft(null);
+			e.currentTarget.blur();
 		}
 	};
 
 	const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = Number(e.target.value);
-		validateAndSetValue(newValue);
+		onChange?.(Number(e.target.value));
+	};
+
+	const handleSliderDoubleClick = () => {
+		if (resetValue !== undefined && !disabled) onChange?.(resetValue);
 	};
 
 	return (
-		<>
-			<p className={styles.sideBarTitle}>{name}</p>
-			<div className={styles.sideBarBlock}>
-				<div className={styles.sliderBlock} id={id}>
-					<div className={styles.sliderBlockInner}>
-						<input
-							id={`${id}-slider`}
-							min={minValue}
-							max={maxValue}
-							value={value}
-							step={step}
-							type="range"
-							data-suffix="%"
-							style={sliderTrackStyle}
-							onChange={handleSliderChange}
-						/>
-					</div>
-					<input
-						id={`${id}-input`}
-						type="text"
-						value={inputText}
-						onChange={handleTextChange}
-						onBlur={handleTextBlur}
-						className={!isValid ? styles.inputError : ""}
-					/>
-				</div>
+		<div
+			className={`${styles.sideBarBlock} ${disabled ? styles.disabled : ""}`}
+			id={id}
+		>
+			<div className={styles.sliderHeader}>
+				<label className={styles.sideBarTitle} htmlFor={`${id}-slider`}>
+					{name}
+				</label>
+				<input
+					id={`${id}-input`}
+					type="text"
+					inputMode="decimal"
+					aria-label={`${name} value`}
+					value={inputText}
+					disabled={disabled}
+					onChange={handleTextChange}
+					onBlur={handleTextBlur}
+					onKeyDown={handleTextKeyDown}
+					className={`${styles.valueInput} ${!isValid ? styles.inputError : ""}`}
+				/>
 			</div>
-		</>
+			<div className={styles.sliderBlockInner}>
+				<input
+					id={`${id}-slider`}
+					min={minValue}
+					max={maxValue}
+					value={value}
+					step={step}
+					type="range"
+					disabled={disabled}
+					style={sliderTrackStyle}
+					title={resetValue !== undefined ? "Double-click to reset" : undefined}
+					onChange={handleSliderChange}
+					onDoubleClick={handleSliderDoubleClick}
+				/>
+			</div>
+		</div>
 	);
 }

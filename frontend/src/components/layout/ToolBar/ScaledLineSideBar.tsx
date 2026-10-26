@@ -2,6 +2,7 @@ import { useProject, useAnnotationSession } from "../../../store";
 import LineBlock from "./LineBlock";
 import styles from "./ScaledLineSideBar.module.css";
 import sideBarStyles from "./ToolBar.module.css";
+import ResizableSideBar from "./ResizableSideBar";
 
 export default function ScaledLineSideBar() {
 	const { projectState } = useProject();
@@ -12,25 +13,27 @@ export default function ScaledLineSideBar() {
 	const scaledLines = currentData?.scaledLineList ?? [];
 
 	return (
-		<div className={sideBarStyles.sideBarSub}>
-			<div className={styles.scaleSidebarIntro}>
-				<h3 className="side-bar__sub-title">Scale Definition</h3>
-				<p className={styles.scaleSidebarHint}>
-					Drag on the image to create a reference line. Use the mouse wheel to
-					zoom and right-drag to pan.
-				</p>
-			</div>
-
-			<div className={styles.scaleSidebarList}>
-				{scaledLines.length === 0 ? (
-					<p className={styles.scaleSidebarEmpty}>
-						No scale lines yet for this image. Draw one on the canvas to get
-						started.
+		<ResizableSideBar>
+			<div className={sideBarStyles.sideBarSub}>
+				<div className={styles.scaleSidebarIntro}>
+					<h3 className="side-bar__sub-title">Scale Definition</h3>
+					<p className={styles.scaleSidebarHint}>
+						Drag on the image to create a reference line. Use the mouse wheel to
+						zoom and right-drag to pan.
 					</p>
-				) : (
-					scaledLines.map((line) => <LineBlock key={line.id} line={line} />)
-				)}
+				</div>
+
+				<div className={styles.scaleSidebarList}>
+					{scaledLines.length === 0 ? (
+						<p className={styles.scaleSidebarEmpty}>
+							No scale lines yet for this image. Draw one on the canvas to get
+							started.
+						</p>
+					) : (
+						scaledLines.map((line) => <LineBlock key={line.id} line={line} />)
+					)}
+				</div>
 			</div>
-		</div>
+		</ResizableSideBar>
 	);
 }

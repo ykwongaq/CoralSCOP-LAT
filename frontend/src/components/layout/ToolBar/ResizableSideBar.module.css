@@ -1,0 +1,86 @@
+.sideBar {
+  position: relative;
+  flex-shrink: 0;
+  height: calc(100vh - var(--header-height));
+  margin-left: 1px;
+  z-index: 10;
+  transition: width 0.2s ease;
+}
+
+/* No animation while the user is dragging — follow the pointer directly. */
+.sideBar.dragging {
+  transition: none;
+}
+
+.clip {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.content {
+  width: 100%;
+  height: 100%;
+}
+
+.collapsed .clip {
+  visibility: hidden;
+}
+
+/* Drag handle on the right edge */
+.handle {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.handle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.handle:hover::after,
+.handle:focus-visible::after,
+.dragging .handle::after {
+  background: var(--surface-surface-primary1, #2f80ed);
+}
+
+/* Small tab that opens / closes the sidebar */
+.toggle {
+  position: absolute;
+  top: 50%;
+  right: -20px;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #e3e6ea;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  background: #fff;
+  color: var(--text-text-page-heading, #333);
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.toggle:hover,
+.toggle:focus-visible {
+  opacity: 1;
+  background: #f7f8f9;
+}

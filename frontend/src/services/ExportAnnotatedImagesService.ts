@@ -1,6 +1,7 @@
 import JSZip from "jszip";
 import {
 	buildLayers,
+	drawAnnotationLayers,
 	getImageDisplayFilter,
 	hasWhiteBalanceAdjustment,
 	createWhiteBalancedImage,
@@ -85,13 +86,16 @@ async function renderAnnotatedImage(
 		};
 		const { layers } = await buildLayers(data, EXPORT_SESSION.selectedAnnotations, vizSetting, displayScale);
 
-		// Mask fill at the user-configured opacity, then border + text badges at
-		// full opacity — mirrors how AnnotationCanvas composites the layers.
-		ctx.globalAlpha = vizSetting.maskOpacity;
-		ctx.drawImage(layers.mask, 0, 0);
-		ctx.globalAlpha = 1;
-		ctx.drawImage(layers.border, 0, 0);
-		ctx.drawImage(layers.text, 0, 0);
+		// Same compositing as the on-screen canvases, so the export honours
+		// the user's opacity, boundary width and label badge settings.
+		// Exports always include the overlays, even if they are hidden on screen.
+		drawAnnotationLayers(
+			ctx,
+			layers,
+			{ ...vizSetting, showMasks: true },
+			width,
+			height,
+		);
 	}
 
 	return new Promise<Blob>((resolve, reject) => {

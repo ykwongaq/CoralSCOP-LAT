@@ -1,45 +1,70 @@
-import { useState, useEffect } from "react";
 import styles from "./AnnotationToggleBlock.module.css";
+
+interface ToggleSwitchProps {
+	id: string;
+	checked: boolean;
+	onChange: (value: boolean) => void;
+	/** Accessible name when there is no visible label next to the switch. */
+	ariaLabel?: string;
+	disabled?: boolean;
+}
+
+/** Small on/off switch. */
+export function ToggleSwitch({
+	id,
+	checked,
+	onChange,
+	ariaLabel,
+	disabled = false,
+}: ToggleSwitchProps) {
+	return (
+		<label className={`${styles.switch} ${disabled ? styles.disabled : ""}`}>
+			<input
+				type="checkbox"
+				role="switch"
+				id={id}
+				checked={checked}
+				disabled={disabled}
+				aria-label={ariaLabel}
+				onChange={(e) => onChange(e.target.checked)}
+			/>
+			<span className={styles.switchSlider}></span>
+		</label>
+	);
+}
 
 interface AnnotationToggleBlockProps {
 	name: string;
 	id: string;
-	defaultValue?: boolean;
-	onChange?: (value: boolean) => void;
+	value: boolean;
+	/** Keyboard shortcut shown as a key badge, e.g. "Tab". */
+	shortcut?: string;
+	/** Short explanation under the name. */
+	description?: string;
+	onChange: (value: boolean) => void;
 }
 
+/** A labelled row with a switch on the right. */
 export default function AnnotationToggleBlock({
 	name,
 	id,
-	defaultValue = false,
+	value,
+	shortcut,
+	description,
 	onChange,
 }: AnnotationToggleBlockProps) {
-	const [isChecked, setIsChecked] = useState<boolean>(defaultValue);
-
-	useEffect(() => {
-		setIsChecked(defaultValue);
-	}, [defaultValue]);
-
-	const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const checked = e.target.checked;
-		setIsChecked(checked);
-		onChange?.(checked);
-	};
-
 	return (
-		<div className="side-bar__blk">
-			<div className={styles.toggleBlk}>
-				<p className={styles.toggleBlkTitle}>{name}</p>
-				<label className={styles.switch}>
-					<input
-						type="checkbox"
-						id={id}
-						checked={isChecked}
-						onChange={handleToggle}
-					/>
-					<span className={styles.switchSlider}></span>
-				</label>
-			</div>
+		<div className={styles.toggleBlk}>
+			<label className={styles.toggleText} htmlFor={id}>
+				<span className={styles.toggleBlkTitle}>
+					{name}
+					{shortcut && <kbd className={styles.shortcut}>{shortcut}</kbd>}
+				</span>
+				{description && (
+					<span className={styles.toggleDescription}>{description}</span>
+				)}
+			</label>
+			<ToggleSwitch id={id} checked={value} onChange={onChange} />
 		</div>
 	);
 }

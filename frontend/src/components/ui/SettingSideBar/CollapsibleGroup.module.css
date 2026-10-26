@@ -70,3 +70,10 @@
 .group.fill .groupContent.expanded {
 	flex: 1;
 }
+
+/* Expanded content taller than maxContentHeight scrolls */
+.groupContent.scrollable {
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: #d5d8de transparent;
+}

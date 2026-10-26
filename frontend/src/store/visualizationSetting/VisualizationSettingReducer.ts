@@ -13,16 +13,25 @@ export type VisualizationSettingAction =
 	| { type: "SET_SATURATION"; payload: number }
 	| { type: "SET_TEMPERATURE"; payload: number }
 	| { type: "SET_TINT"; payload: number }
+	// Set any subset of settings at once (used by the panel and section resets)
+	| {
+			type: "UPDATE_VISUALIZATION_SETTINGS";
+			payload: Partial<Omit<VisualizationSetting, "hiddingLabels">>;
+	  }
 	| { type: "RESET_VISUALIZATION_SETTINGS" };
 
 export const initialVisualizationSetting: VisualizationSetting = {
 	hiddingLabels: [],
 	showMasks: true,
 	maskOpacity: 0.4,
+	pendingMaskOpacity: 0.7,
+	showBoundaries: true,
+	boundaryWidth: 1,
+	showLabelBadges: true,
+	labelBadgeSize: 1,
 	brightness: 100,
 	contrast: 100,
 	saturation: 100,
-	pendingMaskOpacity: 0.7,
 	temperature: 0,
 	tint: 0,
 };
@@ -50,8 +59,14 @@ export function visualizationSettingReducer(
 			return { ...state, temperature: action.payload };
 		case "SET_TINT":
 			return { ...state, tint: action.payload };
+		case "UPDATE_VISUALIZATION_SETTINGS":
+			return { ...state, ...action.payload };
 		case "RESET_VISUALIZATION_SETTINGS":
-			return { ...initialVisualizationSetting };
+			// Keep hidden labels: they are managed from the label list, not the panel
+			return {
+				...initialVisualizationSetting,
+				hiddingLabels: state.hiddingLabels,
+			};
 		default:
 			return state;
 	}

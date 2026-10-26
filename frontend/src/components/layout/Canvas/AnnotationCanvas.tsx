@@ -15,6 +15,7 @@ import {
 	type Layers,
 	buildLayers,
 	buildLayersWithCachedMasks,
+	drawAnnotationLayers,
 	updatePendingMaskLayer,
 	hitTestMask,
 	maskIntersectsRect,
@@ -305,17 +306,12 @@ export default function AnnotationCanvas() {
 		drawImageToContext(ctx);
 
 		// Annotation layers
-		if (viz.showMasks && layersRef.current) {
+		if (layersRef.current) {
 			const { originalWidth: origW, originalHeight: origH } =
 				displayScaleRef.current;
-			ctx.globalAlpha = viz.maskOpacity;
-			ctx.drawImage(layersRef.current.mask, 0, 0, origW, origH);
-			ctx.globalAlpha = 1;
-			ctx.drawImage(layersRef.current.border, 0, 0, origW, origH);
-			ctx.drawImage(layersRef.current.text, 0, 0, origW, origH);
-			ctx.globalAlpha = viz.pendingMaskOpacity;
-			ctx.drawImage(layersRef.current.pendingMask, 0, 0, origW, origH);
-			ctx.globalAlpha = 1;
+			drawAnnotationLayers(ctx, layersRef.current, viz, origW, origH, {
+				includePending: true,
+			});
 		}
 
 		// Selection rectangle (select mode only)

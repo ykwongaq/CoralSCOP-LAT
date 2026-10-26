@@ -5,6 +5,8 @@ interface CollapsibleGroupProps {
 	title: string;
 	defaultExpanded?: boolean;
 	fill?: boolean;
+	/** Caps the expanded content height and scrolls the rest (e.g. "60vh"). */
+	maxContentHeight?: string;
 	children: React.ReactNode;
 }
 
@@ -12,6 +14,7 @@ export default function CollapsibleGroup({
 	title,
 	defaultExpanded = true,
 	fill = false,
+	maxContentHeight,
 	children,
 }: CollapsibleGroupProps) {
 	const [expanded, setExpanded] = useState(defaultExpanded);
@@ -44,7 +47,14 @@ export default function CollapsibleGroup({
 					</svg>
 				</span>
 			</button>
-			<div className={`${styles.groupContent} ${expanded ? styles.expanded : ""}`}>
+			<div
+				className={`${styles.groupContent} ${expanded ? styles.expanded : ""} ${expanded && maxContentHeight ? styles.scrollable : ""}`}
+				style={
+					expanded && maxContentHeight
+						? { maxHeight: maxContentHeight }
+						: undefined
+				}
+			>
 				{children}
 			</div>
 		</div>

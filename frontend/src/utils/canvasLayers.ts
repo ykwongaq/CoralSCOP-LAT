@@ -18,17 +18,213 @@ import {
 // Types
 // ---------------------------------------------------------------------------
 
+export type Centroid = { cx: number; cy: number; labelId: number };
+
 export type Layers = {
 	mask: HTMLCanvasElement;
+	// 1px-wide mask boundaries; source for the `border` layer
+	edges: HTMLCanvasElement;
+	// Boundaries thickened to the current boundary width
 	border: HTMLCanvasElement;
+	// Label badges (circle + label id) at the current badge size
 	text: HTMLCanvasElement;
 	pendingMask: HTMLCanvasElement;
+	centroids: Centroid[];
+	// Style the border / text layers were last drawn with (NaN = not drawn yet)
+	style: { boundaryWidth: number; labelBadgeSize: number };
 };
 
 export type LayersResult = {
 	layers: Layers;
 	pixelMasks: Uint8Array[];
 };
+
+// Automatic sizes, as a fraction of the layer's shorter side. The
+// boundaryWidth / labelBadgeSize settings scale these.
+const BOUNDARY_RADIUS_RATIO = 0.0015;
+const BADGE_RADIUS_RATIO = 0.012;
+
+// ---------------------------------------------------------------------------
+// Layer canvases
+// ---------------------------------------------------------------------------
+
+function createCanvas(width: number, height: number): HTMLCanvasElement {
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	return canvas;
+}
+
+function createLayers(
+	width: number,
+	height: number,
+	maskData: ImageData,
+	edgeData: ImageData,
+	centroids: Centroid[],
+): Layers {
+	const mask = createCanvas(width, height);
+	const edges = createCanvas(width, height);
+	mask.getContext("2d")!.putImageData(maskData, 0, 0);
+	edges.getContext("2d")!.putImageData(edgeData, 0, 0);
+
+	return {
+		mask,
+		edges,
+		border: createCanvas(width, height),
+		text: createCanvas(width, height),
+		pendingMask: createCanvas(width, height),
+		centroids,
+		style: { boundaryWidth: NaN, labelBadgeSize: NaN },
+	};
+}
+
+/** Boundary half-thickness in layer pixels (0 = a 1px line). */
+function getBoundaryRadius(
+	width: number,
+	height: number,
+	boundaryWidth: number,
+): number {
+	const base = Math.max(1, Math.min(width, height) * BOUNDARY_RADIUS_RATIO);
+	return Math.max(0, Math.round(base * boundaryWidth));
+}
+
+/**
+ * Thicken the 1px edges into a disk of `radius` around every edge pixel.
+ *
+ * Done with canvas copies instead of a per-pixel loop: first widen the edges
+ * horizontally row by row, then stack those rows vertically. This needs about
+ * 4 * radius copies, so dragging the width slider stays smooth.
+ */
+function renderBorderLayer(layers: Layers, boundaryWidth: number): void {
+	const { edges, border } = layers;
+	const { width, height } = border;
+	const ctx = border.getContext("2d")!;
+	ctx.imageSmoothingEnabled = false;
+	ctx.clearRect(0, 0, width, height);
+
+	const radius = getBoundaryRadius(width, height, boundaryWidth);
+	if (radius === 0) {
+		ctx.drawImage(edges, 0, 0);
+		return;
+	}
+
+	const row = createCanvas(width, height);
+	const rowCtx = row.getContext("2d")!;
+	rowCtx.imageSmoothingEnabled = false;
+	rowCtx.drawImage(edges, 0, 0);
+
+	// Walk from the top of the disk to its middle, so the row half-width
+	// only ever grows and `row` can be widened in place.
+	const r2 = radius * radius;
+	let rowHalfWidth = 0;
+	for (let dy = radius; dy >= 0; dy--) {
+		const halfWidth = Math.floor(Math.sqrt(r2 - dy * dy));
+		while (rowHalfWidth < halfWidth) {
+			rowHalfWidth++;
+			rowCtx.drawImage(edges, rowHalfWidth, 0);
+			rowCtx.drawImage(edges, -rowHalfWidth, 0);
+		}
+		ctx.drawImage(row, 0, dy);
+		if (dy !== 0) ctx.drawImage(row, 0, -dy);
+	}
+}
+
+function renderTextLayer(layers: Layers, labelBadgeSize: number): void {
+	const { text, centroids } = layers;
+	const { width, height } = text;
+	const ctx = text.getContext("2d")!;
+	ctx.clearRect(0, 0, width, height);
+
+	const baseRadius = Math.max(
+		4,
+		Math.floor(Math.min(width, height) * BADGE_RADIUS_RATIO),
+	);
+	const badgeRadius = Math.max(2, baseRadius * labelBadgeSize);
+	const fontSize = badgeRadius * 1.2;
+
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+
+	for (const { cx, cy, labelId } of centroids) {
+		if (labelId < 0) continue;
+
+		const displayText = String(labelId);
+
+		ctx.beginPath();
+		ctx.arc(cx, cy, badgeRadius, 0, 2 * Math.PI);
+		ctx.fillStyle = getLabelColor(labelId);
+		ctx.strokeStyle = "#fff";
+		ctx.lineWidth = Math.max(1, badgeRadius * 0.12);
+		ctx.fill();
+		ctx.stroke();
+		ctx.closePath();
+
+		// Shrink longer ids so they stay inside the circle
+		const textScale =
+			displayText.length > 2 ? 0.6 : displayText.length > 1 ? 0.75 : 1;
+		ctx.font = `bold ${Math.floor(fontSize * textScale)}px Arial`;
+		ctx.fillStyle = getTextColor(labelId);
+		ctx.fillText(displayText, cx, cy);
+	}
+}
+
+/**
+ * Redraw the border / text layers if their size settings changed since they
+ * were last drawn. Cheap no-op otherwise, so it is safe to call every frame.
+ */
+export function syncLayerStyle(
+	layers: Layers,
+	viz: VisualizationSetting,
+): void {
+	if (viz.showBoundaries && layers.style.boundaryWidth !== viz.boundaryWidth) {
+		renderBorderLayer(layers, viz.boundaryWidth);
+		layers.style.boundaryWidth = viz.boundaryWidth;
+	}
+	if (
+		viz.showLabelBadges &&
+		layers.style.labelBadgeSize !== viz.labelBadgeSize
+	) {
+		renderTextLayer(layers, viz.labelBadgeSize);
+		layers.style.labelBadgeSize = viz.labelBadgeSize;
+	}
+}
+
+/**
+ * Draw the annotation overlays (mask fill, boundaries, label badges and,
+ * optionally, the pending mask) onto `ctx`, stretched to `width` x `height`.
+ * Shared by the annotation canvas, the statistic canvas and image export so
+ * they all look the same.
+ */
+export function drawAnnotationLayers(
+	ctx: CanvasRenderingContext2D,
+	layers: Layers,
+	viz: VisualizationSetting,
+	width: number,
+	height: number,
+	{ includePending = false }: { includePending?: boolean } = {},
+): void {
+	if (!viz.showMasks) return;
+
+	syncLayerStyle(layers, viz);
+
+	const prevAlpha = ctx.globalAlpha;
+	if (viz.maskOpacity > 0) {
+		ctx.globalAlpha = viz.maskOpacity;
+		ctx.drawImage(layers.mask, 0, 0, width, height);
+	}
+	ctx.globalAlpha = 1;
+	if (viz.showBoundaries) {
+		ctx.drawImage(layers.border, 0, 0, width, height);
+	}
+	if (viz.showLabelBadges) {
+		ctx.drawImage(layers.text, 0, 0, width, height);
+	}
+	if (includePending) {
+		ctx.globalAlpha = viz.pendingMaskOpacity;
+		ctx.drawImage(layers.pendingMask, 0, 0, width, height);
+	}
+	ctx.globalAlpha = prevAlpha;
+}
 
 // ---------------------------------------------------------------------------
 // Layer builder — pure function, no React, called once per data change
@@ -50,58 +246,26 @@ export function buildLayersWithCachedMasks(
 		scale,
 	} = displayScale;
 
-	const maskCanvas = document.createElement("canvas");
-	const borderCanvas = document.createElement("canvas");
-	const textCanvas = document.createElement("canvas");
-	const pendingMaskCanvas = document.createElement("canvas");
-
-	maskCanvas.width =
-		borderCanvas.width =
-		textCanvas.width =
-		pendingMaskCanvas.width =
-			width;
-	maskCanvas.height =
-		borderCanvas.height =
-		textCanvas.height =
-		pendingMaskCanvas.height =
-			height;
-
-	const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true })!;
-	const borderCtx = borderCanvas.getContext("2d")!;
-	const textCtx = textCanvas.getContext("2d")!;
-
-	const maskImgData = maskCtx.getImageData(0, 0, width, height);
+	const maskImgData = new ImageData(width, height);
+	const edgeImgData = new ImageData(width, height);
 	const md = maskImgData.data;
+	const ed = edgeImgData.data;
 
-	const centroids: Array<{ cx: number; cy: number; labelId: number }> = [];
-	const edges: Array<{
-		x: number;
-		y: number;
-		r: number;
-		g: number;
-		b: number;
-	}> = [];
+	const centroids: Centroid[] = [];
 
 	const hiddenLabelIds = new Set(
 		visualizationSetting.hiddingLabels.map((label) => label.id),
 	);
-
-	function isMaskSelected(annotation: Annotation): boolean {
-		return selectedAnnotationIds.some((sel) => sel === annotation.id);
-	}
-
-	function isLabelHidden(labelId: number): boolean {
-		return hiddenLabelIds.has(labelId);
-	}
+	const selectedIds = new Set(selectedAnnotationIds);
 
 	for (let annIdx = 0; annIdx < data.annotations.length; annIdx++) {
-		const ann = data.annotations[annIdx];
+		const ann: Annotation = data.annotations[annIdx];
 
-		if (isLabelHidden(ann.labelId)) {
+		if (hiddenLabelIds.has(ann.labelId)) {
 			continue;
 		}
 
-		const color = isMaskSelected(ann)
+		const color = selectedIds.has(ann.id)
 			? getSelectedMaskColor()
 			: getLabelColor(ann.labelId);
 		const [r, g, b] = hexToRgb(color);
@@ -135,7 +299,10 @@ export function buildLayersWithCachedMasks(
 					pixelMask[i + originalWidthVar] === 0);
 
 			if (isEdge) {
-				edges.push({ x: dispX, y: dispY, r, g, b });
+				ed[idx] = r;
+				ed[idx + 1] = g;
+				ed[idx + 2] = b;
+				ed[idx + 3] = 255;
 			}
 
 			sumX += dispX;
@@ -152,68 +319,7 @@ export function buildLayersWithCachedMasks(
 		}
 	}
 
-	const minDim = Math.min(width, height);
-	const boundaryRadius = Math.max(1, Math.round(minDim * 0.0015));
-
-	const borderImgData = borderCtx.getImageData(0, 0, width, height);
-	const bd = borderImgData.data;
-	const r2 = boundaryRadius * boundaryRadius;
-
-	for (const { x, y, r, g, b } of edges) {
-		for (let dy = -boundaryRadius; dy <= boundaryRadius; dy++) {
-			for (let dx = -boundaryRadius; dx <= boundaryRadius; dx++) {
-				if (dx * dx + dy * dy > r2) continue;
-
-				const px = x + dx;
-				const py = y + dy;
-				if (px < 0 || px >= width || py < 0 || py >= height) continue;
-				const pIdx = (py * width + px) * 4;
-				bd[pIdx] = r;
-				bd[pIdx + 1] = g;
-				bd[pIdx + 2] = b;
-				bd[pIdx + 3] = 255;
-			}
-		}
-	}
-
-	maskCtx.putImageData(maskImgData, 0, 0);
-	borderCtx.putImageData(borderImgData, 0, 0);
-
-	const badgeRadius = Math.max(4, Math.floor(minDim * 0.012));
-	const fontSize = Math.round(badgeRadius * 1.2);
-
-	textCtx.textAlign = "center";
-	textCtx.textBaseline = "middle";
-
-	for (const { cx, cy, labelId } of centroids) {
-		if (labelId < 0) continue;
-
-		const color = getLabelColor(labelId);
-		const textColor = getTextColor(labelId);
-		const displayText = String(labelId);
-
-		textCtx.beginPath();
-		textCtx.arc(cx, cy, badgeRadius, 0, 2 * Math.PI);
-		textCtx.fillStyle = color;
-		textCtx.strokeStyle = "#fff";
-		textCtx.lineWidth = Math.max(1, badgeRadius * 0.12);
-		textCtx.fill();
-		textCtx.stroke();
-		textCtx.closePath();
-
-		const adjFontSize =
-			displayText.length > 1 ? Math.floor(fontSize * 0.75) : fontSize;
-		textCtx.font = `bold ${adjFontSize}px Arial`;
-		textCtx.fillStyle = textColor;
-		textCtx.fillText(displayText, cx, cy);
-	}
-
-	return {
-		mask: maskCanvas,
-		border: borderCanvas,
-		text: textCanvas,
-		pendingMask: pendingMaskCanvas,
-	};
+	return createLayers(width, height, maskImgData, edgeImgData, centroids);
 }
 
 export async function buildLayers(
@@ -231,26 +337,6 @@ export async function buildLayers(
 	const width = ds.displayWidth;
 	const height = ds.displayHeight;
 
-	const maskCanvas = document.createElement("canvas");
-	const borderCanvas = document.createElement("canvas");
-	const textCanvas = document.createElement("canvas");
-	const pendingMaskCanvas = document.createElement("canvas");
-
-	maskCanvas.width =
-		borderCanvas.width =
-		textCanvas.width =
-		pendingMaskCanvas.width =
-			width;
-	maskCanvas.height =
-		borderCanvas.height =
-		textCanvas.height =
-		pendingMaskCanvas.height =
-			height;
-
-	const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true })!;
-	const borderCtx = borderCanvas.getContext("2d")!;
-	const textCtx = textCanvas.getContext("2d")!;
-
 	// Pre-compute color map on main thread
 	const colorMap: Record<number, [number, number, number]> = {};
 	for (const ann of data.annotations) {
@@ -265,13 +351,13 @@ export async function buildLayers(
 		(label) => label.id,
 	);
 
-	const [{ maskBuffer, borderBuffer, centroids }, pixelMasks] =
+	const [{ maskBuffer, edgeBuffer, centroids }, pixelMasks] =
 		await Promise.all([
 			// Worker: decode RLE + fill pixels (off main thread)
 			new Promise<{
 				maskBuffer: ArrayBuffer;
-				borderBuffer: ArrayBuffer;
-				centroids: Array<{ cx: number; cy: number; labelId: number }>;
+				edgeBuffer: ArrayBuffer;
+				centroids: Centroid[];
 			}>((resolve, reject) => {
 				const BuildLayersWorker = new Worker(
 					new URL("./canvasLayers.worker.ts", import.meta.url),
@@ -305,58 +391,15 @@ export async function buildLayers(
 			decodeRleMasks(data.annotations.map((ann) => ann.segmentation)),
 		]);
 
-	// Apply transferred buffers to canvases
-	maskCtx.putImageData(
+	const layers = createLayers(
+		width,
+		height,
 		new ImageData(new Uint8ClampedArray(maskBuffer), width, height),
-		0,
-		0,
-	);
-	borderCtx.putImageData(
-		new ImageData(new Uint8ClampedArray(borderBuffer), width, height),
-		0,
-		0,
+		new ImageData(new Uint8ClampedArray(edgeBuffer), width, height),
+		centroids,
 	);
 
-	// Draw text badges on main thread
-	const minDim = Math.min(width, height);
-	const badgeRadius = Math.max(4, Math.floor(minDim * 0.012));
-	const fontSize = Math.round(badgeRadius * 1.2);
-
-	textCtx.textAlign = "center";
-	textCtx.textBaseline = "middle";
-
-	for (const { cx, cy, labelId } of centroids) {
-		if (labelId < 0) continue;
-
-		const color = getLabelColor(labelId);
-		const textColor = getTextColor(labelId);
-		const displayText = String(labelId);
-
-		textCtx.beginPath();
-		textCtx.arc(cx, cy, badgeRadius, 0, 2 * Math.PI);
-		textCtx.fillStyle = color;
-		textCtx.strokeStyle = "#fff";
-		textCtx.lineWidth = Math.max(1, badgeRadius * 0.12);
-		textCtx.fill();
-		textCtx.stroke();
-		textCtx.closePath();
-
-		const adjFontSize =
-			displayText.length > 1 ? Math.floor(fontSize * 0.75) : fontSize;
-		textCtx.font = `bold ${adjFontSize}px Arial`;
-		textCtx.fillStyle = textColor;
-		textCtx.fillText(displayText, cx, cy);
-	}
-
-	return {
-		layers: {
-			mask: maskCanvas,
-			border: borderCanvas,
-			text: textCanvas,
-			pendingMask: pendingMaskCanvas,
-		},
-		pixelMasks,
-	};
+	return { layers, pixelMasks };
 }
 
 // ---------------------------------------------------------------------------

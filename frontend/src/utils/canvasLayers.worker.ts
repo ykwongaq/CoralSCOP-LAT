@@ -20,7 +20,9 @@ type WorkerInput = {
 
 type WorkerOutput = {
 	maskBuffer: ArrayBuffer;
-	borderBuffer: ArrayBuffer;
+	// 1px-wide mask boundaries; thickened later on the main thread so the
+	// boundary width can change without decoding the masks again.
+	edgeBuffer: ArrayBuffer;
 	centroids: Array<{ cx: number; cy: number; labelId: number }>;
 };
 
@@ -47,15 +49,8 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
 	const selectedSet = new Set(selectedAnnotationIds);
 
 	const maskData = new Uint8ClampedArray(width * height * 4);
-	const borderData = new Uint8ClampedArray(width * height * 4);
+	const edgeData = new Uint8ClampedArray(width * height * 4);
 	const centroids: Array<{ cx: number; cy: number; labelId: number }> = [];
-	const edges: Array<{
-		x: number;
-		y: number;
-		r: number;
-		g: number;
-		b: number;
-	}> = [];
 
 	for (let annIdx = 0; annIdx < annotations.length; annIdx++) {
 		const ann = annotations[annIdx];
@@ -95,7 +90,10 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
 					pixelMask[i + originalWidthVar] === 0);
 
 			if (isEdge) {
-				edges.push({ x: dispX, y: dispY, r, g, b });
+				edgeData[idx] = r;
+				edgeData[idx + 1] = g;
+				edgeData[idx + 2] = b;
+				edgeData[idx + 3] = 255;
 			}
 
 			sumX += dispX;
@@ -112,32 +110,11 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
 		}
 	}
 
-	const minDim = Math.min(width, height);
-	const boundaryRadius = Math.max(1, Math.round(minDim * 0.0015));
-	const r2 = boundaryRadius * boundaryRadius;
-
-	for (const { x, y, r, g, b } of edges) {
-		for (let dy = -boundaryRadius; dy <= boundaryRadius; dy++) {
-			for (let dx = -boundaryRadius; dx <= boundaryRadius; dx++) {
-				if (dx * dx + dy * dy > r2) continue;
-
-				const px = x + dx;
-				const py = y + dy;
-				if (px < 0 || px >= width || py < 0 || py >= height) continue;
-				const pIdx = (py * width + px) * 4;
-				borderData[pIdx] = r;
-				borderData[pIdx + 1] = g;
-				borderData[pIdx + 2] = b;
-				borderData[pIdx + 3] = 255;
-			}
-		}
-	}
-
 	const output: WorkerOutput = {
 		maskBuffer: maskData.buffer,
-		borderBuffer: borderData.buffer,
+		edgeBuffer: edgeData.buffer,
 		centroids,
 	};
 
-	self.postMessage(output, [maskData.buffer, borderData.buffer]);
+	self.postMessage(output, [maskData.buffer, edgeData.buffer]);
 };
