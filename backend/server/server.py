@@ -9,7 +9,6 @@ from collections import OrderedDict
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-import torch
 from fastapi import HTTPException
 from PIL import Image
 
@@ -30,23 +29,12 @@ class Server:
     def __init__(self, config: dict):
         self.config = config
 
-        if self.config["data_dir"] is None:
-            raise ValueError(
-                "data_dir must be set in config.json to a persistent directory for embeddings"
-            )
-
         _logger.info("Initializing Server")
 
         self.temp_folder = os.path.join(
             tempfile.gettempdir(), "coralscop-lat-online-temp"
         )
         os.makedirs(self.temp_folder, exist_ok=True)
-
-        # Persistent data directory for embeddings (never auto-deleted)
-        data_dir = os.path.expanduser(
-            config.get("data_dir", "~/.local/share/coralscop-lat")
-        )
-        embeddings_dir = os.path.join(data_dir, "embeddings")
 
         _logger.info("Loading SAM3 model...")
         self.sam3 = SAM3Model(resolve_path(config["sam_model_path"]))
@@ -62,13 +50,15 @@ class Server:
         )
 
         self.mask_handler = MaskHandler()
-        self.embedding_store = EmbeddingStore(base_dir=embeddings_dir)
+        # Embeddings live in RAM only and are generated on demand.
+        self.embedding_store = EmbeddingStore(
+            max_entries=config.get("cpu_embedding_cache_size", 20)
+        )
 
         self.project_handler = ProjectHandler(
             os.path.join(self.temp_folder, "projects"),
             self.sam3,
             coralSCOP,
-            embedding_store=self.embedding_store,
         )
 
         # GPU-side LRU cache for predict_inst: avoids repeated CPU→GPU transfers
@@ -139,17 +129,24 @@ class Server:
         self, session_id: str, stem: str, image: Image.Image
     ) -> None:
         """
-        Generate and persist the SAM embedding for an image.
+        Generate the SAM embedding for an image and keep it in memory.
 
-        Used by the frontend to (re)build an embedding when predict_inst
+        Used by the frontend to build an embedding when predict_inst
         reports that none exists for the (session_id, stem) pair.
         """
         _logger.info("Generating embedding session=%s stem=%s", session_id, stem)
+        start = time.monotonic()
         state = self.sam3.gen_embeddings(image)
 
-        buf = io.BytesIO()
-        torch.save(state, buf)
-        self.embedding_store.save(session_id, stem, buf.getvalue())
+        # Stored as a CPU copy; predict_inst moves it back to the GPU cache.
+        # The copy waits for the GPU to finish, so the time below is accurate.
+        self.embedding_store.put(session_id, stem, state)
+        _logger.info(
+            "Generated embedding session=%s stem=%s in %.2f s",
+            session_id,
+            stem,
+            time.monotonic() - start,
+        )
 
     def _get_state_on_device(self, session_id: str, stem: str):
         """
@@ -159,7 +156,7 @@ class Server:
         predict_inst calls on the same image skip the CPU→GPU transfer.
         The cache is capped at ``gpu_embedding_cache_size`` entries
         (default 5, configurable in config.json).  On a miss the state is
-        loaded from the CPU cache / disk, moved to GPU, then inserted;
+        loaded from the in-memory CPU store, moved to GPU, then inserted;
         the least-recently-used entry is evicted if the cache is full.
         """
         key = (session_id, stem)
@@ -174,7 +171,7 @@ class Server:
                 _logger.debug("GPU cache hit session=%s stem=%s", session_id, stem)
                 return state_gpu
 
-        # Slow path: load from CPU cache / disk (outside lock to avoid blocking)
+        # Slow path: load from the CPU store (outside lock to avoid blocking)
         state_cpu = self.embedding_store.get(session_id, stem)
         if state_cpu is None:
             return None
@@ -375,15 +372,9 @@ class Server:
         """
         Create a single-image project and return the path to the .coral ZIP file.
 
-        For sample images:
-          - sample_id: identifier for the sample image (e.g., "sample")
-          - Embeddings are stored under sample_id and reused across users
-          - A unique project_id (token) is generated for each user
-          - project_info.json includes both project_id and sample_id
-
-        For custom uploads:
-          - sample_id is None
-          - Embeddings and project both use the same unique token
+        A unique project_id (token) is generated for each call. For sample
+        images, sample_id is also recorded in project_info.json. No SAM
+        embedding is created here; it is generated on the first click.
 
         The caller is responsible for deleting temporary files after sending.
         """

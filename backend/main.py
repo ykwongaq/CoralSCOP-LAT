@@ -309,10 +309,9 @@ async def create_sam_session():
     Returns:
         {"session_id": "<uuid>"}
 
-    The returned session_id must be passed to subsequent embedding uploads
-    and to POST /api/sam/predict. DELETE /api/sam/sessions/{session_id}
-    releases the in-memory caches for that session while keeping persisted
-    embedding files on disk.
+    The returned session_id must be passed to subsequent embedding requests
+    and to POST /api/sam/predict. Embeddings are kept in server memory only;
+    DELETE /api/sam/sessions/{session_id} drops them.
     """
     session_id = _server.create_embedding_session()
     return CreateSamSessionResponse(session_id=session_id)
@@ -338,11 +337,11 @@ async def upload_embedding(session_id: str, stem: str, file: UploadFile = File(.
 @app.post("/api/sam/sessions/{session_id}/embeddings/{stem}/generate", status_code=204)
 async def generate_embedding(session_id: str, stem: str, image: UploadFile = File(...)):
     """
-    Generate and persist a SAM embedding for an image.
+    Generate a SAM embedding for an image and keep it in server memory.
 
     The frontend calls this when POST /api/sam/predict returns
-    ``EMBEDDING_MISSING``, re-sending the current image so the server can
-    rebuild the missing embedding.
+    ``EMBEDDING_MISSING`` (first click on an image, or after the embedding
+    was evicted), sending the current image so the server can build it.
 
     Body: multipart/form-data with a single field ``image`` containing the
     source image file.
@@ -368,8 +367,8 @@ async def generate_embedding(session_id: str, stem: str, image: UploadFile = Fil
 @app.delete("/api/sam/sessions/{session_id}", status_code=204)
 async def delete_sam_session(session_id: str):
     """
-    Release the CPU/GPU caches for a SAM session without deleting
-    its persisted embedding files on disk. Safe to call repeatedly.
+    Delete every embedding held for a SAM session (CPU and GPU).
+    Safe to call repeatedly.
     """
     _server.delete_embedding_session(session_id)
     return Response(status_code=204)
@@ -392,10 +391,9 @@ async def quick_start_project(
       - model    : optional model identifier (CoralSCOP)
       - projectId: optional sample image identifier (e.g., "sample" without extension)
 
-    If projectId is provided (for sample images):
-      - Embeddings are reused if they already exist under this sample ID
-      - A new unique project_id is generated for this user
-      - project_info.json includes both project_id and sample_id
+    If projectId is provided (for sample images), project_info.json records
+    it as sample_id alongside a new unique project_id. No SAM embedding is
+    created here; it is generated on the first click.
 
     Returns the .coral binary as application/octet-stream.
     The frontend can pass the response blob directly to loadProject().
@@ -423,7 +421,6 @@ async def quick_start_project(
     token = os.path.basename(zip_path).replace("project_", "").replace(".coral", "")
 
     # Always delete temporary projects after download.
-    # For sample images, embeddings are cached under sample_id, not the project token.
     background_tasks.add_task(_server.delete_project, token)
 
     return FileResponse(

@@ -18,6 +18,19 @@ export interface LoadProjectCallbacks {
 }
 
 /**
+ * Returns a random UUID v4. `crypto.randomUUID` only exists on HTTPS or
+ * localhost, so fall back to `crypto.getRandomValues` on plain HTTP.
+ */
+function newSessionId(): string {
+	if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+	const b = crypto.getRandomValues(new Uint8Array(16));
+	b[6] = (b[6] & 0x0f) | 0x40;
+	b[8] = (b[8] & 0x3f) | 0x80;
+	const h = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+	return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+/**
  * Unzips a .coral project file (ZIP archive) in the browser and:
  *  - Creates object URLs for images (in-memory, current session only)
  *  - Parses annotation JSON files into the ProjectState shape
@@ -146,9 +159,10 @@ export async function loadProject(
 		}
 
 		const projectId = info.project_id;
-		// For sample images, sessionId comes from sample_id (shared embeddings).
-		// For regular projects, sessionId is the projectId (backward compatible).
-		const sessionId = (info.sample_id as string) ?? projectId;
+		// Every opened project gets its own SAM session, so two tabs or users
+		// with the same file never share (or delete) each other's embeddings.
+		// Embeddings are generated on the server on the first click.
+		const sessionId = newSessionId();
 
 		callbacks.onProgress?.(100);
 		callbacks.onComplete?.({

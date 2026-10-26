@@ -1,5 +1,4 @@
 import io
-import os
 import threading
 import uuid
 from collections import OrderedDict
@@ -12,182 +11,91 @@ from .utils.logger import get_logger
 _logger = get_logger(__name__)
 
 
-def _to_device(obj: Any, device: torch.device) -> Any:
-    """Recursively move tensors in obj to *device*."""
+def _to_device(obj: Any, device: torch.device, copy: bool = False) -> Any:
+    """Recursively move tensors in obj to *device* (always copying if *copy*)."""
     if isinstance(obj, torch.Tensor):
-        return obj.to(device)
+        return obj.to(device, copy=copy)
     if isinstance(obj, dict):
-        return {k: _to_device(v, device) for k, v in obj.items()}
+        return {k: _to_device(v, device, copy) for k, v in obj.items()}
     if isinstance(obj, (list, tuple)):
-        moved = [_to_device(v, device) for v in obj]
+        moved = [_to_device(v, device, copy) for v in obj]
         return type(obj)(moved)
     return obj
 
 
 class EmbeddingStore:
     """
-    Manages SAM embedding states, grouped by session UUID.
+    In-memory store for SAM embedding states, keyed by (session_id, stem).
 
-    Disk layer  — every uploaded embedding is persisted as a .pt file under
-                  ``base_dir/<session_id>/<stem>.pt`` and is kept indefinitely
-                  unless removed by a separate maintenance task.
-
-    LRU cache   — the ``hot_cache_size`` most-recently-used states are kept
-                  deserialised on CPU RAM.  A predict_inst call that hits the
-                  cache avoids disk IO; a miss loads from disk once then
-                  re-enters the cache.
+    Nothing is written to disk. Embeddings are generated on demand and kept
+    in CPU RAM in a bounded LRU cache (``max_entries`` items, ~200 MB each).
+    When an entry is evicted, or the server restarts, the next prediction
+    reports EMBEDDING_MISSING and the frontend asks the server to rebuild it.
     """
 
-    def __init__(
-        self,
-        base_dir: str,
-        hot_cache_size: int = 20,
-    ):
-        self._base_dir = base_dir
-        self._hot_cache_size = hot_cache_size
-
-        # LRU cache: (session_id, stem) → state (tensors on CPU)
-        self._cache_lock = threading.Lock()
-        self._hot_cache: OrderedDict[tuple, Any] = OrderedDict()
-
-        os.makedirs(self._base_dir, exist_ok=True)
+    def __init__(self, max_entries: int = 20):
+        self._max_entries = max_entries
+        self._lock = threading.Lock()
+        self._cache: OrderedDict[tuple, Any] = OrderedDict()
 
         _logger.info(
-            "EmbeddingStore ready (dir=%s, hot_cache_size=%d)",
-            self._base_dir,
-            hot_cache_size,
+            "EmbeddingStore ready (in-memory, max_entries=%d, ~%d GB RAM at 200 MB each)",
+            max_entries,
+            max_entries * 200 // 1024,
         )
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
-    def create_session(self, session_id: str = None) -> str:
-        """
-        Create a new session directory and return its UUID.
+    def create_session(self) -> str:
+        """Return a new session UUID. Sessions need no server-side setup."""
+        return str(uuid.uuid4())
 
-        If *session_id* is provided (e.g. a project token), the directory is
-        created under that ID so callers can use the token directly as the
-        SAM session_id.
-        """
-        if session_id is None:
-            session_id = str(uuid.uuid4())
-        os.makedirs(self._session_dir(session_id), exist_ok=True)
-        _logger.debug("Created session %s", session_id)
-        return session_id
+    def put(self, session_id: str, stem: str, state: Any) -> None:
+        """Store a state (moved to CPU) and evict the least-recently-used if full."""
+        # Always copy: the model returns inference-mode tensors, and copying
+        # outside inference mode turns them into normal tensors.
+        state_cpu = _to_device(state, torch.device("cpu"), copy=True)
+        key = (session_id, stem)
+        with self._lock:
+            self._cache[key] = state_cpu
+            self._cache.move_to_end(key)
+            _logger.info(
+                "CPU cache: stored %s (now %d/%d entries)",
+                key,
+                len(self._cache),
+                self._max_entries,
+            )
+            while len(self._cache) > self._max_entries:
+                evicted_key, _ = self._cache.popitem(last=False)
+                _logger.info(
+                    "CPU cache: LRU evicted %s (now %d/%d entries)",
+                    evicted_key,
+                    len(self._cache),
+                    self._max_entries,
+                )
 
     def save(self, session_id: str, stem: str, data: bytes) -> None:
-        """
-        Write raw .pt bytes to disk, then deserialise and cache on CPU RAM.
-        If RAM is insufficient, the embedding is saved to disk only — no error
-        is raised, and the next predict call will simply load it from disk.
-        """
-        session_dir = self._session_dir(session_id)
-        os.makedirs(session_dir, exist_ok=True)
-        path = os.path.join(session_dir, f"{stem}.pt")
-
-        with open(path, "wb") as fh:
-            fh.write(data)
-        _logger.debug(
-            "Saved embedding session=%s stem=%s (%d bytes)",
-            session_id,
-            stem,
-            len(data),
-        )
-
-        # Deserialise from the already-in-memory bytes (no second disk read).
-        try:
-            state = torch.load(
-                io.BytesIO(data), map_location="cpu", weights_only=False
-            )
-            self._cache_put((session_id, stem), state)
-            _logger.debug("Cached embedding session=%s stem=%s", session_id, stem)
-        except MemoryError:
-            _logger.warning(
-                "Not enough RAM to cache embedding session=%s stem=%s — disk-only fallback",
-                session_id,
-                stem,
-            )
+        """Store a state from raw ``torch.save`` bytes."""
+        state = torch.load(io.BytesIO(data), map_location="cpu", weights_only=False)
+        self.put(session_id, stem, state)
 
     def get(self, session_id: str, stem: str) -> Optional[Any]:
-        """
-        Return the deserialized state for (session_id, stem), or None if not found.
-
-        Cache hit  → returns immediately from RAM (no disk IO).
-        Cache miss → loads from disk, caches the result, then returns.
-
-        Raises MemoryError if a disk-load is needed but RAM is exhausted.
-        The caller should catch MemoryError and return HTTP 503.
-        """
+        """Return the CPU state for (session_id, stem), or None if not cached."""
         key = (session_id, stem)
-
-        # Fast path: cache hit
-        with self._cache_lock:
-            if key in self._hot_cache:
-                self._hot_cache.move_to_end(key)
-                _logger.debug("Cache hit session=%s stem=%s", session_id, stem)
-                return self._hot_cache[key]
-
-        # Slow path: cache miss → load from disk
-        path = os.path.join(self._session_dir(session_id), f"{stem}.pt")
-        if not os.path.isfile(path):
-            return None
-
-        _logger.debug("Cache miss — loading from disk session=%s stem=%s", session_id, stem)
-
-        # MemoryError here means the server is critically low on RAM.
-        # Let it propagate so the caller can return HTTP 503.
-        state = torch.load(path, map_location="cpu", weights_only=False)
-
-        try:
-            self._cache_put(key, state)
-        except MemoryError:
-            _logger.warning(
-                "RAM too low to re-cache after disk load session=%s stem=%s",
-                session_id,
-                stem,
-            )
-
-        return state
+        with self._lock:
+            state = self._cache.get(key)
+            if state is not None:
+                self._cache.move_to_end(key)
+            return state
 
     def delete_session(self, session_id: str) -> None:
-        """Release cached CPU memory for a session while keeping disk files intact."""
-        with self._cache_lock:
-            stale = [k for k in self._hot_cache if k[0] == session_id]
+        """Drop every embedding belonging to a session."""
+        with self._lock:
+            stale = [k for k in self._cache if k[0] == session_id]
             for k in stale:
-                del self._hot_cache[k]
-            if stale:
-                _logger.debug(
-                    "Evicted %d CPU cache entries for session %s",
-                    len(stale),
-                    session_id,
-                )
-            else:
-                _logger.debug("No CPU cache entries to evict for session %s", session_id)
-
-    # ------------------------------------------------------------------
-    # Internals
-    # ------------------------------------------------------------------
-
-    def _session_dir(self, session_id: str) -> str:
-        return os.path.join(self._base_dir, session_id)
-
-    def _cache_put(self, key: tuple, state: Any) -> None:
-        """Insert *state* into the LRU cache and evict the oldest entry if full."""
-        with self._cache_lock:
-            # Refresh position if already present
-            if key in self._hot_cache:
-                self._hot_cache.move_to_end(key)
-                self._hot_cache[key] = state
-                return
-            self._hot_cache[key] = state
-            self._hot_cache.move_to_end(key)
-            _logger.info(
-                "CPU cache: added %s (now %d/%d entries)",
-                key, len(self._hot_cache), self._hot_cache_size
-            )
-            # Evict LRU entries until within limit
-            while len(self._hot_cache) > self._hot_cache_size:
-                evicted_key, _ = self._hot_cache.popitem(last=False)
-                _logger.info("CPU cache: LRU evicted %s (now %d/%d entries)",
-                            evicted_key, len(self._hot_cache), self._hot_cache_size)
+                del self._cache[k]
+        _logger.debug(
+            "Deleted %d embeddings for session %s", len(stale), session_id
+        )

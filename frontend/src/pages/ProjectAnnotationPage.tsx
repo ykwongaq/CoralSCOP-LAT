@@ -96,12 +96,16 @@ function ProjectAnnotationContent() {
 			if (sid) releaseSessionOnUnload(sid);
 		};
 		window.addEventListener("pagehide", handlePageHide);
-		return () => {
-			window.removeEventListener("pagehide", handlePageHide);
-			const sid = sessionIdRef.current;
-			if (sid) releaseSession(sid);
-		};
+		return () => window.removeEventListener("pagehide", handlePageHide);
 	}, []);
+
+	// Release a session's embeddings when it is replaced (another project is
+	// loaded) or when the user navigates away inside the app.
+	useEffect(() => {
+		const sid = projectState.sessionId;
+		if (!sid) return;
+		return () => releaseSession(sid);
+	}, [projectState.sessionId]);
 
 	const handleBackToHome = useCallback(() => {
 		if (projectLoaded) {

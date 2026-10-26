@@ -54,8 +54,7 @@ export const EMBEDDING_MISSING_MARKER = "EMBEDDING_MISSING";
  *
  * The returned `session_id` must be passed to every subsequent
  * {@link uploadEmbedding} call and to the predict endpoint.
- * Call {@link releaseSession} when you want to release the in-memory
- * cache for a temporary session while leaving persisted files intact.
+ * Call {@link releaseSession} to drop the session's embeddings on the server.
  */
 export function createSamSession(
 	callbacks: ApiRequestCallbacks<CreateSamSessionResponse>,
@@ -94,10 +93,11 @@ export function uploadEmbedding(
 }
 
 /**
- * Generates and persists a SAM embedding for an image on the server.
+ * Generates a SAM embedding for an image and keeps it in server memory.
  *
  * The frontend calls this when {@link predictInstance} reports a missing
- * embedding, re-sending the current image so the server can rebuild it.
+ * embedding (first click on an image, or after the server evicted it),
+ * sending the current image so the server can build it.
  *
  * @param request.sessionId  UUID identifying the embedding session
  * @param request.stem       Image filename without extension (e.g. "DSC_0001")
@@ -227,7 +227,7 @@ export function releaseSession(sessionId: string): void {
 }
 
 /**
- * Releases a SAM session's cache during a page unload event (tab close / refresh).
+ * Deletes a SAM session's embeddings during a page unload event (tab close / refresh).
  * Uses `fetch` with `keepalive: true` so the request survives page teardown.
  * `apiClient` wraps an AbortController and is not safe to use in `beforeunload`.
  */

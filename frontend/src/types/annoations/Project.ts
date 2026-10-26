@@ -13,13 +13,12 @@ export interface ProjectState {
    */
   excludedLabelIds: number[];
 
-  /**
-   * Project UUID stored in project_info.json.  For new-format .coral files
-   * (no embedded embeddings) this is also the SAM session_id — embeddings
-   * are stored persistently on the server under this key.
-   */
+  /** Project UUID stored in project_info.json. */
   projectId?: string;
-  /** SAM session UUID on the backend. Present when embeddings are available. */
+  /**
+   * SAM session UUID, freshly generated each time a project is opened.
+   * The server keeps this session's embeddings in memory until it is released.
+   */
   sessionId?: string;
   /** Original .coral file bytes. Held so save can clone images/annotations. */
   sourceFile?: ArrayBuffer;

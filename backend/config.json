@@ -1,5 +1,4 @@
 {
-    "data_dir": "embeddings",
     "sam_model_path": "checkpoints/sam3/sam3.pt",
     "CoralSCOP": {
         "coralSCOP_model_path": "checkpoints/CoralSCOP/vit_b_coralscop.pth",
@@ -9,6 +8,7 @@
          "point_number": 32,
          "max_masks_num": 100
     },
+    "cpu_embedding_cache_size": 20,
     "gpu_embedding_cache_size": 3,
     "gpu_embedding_cache_ttl_seconds": 900
 }

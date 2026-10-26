@@ -5,7 +5,6 @@ import shutil
 import uuid
 
 from PIL import Image
-from server.embeddingStore import EmbeddingStore
 from server.models.CoralSCOPModel import CoralSCOPModel
 from server.models.SAM3Model import SAM3Model
 from server.projectHandler import ProjectHandler
@@ -23,12 +22,6 @@ def main(args):
     with open(config_path, "r") as f:
         config = json.load(f)
 
-    config["data_dir"] = output_embedding_folder
-    embeddings_dir = os.path.join(output_embedding_folder, "embeddings")
-    os.makedirs(embeddings_dir, exist_ok=True)
-
-    embedding_store = EmbeddingStore(base_dir=embeddings_dir)
-
     sam3 = SAM3Model(resolve_path(config["sam_model_path"]))
     coralSCOP = CoralSCOPModel(
         model_path=resolve_path(config["CoralSCOP"]["coralSCOP_model_path"]),
@@ -43,7 +36,6 @@ def main(args):
         os.path.join(output_embedding_folder, "projects"),
         sam3,
         coralSCOP,
-        embedding_store,
     )
 
     token = str(uuid.uuid4())
@@ -105,13 +97,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--use_coralscop",
-        help="Whether to use Coralscop for embedding generation",
+        help="Whether to run CoralSCOP to pre-generate annotations",
         action="store_true",
     )
     parser.add_argument(
         "--output_coral",
         type=str,
-        help="Optional: direct file path for the output .coral file (e.g., /path/to/output.coral). If omitted, the file is kept inside --output_folder/projects/",
+        help="Optional: direct file path for the output .coral file (e.g., /path/to/output.coral). If omitted, the file is kept inside --output_embedding_folder/projects/",
     )
     parser.add_argument(
         "--project_id",

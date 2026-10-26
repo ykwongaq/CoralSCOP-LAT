@@ -1,4 +1,3 @@
-import io
 import json
 import os
 import shutil
@@ -23,12 +22,10 @@ class ProjectHandler:
         temp_folder: str,
         sam_model: SAM3Model,
         coralSCOP_model: CoralSCOPModel = None,
-        embedding_store=None,
     ):
         self.temp_folder = temp_folder
         self.sam3_model = sam_model
         self.coralSCOP_model = coralSCOP_model
-        self.embedding_store = embedding_store
 
     def clean_up(self, token: str) -> None:
         zip_path = os.path.join(self.temp_folder, f"project_{token}.coral")
@@ -93,8 +90,6 @@ class ProjectHandler:
             n = len(images)
 
             for idx, (image, filename) in enumerate(zip(images, filenames)):
-                state = self.sam3_model.gen_embeddings(image)
-
                 if config.get("model") == "CoralSCOP":
                     output_json = self.run_coral_scop(image, config)
                 else:
@@ -121,14 +116,6 @@ class ProjectHandler:
                     "w",
                 ) as f:
                     json.dump(output_json, f, indent=4)
-
-                if self.embedding_store is not None:
-                    buf = io.BytesIO()
-                    torch.save(state, buf)
-                    embedding_session_id = sample_id if sample_id else token
-                    self.embedding_store.save(
-                        embedding_session_id, filename_without_ext, buf.getvalue()
-                    )
 
             project_info = {
                 "project_id": token,
@@ -172,17 +159,14 @@ class ProjectHandler:
         """
         Generator that processes images and yields progress events.
 
-        Embeddings are stored persistently in the EmbeddingStore. For regular projects,
-        embeddings use the token as the session_id. For sample images, embeddings use
-        the sample_id as the session_id, allowing embeddings to be shared across users.
+        No SAM embeddings are created here. They are generated on demand when the
+        user first clicks on an image, and kept in server memory only.
 
-        The .coral ZIP contains only images, annotations, and project_info.json — no
-        embeddings — keeping the download size small.
+        The .coral ZIP contains only images, annotations, and project_info.json.
 
         Args:
             token: Externally-generated UUID used for temp file naming and download token.
-            sample_id: Optional identifier for sample images. If provided, embeddings
-                      are stored under sample_id instead of token, enabling reuse across users.
+            sample_id: Optional identifier for sample images, recorded in project_info.json.
 
         Yields:
             {"type": "progress", "value": <0-95>, "message": <str>}
@@ -214,8 +198,6 @@ class ProjectHandler:
                     "message": f"Processing {filename} ({idx + 1}/{n})",
                 }
 
-                state = self.sam3_model.gen_embeddings(image)
-
                 if config.get("model") == "CoralSCOP":
                     output_json = self.run_coral_scop(image, config)
                 else:
@@ -243,17 +225,6 @@ class ProjectHandler:
                 ) as f:
                     json.dump(output_json, f, indent=4)
 
-                # Save embedding to persistent store
-                # For sample images, use sample_id as session_id (shared across users)
-                # For regular projects, use token as session_id
-                if self.embedding_store is not None:
-                    buf = io.BytesIO()
-                    torch.save(state, buf)
-                    embedding_session_id = sample_id if sample_id else token
-                    self.embedding_store.save(
-                        embedding_session_id, filename_without_ext, buf.getvalue()
-                    )
-
                 yield {
                     "type": "progress",
                     "value": int((idx + 1) / n * 80),
@@ -262,8 +233,6 @@ class ProjectHandler:
 
             yield {"type": "progress", "value": 85, "message": "Packaging project file"}
 
-            # For sample images, sample_id is the SAM session_id (shared embeddings)
-            # For regular projects, token is the SAM session_id
             project_info = {
                 "project_id": token,
                 "last_idx": 0,
@@ -275,7 +244,7 @@ class ProjectHandler:
             with open(os.path.join(temp_dir, "project_info.json"), "w") as f:
                 json.dump(project_info, f, indent=4)
 
-            # Embeddings are stored server-side; ZIP contains only images + annotations
+            # ZIP contains only images + annotations + project_info.json
             with zipfile.ZipFile(
                 zip_output_path, "w", compression=zipfile.ZIP_DEFLATED
             ) as zf:
@@ -293,9 +262,8 @@ class ProjectHandler:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
             # Release CUDA caching allocator memory back to the OS.
-            # During the loop above, gen_embeddings() allocated ~200MB per image
-            # on GPU.  Those tensors are now out of scope, but the CUDA allocator
-            # still holds the reserved memory.  empty_cache() returns it.
+            # CoralSCOP inference above may leave memory reserved by the CUDA
+            # allocator.  empty_cache() returns it.
             _logger.info(
                 "Releasing CUDA cache after project creation (token=%s)", token
             )
