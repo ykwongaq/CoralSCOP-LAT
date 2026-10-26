@@ -8,6 +8,7 @@ export type ProjectCreationAction =
 	| { type: "UPDATE_MIN_AREA"; payload: number }
 	| { type: "UPDATE_MIN_CONFIDENCE"; payload: number }
 	| { type: "UPDATE_MAX_OVERLAP"; payload: number }
+	| { type: "UPDATE_CLAHE"; payload: boolean }
 	| { type: "UPDATE_MODEL_SELECTION"; payload: string | null };
 
 function add_image(state: ProjectCreationState, payload: ImageData) {
@@ -106,6 +107,7 @@ export const initialProjectCreationState: ProjectCreationState = {
 		min_area: 0.001,
 		min_confidence: 0.5,
 		max_overlap: 0.001,
+		clahe: false,
 	},
 	model_selection: "CoralSCOP",
 };
@@ -131,6 +133,8 @@ export function projectCreationReducer(
 			return update_min_confidence(state, action.payload);
 		case "UPDATE_MAX_OVERLAP":
 			return update_max_overlap(state, action.payload);
+		case "UPDATE_CLAHE":
+			return { ...state, config: { ...state.config, clahe: action.payload } };
 		case "UPDATE_MODEL_SELECTION":
 			return update_model_selection(state, action.payload);
 		default:

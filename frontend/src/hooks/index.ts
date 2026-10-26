@@ -17,3 +17,4 @@ export {
 	useCanvasImageDisplay,
 	type Viewport,
 } from "./useCanvasImageDisplay";
+export { useActiveImage, useEnhancedImageSync } from "./useEnhancedImage";

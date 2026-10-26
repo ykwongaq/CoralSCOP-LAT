@@ -21,6 +21,7 @@ import {
 	maskIntersectsRect,
 	brushPercentToPixels,
 	clampBrushPercent,
+	getActiveImage,
 } from "../../../utils";
 import {
 	useCanvasInteraction,
@@ -46,7 +47,14 @@ export default function AnnotationCanvas() {
 	const data =
 		projectState.dataList[annotationSessionState.currentDataIndex] ?? null;
 
-	const imageUrl = data?.imageData.imageUrl ?? null;
+	// Original or enhanced version, depending on the "Enhanced image" switch.
+	// The canvas shows it and SAM predicts on it.
+	const activeImage = data
+		? getActiveImage(data.imageData, projectState.useEnhancedImage)
+		: null;
+	const imageUrl = activeImage?.url ?? null;
+	const activeImageRef = useRef(activeImage);
+	activeImageRef.current = activeImage;
 
 	// -------------------------------------------------------------------
 	// Shared image-display hook — manages image loading, white balance,
@@ -62,7 +70,7 @@ export default function AnnotationCanvas() {
 		imageSize,
 		requestDraw,
 		drawImageToContext,
-	} = useCanvasImageDisplay(imageUrl);
+	} = useCanvasImageDisplay(imageUrl, data?.id);
 
 	// -------------------------------------------------------------------
 	// Rendering refs — updates don't trigger re-renders
@@ -532,17 +540,21 @@ export default function AnnotationCanvas() {
 					scheduleDraw();
 
 					const sessionId = projectStateRef.current.sessionId;
-					if (sessionId && data) {
-						const stem = data.imageData.imageName.replace(/\.[^.]+$/, "");
+					const image = activeImageRef.current;
+					if (sessionId && image) {
+						const stem = image.embeddingStem;
 						// pointPromptsRef hasn't updated yet (dispatch is async), so append manually
 						const allPrompts = [...pointPromptsRef.current, newPrompt];
 						const maskInput = pendingAnnotationRef.current?.encodedLogit;
 
 						predictInstanceWithRegeneration(
 							{ sessionId, stem, inputPrompts: allPrompts, maskInput },
-							data.imageData.imageUrl,
+							image.url,
 							{
 								onComplete: (response) => {
+									// The user switched image version meanwhile; the
+									// prompt was cleared, so drop this result.
+									if (activeImageRef.current?.embeddingStem !== stem) return;
 									annotationSessionDispatch({
 										type: "SET_PENDING_MASK",
 										payload: {

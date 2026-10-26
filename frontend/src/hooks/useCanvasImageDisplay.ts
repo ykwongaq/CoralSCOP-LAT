@@ -32,7 +32,15 @@ export type Viewport = {
  * StatisticCanvas) previously duplicated this logic.  This hook is the
  * single source of truth.
  */
-export function useCanvasImageDisplay(imageUrl: string | null) {
+export function useCanvasImageDisplay(
+	imageUrl: string | null,
+	/**
+	 * Identifies the image being shown, independent of its URL. When the URL
+	 * changes but the key and size stay the same (e.g. switching between the
+	 * original and enhanced version), the zoom and pan are kept.
+	 */
+	viewKey?: string | number,
+) {
 	const { visualizationSettingState } = useVisualizationSetting();
 
 	// ------------------------------------------------------------------
@@ -56,6 +64,9 @@ export function useCanvasImageDisplay(imageUrl: string | null) {
 	// resetViewport so they can trigger a redraw without knowing the
 	// component's specific draw callback.
 	const drawFnRef = useRef<(() => void) | null>(null);
+
+	// viewKey of the image currently loaded (see the hook's viewKey parameter).
+	const loadedViewKeyRef = useRef<string | number | undefined>(undefined);
 
 	// ------------------------------------------------------------------
 	// State — triggers re-renders so dependents (e.g. layer building)
@@ -183,6 +194,24 @@ export function useCanvasImageDisplay(imageUrl: string | null) {
 	// Effects
 	// ==================================================================
 
+	// Rebuild the white-balanced copy of the image. Reads refs only, so it is stable.
+	const rebuildWhiteBalance = useCallback(() => {
+		wbImageRef.current = null;
+		const img = imageRef.current;
+		if (!img) return;
+		const viz = vizRef.current;
+		if (!hasWhiteBalanceAdjustment(viz)) return;
+		const size = imageSizeRef.current;
+		if (size.width === 0 || size.height === 0) return;
+		wbImageRef.current = createWhiteBalancedImage(
+			img,
+			size.width,
+			size.height,
+			viz.temperature,
+			viz.tint,
+		);
+	}, []);
+
 	// --- Image loading ---
 	useEffect(() => {
 		if (!imageUrl) {
@@ -197,10 +226,33 @@ export function useCanvasImageDisplay(imageUrl: string | null) {
 			return;
 		}
 
+		let stale = false;
 		const img = new Image();
 		img.onload = () => {
+			// Ignore an image that finished loading after the URL changed again.
+			if (stale) return;
+			const prevSize = imageSizeRef.current;
+			const key = viewKey;
+			const sameView =
+				imageRef.current !== null &&
+				key !== undefined &&
+				key === loadedViewKeyRef.current &&
+				prevSize.width === img.naturalWidth &&
+				prevSize.height === img.naturalHeight;
+			loadedViewKeyRef.current = key;
 			imageRef.current = img;
 			wbImageRef.current = null;
+
+			if (sameView) {
+				// Another version of the same image: keep zoom/pan, just redraw.
+				rebuildWhiteBalance();
+				if (drawFnRef.current) {
+					cancelAnimationFrame(rafRef.current);
+					rafRef.current = requestAnimationFrame(drawFnRef.current);
+				}
+				return;
+			}
+
 			displayScaleRef.current = computeDisplayScale(
 				img.naturalWidth,
 				img.naturalHeight,
@@ -211,7 +263,10 @@ export function useCanvasImageDisplay(imageUrl: string | null) {
 		};
 		img.onerror = () => {};
 		img.src = imageUrl;
-	}, [imageUrl]);
+		return () => {
+			stale = true;
+		};
+	}, [imageUrl, viewKey, rebuildWhiteBalance]);
 
 	// --- Reset viewport after image loads ---
 	useEffect(() => {
@@ -227,27 +282,20 @@ export function useCanvasImageDisplay(imageUrl: string | null) {
 	}, [imageSize, resetViewport]);
 
 	// --- White balance ---
+
 	useEffect(() => {
-		wbImageRef.current = null;
-		const img = imageRef.current;
-		if (!img) return;
-		const viz = visualizationSettingState;
-		if (!hasWhiteBalanceAdjustment(viz)) return;
-		const size = imageSizeRef.current;
-		if (size.width === 0 || size.height === 0) return;
-		wbImageRef.current = createWhiteBalancedImage(
-			img,
-			size.width,
-			size.height,
-			viz.temperature,
-			viz.tint,
-		);
+		rebuildWhiteBalance();
 		// Redraw so the new WB image is used
 		if (drawFnRef.current) {
 			cancelAnimationFrame(rafRef.current);
 			rafRef.current = requestAnimationFrame(drawFnRef.current);
 		}
-	}, [visualizationSettingState.temperature, visualizationSettingState.tint, imageSize]);
+	}, [
+		visualizationSettingState.temperature,
+		visualizationSettingState.tint,
+		imageSize,
+		rebuildWhiteBalance,
+	]);
 
 	// --- ResizeObserver (handles window resize, sidebar toggles, etc.) ---
 	useEffect(() => {

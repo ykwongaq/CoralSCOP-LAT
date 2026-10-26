@@ -50,6 +50,7 @@ import {
 import ActionButton from "../components/ui/FloatBar/FloatBarButton";
 import { RunModelIcon } from "../components/ui/FloatBar/icons";
 import { SideBar } from "../components/layout";
+import { getActiveImage } from "../utils";
 
 function isProjectLoaded(state: ProjectState): boolean {
 	return state.dataList.length > 0;
@@ -156,10 +157,12 @@ function ProjectQuickStartPageContent() {
 		if (!currentData) return;
 
 		const { imageData } = currentData;
+		// Run on the version (original or enhanced) currently in use.
+		const image = getActiveImage(imageData, projectState.useEnhancedImage);
 
 		let imageBlob: Blob;
 		try {
-			const fetchResponse = await fetch(imageData.imageUrl);
+			const fetchResponse = await fetch(image.url);
 			imageBlob = await fetchResponse.blob();
 		} catch (error) {
 			console.error("Failed to fetch image blob:", error);

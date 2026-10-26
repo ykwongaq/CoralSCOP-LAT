@@ -1,49 +1,34 @@
-export const UploadImagePanelID = "upload-image-panel";
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import layoutStyles from "../PanelLayout.module.css";
+import styles from "./CreationWizard.module.css";
 
 import { useProjectCreation } from "../../../store";
 import { ImageUploader, usePopMessage, ImageGallery, Button } from "../../ui";
 import type { ImageData } from "../../../types";
 import { BottomBar } from "../../layout";
-import type { ApiRequestHandle } from "../../../types/api";
-import {
-	createProject,
-	deleteProject,
-	downloadProject,
-} from "../../../services";
 
-import { useNavigate } from "react-router-dom";
+export const UploadImagePanelID = "upload-image-panel";
 
-const MAX_IMAGES = 50;
+export const MAX_IMAGES = 50;
 
-export default function UploadImagePanel() {
-	const navigate = useNavigate();
+interface UploadImagePanelProps {
+	onNext: () => void;
+}
+
+/** Wizard step 1: add images and pick which ones go into the project. */
+export default function UploadImagePanel({ onNext }: UploadImagePanelProps) {
 	const { projectCreationState, projectCreationDispatch } =
 		useProjectCreation();
-	const {
-		showMessage,
-		showProjectNameInput,
-		closeMessage,
-		showError,
-		showLoading,
-		updateLoadingProgress,
-	} = usePopMessage();
+	const { showMessage, closeMessage } = usePopMessage();
 
-	const backToHome = useCallback(() => {
-		navigate("/");
-	}, [navigate]);
-
-	// Holds the active request handle so we can cancel it from the modal button.
-	const requestHandleRef = useRef<ApiRequestHandle | null>(null);
+	const imageCount = projectCreationState.imageDataList.length;
+	const selectedCount = projectCreationState.selectedIndices.length;
 
 	const handleImages = useCallback(
 		(images: ImageData[]) => {
-			const currentCount = projectCreationState.imageDataList.length;
-			const newCount = images.length;
-			const totalCount = currentCount + newCount;
+			const totalCount = imageCount + images.length;
 
-			if (currentCount >= MAX_IMAGES) {
+			if (imageCount >= MAX_IMAGES) {
 				showMessage({
 					title: "Image Limit Reached",
 					content: `You can only upload up to ${MAX_IMAGES} images per project.`,
@@ -53,7 +38,7 @@ export default function UploadImagePanel() {
 			}
 
 			if (totalCount > MAX_IMAGES) {
-				const allowedCount = MAX_IMAGES - currentCount;
+				const allowedCount = MAX_IMAGES - imageCount;
 				showMessage({
 					title: "Image Limit Exceeded",
 					content: `You can only upload ${allowedCount} more image${allowedCount !== 1 ? "s" : ""}. The maximum limit is ${MAX_IMAGES} images per project.`,
@@ -69,12 +54,7 @@ export default function UploadImagePanel() {
 
 			projectCreationDispatch({ type: "ADD_IMAGES", payload: images });
 		},
-		[
-			projectCreationDispatch,
-			projectCreationState.imageDataList.length,
-			showMessage,
-			closeMessage,
-		],
+		[projectCreationDispatch, imageCount, showMessage, closeMessage],
 	);
 
 	const handleToggleSelection = useCallback(
@@ -95,114 +75,16 @@ export default function UploadImagePanel() {
 		projectCreationDispatch({ type: "DESELECT_ALL_IMAGES", payload: null });
 	}, [projectCreationDispatch]);
 
-	const handleCreateProject = useCallback(() => {
-		const selectedImages = projectCreationState.imageDataList.filter(
-			(_, i) => projectCreationState.selectedIndices.includes(i),
-		);
-		requestHandleRef.current = createProject(
-			{
-				images: selectedImages,
-				config: projectCreationState.config,
-				model: projectCreationState.model_selection,
-			},
-			{
-				onLoading: () => {
-					showLoading({
-						title: "Creating Project",
-						content: "Uploading images and processing…",
-						progress: null,
-						buttons: [
-							{
-								label: "Cancel",
-								onClick: () => {
-									requestHandleRef.current?.cancel();
-									requestHandleRef.current = null;
-									closeMessage();
-								},
-							},
-						],
-					});
-				},
-				onProgress: (pct) => {
-					updateLoadingProgress(pct);
-				},
-				onError: (err) => {
-					showError({
-						title: "Failed to Create Project",
-						content: "An error occurred while communicating with the server.",
-						errorMessage: err.message,
-						buttons: [{ label: "Close", onClick: closeMessage }],
-					});
-				},
-				onComplete: (data) => {
-					closeMessage();
-					showProjectNameInput({
-						title: "Project Created",
-						content:
-							"Your project has been created successfully. Please enter a name and click Download to get your project file.",
-						defaultValue: data.downloadToken,
-						placeholder: "Enter project name",
-						confirmLabel: "Download",
-						onCancel: () => {
-							deleteProject(
-								{ token: data.downloadToken },
-								{
-									onComplete: closeMessage,
-									onError(error) {
-										showError({
-											title: "Failed to Delete Project",
-											content:
-												"An error occurred while communicating with the server.",
-											errorMessage: error.message,
-											buttons: [{ label: "Close", onClick: closeMessage }],
-										});
-									},
-								},
-							);
-						},
-						onConfirm: (projectName) => {
-							downloadProject(
-								{ token: data.downloadToken, filename: projectName },
-								{
-									onComplete: () => {
-										closeMessage();
-										backToHome();
-									},
-									onError: (error) => {
-										showError({
-											title: "Failed to Download Project",
-											content:
-												"An error occurred while communicating with the server.",
-											errorMessage: error.message,
-											buttons: [{ label: "Close", onClick: closeMessage }],
-										});
-									},
-								},
-							);
-						},
-					});
-				},
-			},
-		);
-	}, [
-		projectCreationState.imageDataList,
-		projectCreationState.selectedIndices,
-		projectCreationState.config,
-		projectCreationState.model_selection,
-		showLoading,
-		showError,
-		showMessage,
-		showProjectNameInput,
-		closeMessage,
-		updateLoadingProgress,
-	]);
-
 	return (
-		<div className={layoutStyles.mainSectionInner}>
-			<p className={layoutStyles.mainSectionTitle}>
-				Upload Images ({projectCreationState.imageDataList.length}/{MAX_IMAGES})
-			</p>
+		<>
 			<div className={layoutStyles.mainSectionContent}>
+				<p className={styles.stepTitle}>
+					Upload Images ({imageCount}/{MAX_IMAGES})
+				</p>
+				<p className={styles.stepDesc}>
+					Add the images you want to annotate. Click an image to include or
+					exclude it from the project.
+				</p>
 				<ImageUploader onImages={handleImages} />
 				<ImageGallery
 					imageDataList={projectCreationState.imageDataList}
@@ -211,22 +93,25 @@ export default function UploadImagePanel() {
 				/>
 			</div>
 
-			{projectCreationState.imageDataList.length > 0 && (
-				<BottomBar className={layoutStyles.mainSectionBottom}>
-					<Button onClick={handleDeselectAll} isBorder>
-						Deselect All
-					</Button>
-					<Button onClick={handleSelectAll} isBorder>
-						Select All
-					</Button>
-					<Button
-						onClick={handleCreateProject}
-						disabled={projectCreationState.selectedIndices.length === 0}
-					>
-						Create Project
-					</Button>
-				</BottomBar>
-			)}
-		</div>
+			<BottomBar className={layoutStyles.mainSectionBottom}>
+				{imageCount > 0 && (
+					<>
+						<span className={styles.bottomBarInfo}>
+							{selectedCount} of {imageCount} selected
+						</span>
+						<span className={styles.bottomBarSpacer} />
+						<Button className={styles.wizardButton} onClick={handleDeselectAll} isBorder>
+							Deselect All
+						</Button>
+						<Button className={styles.wizardButton} onClick={handleSelectAll} isBorder>
+							Select All
+						</Button>
+					</>
+				)}
+				<Button className={styles.wizardButton} onClick={onNext} disabled={selectedCount === 0}>
+					Next
+				</Button>
+			</BottomBar>
+		</>
 	);
 }

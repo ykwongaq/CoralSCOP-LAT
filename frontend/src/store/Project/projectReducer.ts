@@ -29,6 +29,11 @@ export type ModelOutputCategory = {
 export type ProjectAction =
 	| { type: "LOAD_PROJECT"; payload: ProjectState }
 	| { type: "SET_PROJECT_NAME"; payload: string }
+	| { type: "SET_USE_ENHANCED_IMAGE"; payload: boolean }
+	| {
+			type: "SET_ENHANCED_IMAGE_URL";
+			payload: { dataId: number; enhancedImageUrl: string };
+	  }
 	| {
 			type: "ADD_LABEL";
 			payload: {
@@ -588,6 +593,23 @@ export function projectReducer(
 			};
 		case "SET_PROJECT_NAME":
 			return { ...state, projectName: action.payload };
+		case "SET_USE_ENHANCED_IMAGE":
+			return { ...state, useEnhancedImage: action.payload };
+		case "SET_ENHANCED_IMAGE_URL":
+			return {
+				...state,
+				dataList: state.dataList.map((data) =>
+					data.id === action.payload.dataId
+						? {
+								...data,
+								imageData: {
+									...data.imageData,
+									enhancedImageUrl: action.payload.enhancedImageUrl,
+								},
+							}
+						: data,
+				),
+			};
 		case "ADD_LABEL":
 			return addLabel(state, action.payload.labelName);
 		case "ADD_LABELS":

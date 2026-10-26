@@ -36,6 +36,8 @@ class CreateProjectConfig(BaseModel):
     min_area: Optional[float] = None
     min_confidence: Optional[float] = None
     max_overlap: Optional[float] = None
+    # Store CLAHE-enhanced copies and run CoralSCOP on them.
+    clahe: Optional[bool] = None
 
 
 class CreateProjectResponse(BaseModel):

@@ -10,9 +10,18 @@ from PIL import Image
 
 from .models.CoralSCOPModel import CoralSCOPModel
 from .models.SAM3Model import SAM3Model
+from .utils.clahe import (
+    ENHANCED_IMAGE_EXT,
+    apply_clahe,
+    clahe_settings,
+    save_enhanced_image,
+)
 from .utils.logger import get_logger
 
 _logger = get_logger(__name__)
+
+# Folder inside the .coral file holding CLAHE-enhanced copies of the images.
+ENHANCED_IMAGES_FOLDER = "images_enhanced"
 
 
 class ProjectHandler:
@@ -69,84 +78,14 @@ class ProjectHandler:
         image_filenames: List[str],
         config: Dict,
         sample_id: Optional[str] = None,
-    ) -> List[Dict]:
+    ) -> None:
         """
-        Non stream version of create_project
+        Non-streaming version of stream_create_project (used by create_project.py).
         """
-
-        temp_dir = os.path.join(self.temp_folder, f"project_{token}")
-        zip_output_path = os.path.join(self.temp_folder, f"project_{token}.coral")
-
-        os.makedirs(temp_dir, exist_ok=True)
-        image_folder = os.path.join(temp_dir, "images")
-        annotations_folder = os.path.join(temp_dir, "annotations")
-        os.makedirs(image_folder, exist_ok=True)
-        os.makedirs(annotations_folder, exist_ok=True)
-
-        try:
-            sorted_indexes = np.argsort(image_filenames)
-            images = [images[i] for i in sorted_indexes]
-            filenames = [image_filenames[i] for i in sorted_indexes]
-            n = len(images)
-
-            for idx, (image, filename) in enumerate(zip(images, filenames)):
-                if config.get("model") == "CoralSCOP":
-                    output_json = self.run_coral_scop(image, config)
-                else:
-                    output_json = {
-                        "image": {
-                            "image_filename": filename,
-                            "image_width": image.width,
-                            "image_height": image.height,
-                            "id": idx,
-                        },
-                        "annotations": [],
-                        "categories": [],
-                    }
-
-                filename_without_ext = os.path.splitext(filename)[0]
-
-                # Save image
-                image_output_path = os.path.join(image_folder, filename)
-                image.save(image_output_path)
-
-                # Save annotations
-                with open(
-                    os.path.join(annotations_folder, f"{filename_without_ext}.json"),
-                    "w",
-                ) as f:
-                    json.dump(output_json, f, indent=4)
-
-            project_info = {
-                "project_id": token,
-                "last_idx": 0,
-                "creation_time": token,
-                "config": config,
-            }
-            if sample_id:
-                project_info["sample_id"] = sample_id
-
-            with open(os.path.join(temp_dir, "project_info.json"), "w") as f:
-                json.dump(project_info, f, indent=4)
-
-            with zipfile.ZipFile(
-                zip_output_path, "w", compression=zipfile.ZIP_DEFLATED
-            ) as zf:
-                for folder_name in ["images", "annotations"]:
-                    folder_path = os.path.join(temp_dir, folder_name)
-                    for root, _, files in os.walk(folder_path):
-                        for file in files:
-                            file_path = os.path.join(root, file)
-                            zf.write(file_path, os.path.relpath(file_path, temp_dir))
-                project_info_path = os.path.join(temp_dir, "project_info.json")
-                zf.write(
-                    project_info_path, os.path.relpath(project_info_path, temp_dir)
-                )
-            shutil.rmtree(temp_dir, ignore_errors=True)
-
-        except Exception as e:
-            self.clean_up(token)
-            raise e
+        for _ in self.stream_create_project(
+            token, images, image_filenames, config, sample_id=sample_id
+        ):
+            pass
 
     def stream_create_project(
         self,
@@ -162,7 +101,8 @@ class ProjectHandler:
         No SAM embeddings are created here. They are generated on demand when the
         user first clicks on an image, and kept in server memory only.
 
-        The .coral ZIP contains only images, annotations, and project_info.json.
+        The .coral ZIP contains images, annotations and project_info.json, plus
+        images_enhanced/ when config["clahe"] is true.
 
         Args:
             token: Externally-generated UUID used for temp file naming and download token.
@@ -179,9 +119,14 @@ class ProjectHandler:
 
         os.makedirs(temp_dir, exist_ok=True)
         image_folder = os.path.join(temp_dir, "images")
+        enhanced_folder = os.path.join(temp_dir, ENHANCED_IMAGES_FOLDER)
         annotations_folder = os.path.join(temp_dir, "annotations")
         os.makedirs(image_folder, exist_ok=True)
         os.makedirs(annotations_folder, exist_ok=True)
+
+        use_clahe = bool(config.get("clahe"))
+        if use_clahe:
+            os.makedirs(enhanced_folder, exist_ok=True)
 
         _logger.info(f"Config for project {token}: {config}")
 
@@ -198,8 +143,22 @@ class ProjectHandler:
                     "message": f"Processing {filename} ({idx + 1}/{n})",
                 }
 
+                filename_without_ext = os.path.splitext(filename)[0]
+
+                # With CLAHE, models run on the enhanced copy. The original is
+                # always kept as well (statistics use its true colours).
+                model_image = image
+                if use_clahe:
+                    model_image = apply_clahe(image)
+                    save_enhanced_image(
+                        model_image,
+                        os.path.join(
+                            enhanced_folder, filename_without_ext + ENHANCED_IMAGE_EXT
+                        ),
+                    )
+
                 if config.get("model") == "CoralSCOP":
-                    output_json = self.run_coral_scop(image, config)
+                    output_json = self.run_coral_scop(model_image, config)
                 else:
                     output_json = {
                         "image": {
@@ -211,8 +170,6 @@ class ProjectHandler:
                         "annotations": [],
                         "categories": [],
                     }
-
-                filename_without_ext = os.path.splitext(filename)[0]
 
                 # Save image
                 image_output_path = os.path.join(image_folder, filename)
@@ -238,17 +195,21 @@ class ProjectHandler:
                 "last_idx": 0,
                 "creation_time": token,
                 "config": config,
+                # Whether models and display use the enhanced images when opened.
+                "use_enhanced_image": use_clahe,
             }
+            if use_clahe:
+                project_info["enhancement"] = clahe_settings()
             if sample_id:
                 project_info["sample_id"] = sample_id
             with open(os.path.join(temp_dir, "project_info.json"), "w") as f:
                 json.dump(project_info, f, indent=4)
 
-            # ZIP contains only images + annotations + project_info.json
+            # ZIP contains images (+ enhanced copies) + annotations + project_info.json
             with zipfile.ZipFile(
                 zip_output_path, "w", compression=zipfile.ZIP_DEFLATED
             ) as zf:
-                for folder_name in ["images", "annotations"]:
+                for folder_name in ["images", ENHANCED_IMAGES_FOLDER, "annotations"]:
                     folder_path = os.path.join(temp_dir, folder_name)
                     for root, _, files in os.walk(folder_path):
                         for file in files:

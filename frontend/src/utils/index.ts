@@ -9,3 +9,4 @@ export * from "./AnnotationCommand";
 export * from "./brush";
 export * from "./taxonomy";
 export { default as triggerDownload } from "./download";
+export * from "./activeImage";

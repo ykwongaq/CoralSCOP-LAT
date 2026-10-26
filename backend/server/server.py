@@ -17,6 +17,7 @@ from .maskHandler import MaskHandler
 from .models.CoralSCOPModel import CoralSCOPModel
 from .models.SAM3Model import SAM3Model
 from .projectHandler import ProjectHandler
+from .utils.clahe import apply_clahe, encode_enhanced_image
 from .utils.logger import get_logger
 from .utils.masks import encode_masks
 from .utils.path import resolve_path
@@ -394,6 +395,18 @@ class Server:
             pass
 
         return self.project_handler.get_zip_path(token)
+
+    def enhance_image(self, image: Image.Image) -> bytes:
+        """Return the CLAHE-enhanced image, encoded as stored in .coral files."""
+        start = time.monotonic()
+        encoded = encode_enhanced_image(apply_clahe(image))
+        _logger.info(
+            "Enhanced image %dx%d with CLAHE in %.2f s",
+            image.width,
+            image.height,
+            time.monotonic() - start,
+        )
+        return encoded
 
     def run_model(self, image: Image.Image, config: Dict) -> Dict:
         if config.get("model") == "CoralSCOP":

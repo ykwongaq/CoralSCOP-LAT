@@ -156,7 +156,9 @@ async def create_project(
 
     Accepts multipart/form-data:
       - images  : one or more image files
-      - config  : JSON string  { min_area, min_confidence, max_overlap }
+      - config  : JSON string  { min_area, min_confidence, max_overlap, clahe }
+                  clahe=true stores CLAHE-enhanced copies in images_enhanced/
+                  and runs the model on them
       - model   : optional model identifier (CoralSCOP)
 
     Streams SSE lines:
@@ -428,6 +430,33 @@ async def quick_start_project(
         filename=os.path.basename(zip_path),
         media_type="application/octet-stream",
     )
+
+
+# ---------------------------------------------------------------------------
+# Image enhancement
+# ---------------------------------------------------------------------------
+
+
+@app.post("/api/images/enhance")
+async def enhance_image(image: UploadFile = File(...)):
+    """
+    Return a CLAHE-enhanced copy of an image.
+
+    Used when the user turns on "Enhanced image" for an image that has no
+    enhanced copy in its project yet (quick start, or a project created
+    without CLAHE). The result has the same width and height as the input.
+
+    Body: multipart/form-data with a single field ``image``.
+    Returns: the enhanced image as image/jpeg.
+    """
+    try:
+        pil_image = await read_uploaded_image(image, mode="RGB")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    loop = asyncio.get_running_loop()
+    data = await loop.run_in_executor(None, _server.enhance_image, pil_image)
+    return Response(content=data, media_type="image/jpeg")
 
 
 @app.post("/api/sam/predict/", response_model=PredictInstResponse)

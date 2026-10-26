@@ -1,6 +1,7 @@
 import JSZip from "jszip";
 import triggerDownload from "../utils/download";
 import { toCocoTaxonomy } from "../utils/taxonomy";
+import { ENHANCED_IMAGES_FOLDER } from "./LoadProjectService";
 
 import type {
 	ProjectState,
@@ -47,8 +48,9 @@ function buildAnnotationFile(
 
 /**
  * Saves the current project state back to a .coral file and triggers a browser
- * download. Reuses images and embeddings from the original source file — only
- * the annotation JSON entries are rewritten, so no network calls are needed.
+ * download. Reuses images from the original source file; rewrites the
+ * annotation JSON entries and project_info.json, and adds any enhanced images
+ * generated during this session. No network calls are needed.
  */
 export async function saveProject(state: ProjectState): Promise<void> {
 	if (!state.sourceFile) {
@@ -60,7 +62,12 @@ export async function saveProject(state: ProjectState): Promise<void> {
 	// stripping them reduces file size for old-format projects too).
 	const sourceZip = await JSZip.loadAsync(state.sourceFile);
 	const zip = new JSZip();
-	const keepPrefixes = ["images/", "annotations/", "project_info.json"];
+	const keepPrefixes = [
+		"images/",
+		ENHANCED_IMAGES_FOLDER,
+		"annotations/",
+		"project_info.json",
+	];
 	await Promise.all(
 		Object.entries(sourceZip.files).map(async ([path, entry]) => {
 			if (entry.dir) return;
@@ -68,6 +75,34 @@ export async function saveProject(state: ProjectState): Promise<void> {
 			zip.file(path, await entry.async("arraybuffer"));
 		}),
 	);
+
+	// Enhanced images generated during this session are not in the source
+	// file yet; add them so they don't have to be generated again.
+	const enhancedStems = new Set(
+		Object.keys(zip.files)
+			.filter((path) => path.startsWith(ENHANCED_IMAGES_FOLDER))
+			.map((path) =>
+				path.slice(ENHANCED_IMAGES_FOLDER.length).replace(/\.[^.]+$/, ""),
+			),
+	);
+	for (const data of state.dataList) {
+		const url = data.imageData.enhancedImageUrl;
+		const stem = data.imageData.imageName.replace(/\.[^.]+$/, "");
+		if (!url || enhancedStems.has(stem)) continue;
+		const blob = await (await fetch(url)).blob();
+		zip.file(`${ENHANCED_IMAGES_FOLDER}${stem}.jpg`, blob);
+	}
+
+	// Remember whether the enhanced image was in use.
+	const infoEntry = sourceZip.file("project_info.json");
+	if (infoEntry) {
+		const info = JSON.parse(await infoEntry.async("text")) as Record<
+			string,
+			unknown
+		>;
+		info.use_enhanced_image = state.useEnhancedImage === true;
+		zip.file("project_info.json", JSON.stringify(info, null, 4));
+	}
 
 	// Overwrite only the annotation entries with the current in-memory state.
 	for (const data of state.dataList) {

@@ -10,6 +10,9 @@ import type {
 	CoralWatchCard,
 } from "../types";
 
+/** Folder inside a .coral file holding CLAHE-enhanced copies of the images. */
+export const ENHANCED_IMAGES_FOLDER = "images_enhanced/";
+
 export interface LoadProjectCallbacks {
 	onLoading?: () => void;
 	onProgress?: (progress: number) => void;
@@ -52,6 +55,8 @@ export async function loadProject(
 
 		// Bucket ZIP entries by folder
 		const imageEntries: JSZip.JSZipObject[] = [];
+		// CLAHE-enhanced copies, matched to the original image by filename stem.
+		const enhancedMap = new Map<string, JSZip.JSZipObject>(); // stem → entry
 		const annotationMap = new Map<string, JSZip.JSZipObject>(); // stem → entry
 		let projectInfoEntry: JSZip.JSZipObject | null = null;
 
@@ -59,6 +64,11 @@ export async function loadProject(
 			if (entry.dir) return;
 			if (path.startsWith("images/")) {
 				imageEntries.push(entry);
+			} else if (path.startsWith(ENHANCED_IMAGES_FOLDER)) {
+				const stem = path
+					.slice(ENHANCED_IMAGES_FOLDER.length)
+					.replace(/\.[^.]+$/, "");
+				enhancedMap.set(stem, entry);
 			} else if (path.startsWith("annotations/")) {
 				const stem = path.replace("annotations/", "").replace(/\.json$/, "");
 				annotationMap.set(stem, entry);
@@ -86,6 +96,11 @@ export async function loadProject(
 
 			const imageBlob = await imageEntry.async("blob");
 			const imageUrl = URL.createObjectURL(imageBlob);
+
+			const enhancedEntry = enhancedMap.get(stem);
+			const enhancedImageUrl = enhancedEntry
+				? URL.createObjectURL(await enhancedEntry.async("blob"))
+				: undefined;
 
 			let annotations: Annotation[] = [];
 			let scaledLineList: ScaledLine[] = [];
@@ -135,7 +150,7 @@ export async function loadProject(
 
 			dataList.push({
 				id: i,
-				imageData: { imageUrl, imageName, width, height },
+				imageData: { imageUrl, imageName, width, height, enhancedImageUrl },
 				annotations,
 				scaledLineList,
 				coralWatch,
@@ -173,6 +188,7 @@ export async function loadProject(
 			sessionId,
 			sourceFile: fileBuffer,
 			excludedLabelIds,
+			useEnhancedImage: info.use_enhanced_image === true,
 		});
 	} catch (err) {
 		callbacks.onError?.({

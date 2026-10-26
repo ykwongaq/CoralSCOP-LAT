@@ -32,6 +32,13 @@ export type AnnotationSessionAction =
 	| { type: "SET_CURRENT_DATA_INDEX"; payload: number }
 	| { type: "ADD_POINT_PROMPT"; payload: PointPrompt }
 	| { type: "CLEAR_POINT_PROMPTS" }
+	| {
+			type: "SET_ENHANCED_IMAGE_STATUS";
+			payload: {
+				status: AnnotationSessionState["enhancedImageStatus"];
+				error?: string | null;
+			};
+	  }
 	| { type: "UNDO_POINT_PROMPT" }
 	| { type: "SET_PROMPT_MODE"; payload: "point" | "polygon" | "brush" }
 	| { type: "ADD_POLYGON_VERTEX"; payload: Point }
@@ -76,6 +83,8 @@ export const initialAnnotationSessionState: AnnotationSessionState = {
 	editTool: "vertex",
 	editPolygon: null,
 	selectedScaledLineId: null,
+	enhancedImageStatus: "idle",
+	enhancedImageError: null,
 };
 
 const MAX_EDIT_UNDO = 100;
@@ -213,6 +222,12 @@ export function annotationSessionReducer(
 			};
 		case "CLEAR_POINT_PROMPTS":
 			return { ...state, pointPrompts: [], pendingMaskHistory: [] };
+		case "SET_ENHANCED_IMAGE_STATUS":
+			return {
+				...state,
+				enhancedImageStatus: action.payload.status,
+				enhancedImageError: action.payload.error ?? null,
+			};
 		case "UNDO_POINT_PROMPT": {
 			if (state.pointPrompts.length === 0) return state;
 			const count = state.pointPrompts.length - 1;

@@ -1,5 +1,7 @@
 import {
 	initialVisualizationSetting,
+	useAnnotationSession,
+	useProject,
 	useVisualizationSetting,
 } from "../../../store";
 import type { VisualizationSetting } from "../../../types";
@@ -108,6 +110,10 @@ const isModified = (state: VisualizationSetting, keys: SliderKey[]) =>
 export default function VisualizationSettingsPanel() {
 	const { visualizationSettingState: viz, visualizationSettingDispatch } =
 		useVisualizationSetting();
+	const { projectState, projectDispatch } = useProject();
+	const { annotationSessionState } = useAnnotationSession();
+	const useEnhancedImage = projectState.useEnhancedImage === true;
+	const enhanceStatus = annotationSessionState.enhancedImageStatus;
 
 	const update = (payload: Partial<Omit<VisualizationSetting, "hiddingLabels">>) =>
 		visualizationSettingDispatch({
@@ -186,6 +192,31 @@ export default function VisualizationSettingsPanel() {
 			)}
 
 			<p className={styles.category}>Image</p>
+			<div className={styles.enhanceToggle}>
+				<AnnotationToggleBlock
+					name="Enhanced image (CLAHE)"
+					id="viz-enhanced-image"
+					description="Boosts local contrast. SAM and CoralSCOP also run on it. Statistics always use the original colours."
+					value={useEnhancedImage}
+					onChange={(value) =>
+						projectDispatch({ type: "SET_USE_ENHANCED_IMAGE", payload: value })
+					}
+				/>
+				{useEnhancedImage && enhanceStatus === "loading" && (
+					<p className={styles.enhanceStatus} role="status">
+						Enhancing this image…
+					</p>
+				)}
+				{useEnhancedImage && enhanceStatus === "error" && (
+					<p
+						className={`${styles.enhanceStatus} ${styles.enhanceError}`}
+						role="alert"
+					>
+						Could not enhance this image, showing the original. Turn the
+						switch off and on to try again.
+					</p>
+				)}
+			</div>
 			{IMAGE_SECTIONS.map((section) => renderSection(section))}
 
 			<button

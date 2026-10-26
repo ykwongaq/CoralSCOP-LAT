@@ -19,6 +19,7 @@ import {
 	extractPolygonFromMask,
 	rleArea,
 	unionRLEs,
+	getActiveImage,
 } from "../utils";
 import type { Annotation } from "../types";
 
@@ -411,10 +412,11 @@ function useCreateAnnotationCommands() {
 		const sessionId = projectState.sessionId;
 		const data = projectState.dataList[annotationSessionState.currentDataIndex];
 		if (!sessionId || !data) return;
-		const stem = data.imageData.imageName.replace(/\.[^.]+$/, "");
+		// Predict on the version (original or enhanced) currently in use.
+		const image = getActiveImage(data.imageData, projectState.useEnhancedImage);
 		predictInstanceWithRegeneration(
-			{ sessionId, stem, inputPrompts: remaining },
-			data.imageData.imageUrl,
+			{ sessionId, stem: image.embeddingStem, inputPrompts: remaining },
+			image.url,
 			{
 				onComplete: (response) => {
 					annotationSessionDispatch({
@@ -442,6 +444,7 @@ function useCreateAnnotationCommands() {
 		annotationSessionState.activateLabel,
 		projectState.sessionId,
 		projectState.dataList,
+		projectState.useEnhancedImage,
 		annotationSessionDispatch,
 	]);
 

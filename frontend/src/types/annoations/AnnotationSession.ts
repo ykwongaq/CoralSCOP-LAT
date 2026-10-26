@@ -53,4 +53,10 @@ export default interface AnnotationSessionState {
 	editPolygon: EditPolygon | null;
 
 	selectedScaledLineId: number | null;
+
+	// Progress of generating the enhanced (CLAHE) image for the current image
+	enhancedImageStatus: EnhancedImageStatus;
+	enhancedImageError: string | null;
 }
+
+export type EnhancedImageStatus = "idle" | "loading" | "error";

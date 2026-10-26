@@ -1,5 +1,9 @@
 import { useAnnotationSession } from "../../../store";
-import { useAnnotationCommands, useAnnotationKeyboard } from "../../../hooks";
+import {
+	useAnnotationCommands,
+	useAnnotationKeyboard,
+	useEnhancedImageSync,
+} from "../../../hooks";
 import {
 	AnnotationSideBar,
 	AnnotationCanvas,
@@ -29,6 +33,7 @@ export default function AnnotationPanel({
 	const { execute } = useAnnotationCommands();
 
 	useAnnotationKeyboard(mode, (cmd) => execute[cmd]());
+	useEnhancedImageSync();
 
 	return (
 		<>

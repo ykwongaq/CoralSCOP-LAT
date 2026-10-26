@@ -22,4 +22,9 @@ export interface ProjectState {
   sessionId?: string;
   /** Original .coral file bytes. Held so save can clone images/annotations. */
   sourceFile?: ArrayBuffer;
+  /**
+   * When true, the annotation canvas shows the CLAHE-enhanced images and
+   * SAM / CoralSCOP run on them. Saved in project_info.json.
+   */
+  useEnhancedImage?: boolean;
 }

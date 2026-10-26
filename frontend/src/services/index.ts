@@ -14,6 +14,11 @@ export {
 	type DownloadProjectResponse,
 	downloadProject,
 } from "./DownloadProjectService";
+export {
+	type EnhanceImageRequest,
+	enhanceImage,
+	enhanceImageFromUrl,
+} from "./EnhanceImageService";
 export { exportAllAnnotatedImages } from "./ExportAnnotatedImagesService";
 export { exportAllCocoAnnotations } from "./ExportCocoService";
 export { exportAllImages } from "./ExportImagesService";
