@@ -3,13 +3,26 @@ import type {
 	AnnotationSessionState,
 	BrushStroke,
 	EditPolygon,
+	EditSnapshot,
+	EditTool,
 	PendingAnnotation,
 	Point,
 	PointPrompt,
 } from "../../types";
+import {
+	BRUSH_SIZE_DEFAULT_PERCENT,
+	clampBrushPercent,
+} from "../../utils/brush";
 
 export type AnnotationSessionAction =
-	| { type: "SET_PENDING_MASK"; payload: PendingAnnotation }
+	// promptCount: number of point prompts the mask was predicted from.
+	// When given, the mask is recorded for undo, and only shown if no prompt
+	// was added or undone meanwhile.
+	| {
+			type: "SET_PENDING_MASK";
+			payload: PendingAnnotation;
+			promptCount?: number;
+	  }
 	| { type: "CLEAR_PENDING_MASK" }
 	| { type: "SET_ACTIVE_LABEL"; payload: Label | null }
 	| { type: "CLEAR_ACTIVE_LABEL" }
@@ -24,16 +37,27 @@ export type AnnotationSessionAction =
 	| { type: "ADD_POLYGON_VERTEX"; payload: Point }
 	| { type: "CLEAR_POLYGON_VERTICES" }
 	| { type: "UNDO_POLYGON_VERTEX" }
+	// Brush size as a percentage of the image's longer side
 	| { type: "SET_BRUSH_SIZE"; payload: number }
 	| { type: "ADD_BRUSH_STROKE"; payload: BrushStroke }
 	| { type: "APPEND_BRUSH_POINT"; payload: Point }
 	| { type: "CLEAR_BRUSH_STROKES" }
-	| { type: "SET_EDIT_TOOL"; payload: "vertex" | "brush" }
+	| { type: "UNDO_BRUSH_STROKE" }
+	| { type: "SET_EDIT_TOOL"; payload: EditTool }
 	| { type: "START_EDIT_POLYGON"; payload: EditPolygon }
 	| { type: "SET_EDIT_POLYGON_POINTS"; payload: Point[] }
 	| { type: "ADD_EDIT_BRUSH_STROKE"; payload: BrushStroke }
 	| { type: "APPEND_EDIT_BRUSH_POINT"; payload: Point }
-	| { type: "CLEAR_EDIT_BRUSH_STROKES" }
+	// Save the current edit geometry to the undo stack (call before a change)
+	| { type: "CHECKPOINT_EDIT" }
+	| { type: "UNDO_EDIT" }
+	// Restore the geometry from the last save (undoable)
+	| { type: "RESET_EDIT_POLYGON" }
+	// After a save: the saved mask becomes the new base for editing
+	| {
+			type: "REBASE_EDIT_POLYGON";
+			payload: { annotationId: number; points: Point[] };
+	  }
 	| { type: "CLEAR_EDIT_POLYGON" }
 	| { type: "SELECT_SCALED_LINE_ID"; payload: number | null };
 
@@ -45,13 +69,73 @@ export const initialAnnotationSessionState: AnnotationSessionState = {
 	promptMode: "point",
 	currentDataIndex: 0,
 	pointPrompts: [],
+	pendingMaskHistory: [],
 	polygonPoints: [],
 	brushStrokes: [],
-	brushSize: 20,
+	brushSizePercent: BRUSH_SIZE_DEFAULT_PERCENT,
 	editTool: "vertex",
 	editPolygon: null,
 	selectedScaledLineId: null,
 };
+
+const MAX_EDIT_UNDO = 100;
+
+/** Push the current edit geometry onto the undo stack. */
+function withEditCheckpoint(editPolygon: EditPolygon): EditPolygon {
+	const snapshot: EditSnapshot = {
+		points: editPolygon.points,
+		brushStrokes: editPolygon.brushStrokes,
+	};
+	return {
+		...editPolygon,
+		undoStack: [...editPolygon.undoStack, snapshot].slice(-MAX_EDIT_UNDO),
+	};
+}
+
+/**
+ * Restore the most recent snapshot that differs from the current geometry.
+ * Snapshots identical to the current state (e.g. a vertex clicked but not
+ * moved) are skipped so every undo visibly changes something.
+ */
+function undoEdit(editPolygon: EditPolygon): EditPolygon {
+	const stack = editPolygon.undoStack.slice();
+	while (stack.length > 0) {
+		const snapshot = stack.pop()!;
+		if (
+			snapshot.points !== editPolygon.points ||
+			snapshot.brushStrokes !== editPolygon.brushStrokes
+		) {
+			return {
+				...editPolygon,
+				points: snapshot.points,
+				brushStrokes: snapshot.brushStrokes,
+				undoStack: stack,
+			};
+		}
+	}
+	return { ...editPolygon, undoStack: [] };
+}
+
+function setPendingMask(
+	state: AnnotationSessionState,
+	mask: PendingAnnotation,
+	promptCount: number | undefined,
+): AnnotationSessionState {
+	if (promptCount === undefined) return { ...state, pendingMask: mask };
+	// Prediction for prompts that were undone meanwhile: drop it.
+	if (promptCount < 1 || promptCount > state.pointPrompts.length) return state;
+	const history = state.pendingMaskHistory.slice();
+	while (history.length < promptCount) history.push(null);
+	history[promptCount - 1] = mask;
+	return {
+		...state,
+		pendingMaskHistory: history,
+		// Only show it if it matches the current prompts (avoids an older,
+		// slower response overwriting a newer mask).
+		pendingMask:
+			promptCount === state.pointPrompts.length ? mask : state.pendingMask,
+	};
+}
 
 function select_scaled_line_id(
 	state: AnnotationSessionState,
@@ -86,6 +170,7 @@ function setCurrentDataIndex(
 		...state,
 		currentDataIndex: index,
 		pointPrompts: [],
+		pendingMaskHistory: [],
 		polygonPoints: [],
 		brushStrokes: [],
 		pendingMask: null,
@@ -101,7 +186,7 @@ export function annotationSessionReducer(
 ): AnnotationSessionState {
 	switch (action.type) {
 		case "SET_PENDING_MASK":
-			return { ...state, pendingMask: action.payload };
+			return setPendingMask(state, action.payload, action.promptCount);
 		case "CLEAR_PENDING_MASK":
 			return { ...state, pendingMask: null };
 		case "SET_ACTIVE_LABEL":
@@ -127,14 +212,26 @@ export function annotationSessionReducer(
 				pointPrompts: [...state.pointPrompts, action.payload],
 			};
 		case "CLEAR_POINT_PROMPTS":
-			return { ...state, pointPrompts: [] };
-		case "UNDO_POINT_PROMPT":
-			return { ...state, pointPrompts: state.pointPrompts.slice(0, -1) };
+			return { ...state, pointPrompts: [], pendingMaskHistory: [] };
+		case "UNDO_POINT_PROMPT": {
+			if (state.pointPrompts.length === 0) return state;
+			const count = state.pointPrompts.length - 1;
+			return {
+				...state,
+				pointPrompts: state.pointPrompts.slice(0, -1),
+				pendingMaskHistory: state.pendingMaskHistory.slice(0, count),
+				// Mask from before the undone prompt (null if not recorded;
+				// the caller then re-runs SAM).
+				pendingMask:
+					count > 0 ? (state.pendingMaskHistory[count - 1] ?? null) : null,
+			};
+		}
 		case "SET_PROMPT_MODE":
 			return {
 				...state,
 				promptMode: action.payload,
 				pointPrompts: [],
+				pendingMaskHistory: [],
 				polygonPoints: [],
 				brushStrokes: [],
 				pendingMask: null,
@@ -149,7 +246,10 @@ export function annotationSessionReducer(
 		case "UNDO_POLYGON_VERTEX":
 			return { ...state, polygonPoints: state.polygonPoints.slice(0, -1) };
 		case "SET_BRUSH_SIZE":
-			return { ...state, brushSize: action.payload };
+			return {
+				...state,
+				brushSizePercent: clampBrushPercent(action.payload),
+			};
 		case "ADD_BRUSH_STROKE":
 			return {
 				...state,
@@ -168,6 +268,8 @@ export function annotationSessionReducer(
 		}
 		case "CLEAR_BRUSH_STROKES":
 			return { ...state, brushStrokes: [] };
+		case "UNDO_BRUSH_STROKE":
+			return { ...state, brushStrokes: state.brushStrokes.slice(0, -1) };
 		case "SET_EDIT_TOOL":
 			return { ...state, editTool: action.payload };
 		case "START_EDIT_POLYGON":
@@ -179,16 +281,17 @@ export function annotationSessionReducer(
 						editPolygon: { ...state.editPolygon, points: action.payload },
 					}
 				: state;
-		case "ADD_EDIT_BRUSH_STROKE":
-			return state.editPolygon
-				? {
-						...state,
-						editPolygon: {
-							...state.editPolygon,
-							brushStrokes: [...state.editPolygon.brushStrokes, action.payload],
-						},
-					}
-				: state;
+		case "ADD_EDIT_BRUSH_STROKE": {
+			if (!state.editPolygon) return state;
+			const editPolygon = withEditCheckpoint(state.editPolygon);
+			return {
+				...state,
+				editPolygon: {
+					...editPolygon,
+					brushStrokes: [...editPolygon.brushStrokes, action.payload],
+				},
+			};
+		}
 		case "APPEND_EDIT_BRUSH_POINT": {
 			if (!state.editPolygon || state.editPolygon.brushStrokes.length === 0)
 				return state;
@@ -205,13 +308,46 @@ export function annotationSessionReducer(
 				},
 			};
 		}
-		case "CLEAR_EDIT_BRUSH_STROKES":
+		case "CHECKPOINT_EDIT":
 			return state.editPolygon
-				? {
-						...state,
-						editPolygon: { ...state.editPolygon, brushStrokes: [] },
-					}
+				? { ...state, editPolygon: withEditCheckpoint(state.editPolygon) }
 				: state;
+		case "UNDO_EDIT":
+			return state.editPolygon
+				? { ...state, editPolygon: undoEdit(state.editPolygon) }
+				: state;
+		case "RESET_EDIT_POLYGON": {
+			const ep = state.editPolygon;
+			if (!ep) return state;
+			// Nothing to reset: don't add an empty undo step.
+			if (ep.points === ep.originalPoints && ep.brushStrokes.length === 0)
+				return state;
+			return {
+				...state,
+				editPolygon: {
+					...withEditCheckpoint(ep),
+					points: ep.originalPoints,
+					brushStrokes: [],
+				},
+			};
+		}
+		case "REBASE_EDIT_POLYGON":
+			// Ignore if the user left edit mode or switched mask meanwhile.
+			if (
+				!state.editPolygon ||
+				state.editPolygon.annotationId !== action.payload.annotationId
+			)
+				return state;
+			return {
+				...state,
+				editPolygon: {
+					...state.editPolygon,
+					points: action.payload.points,
+					originalPoints: action.payload.points,
+					brushStrokes: [],
+					undoStack: [],
+				},
+			};
 		case "CLEAR_EDIT_POLYGON":
 			return { ...state, editPolygon: null };
 		case "SELECT_SCALED_LINE_ID":

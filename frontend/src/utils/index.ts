@@ -6,5 +6,6 @@ export * from "./LabelColorMap";
 export * from "./polygon";
 export * from "./saveBlobWithPicker";
 export * from "./AnnotationCommand";
+export * from "./brush";
 export * from "./taxonomy";
 export { default as triggerDownload } from "./download";

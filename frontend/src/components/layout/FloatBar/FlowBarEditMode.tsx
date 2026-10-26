@@ -2,6 +2,7 @@ import { useAnnotationSession } from "../../../store";
 import { useAnnotationCommands } from "../../../hooks";
 import FlowBar from "./FlowBar";
 import EditToolToggle from "./EditToolToggle";
+import BrushSizeSlider from "./BrushSizeSlider";
 import ActionButton from "../../ui/FloatBar/FloatBarButton";
 
 interface ModeBarProps {
@@ -16,6 +17,14 @@ export default function EditModeBar({ children }: ModeBarProps) {
 	return (
 		<FlowBar hidden={mode !== "edit"}>
 			<EditToolToggle />
+			{annotationSessionState.editTool !== "vertex" && <BrushSizeSlider />}
+			<ActionButton
+				name="Undo"
+				shortcut="Ctrl+Z"
+				icon="ico-undo icon"
+				onClick={() => execute.undo()}
+				iconOnly
+			/>
 			<ActionButton
 				name="Reset changes"
 				shortcut="R"

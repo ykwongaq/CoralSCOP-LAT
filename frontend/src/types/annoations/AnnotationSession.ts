@@ -5,6 +5,12 @@ import type { PendingAnnotation } from "./PendingAnnotation";
 import type { Point } from "../Point";
 import type { PointPrompt } from "./PointPrompt";
 
+// Tool used while editing a mask:
+//   "vertex" = drag/add polygon vertices
+//   "brush"  = paint regions onto the mask
+//   "eraser" = erase regions from the mask
+export type EditTool = "vertex" | "brush" | "eraser";
+
 // State for the annotation process
 export default interface AnnotationSessionState {
 	// Pending masks to be added to the annotation session
@@ -26,18 +32,22 @@ export default interface AnnotationSessionState {
 	// Point prompts for SAM inference (add mode)
 	pointPrompts: PointPrompt[];
 
+	// SAM mask after each point prompt (index i = after prompts 0..i), so
+	// undoing a prompt can restore the previous mask without re-running SAM.
+	// An entry is null until its prediction arrives.
+	pendingMaskHistory: (PendingAnnotation | null)[];
+
 	// Vertices of the polygon being drawn (add mode, polygon prompt)
 	polygonPoints: Point[];
 
 	// Brush strokes drawn in add mode (brush prompt), each a polyline
 	brushStrokes: BrushStroke[];
 
-	// Brush diameter in image pixels
-	brushSize: number;
+	// Brush diameter as a percentage of the image's longer side
+	brushSizePercent: number;
 
-	// Tool used while editing a polygon ("vertex" = drag/add vertices,
-	// "brush" = paint additional regions)
-	editTool: "vertex" | "brush";
+	// Tool used while editing a mask
+	editTool: EditTool;
 
 	// Polygon currently being edited (edit mode)
 	editPolygon: EditPolygon | null;

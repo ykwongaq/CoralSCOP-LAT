@@ -22,6 +22,8 @@ export type AnnotationCommand =
 	| "clear-prompts"
 	| "confirm-mask"
 	| "switch-to-select"
+	// Add and edit mode
+	| "undo"
 	// Edit mode
 	| "confirm-edit"
 	| "cancel-edit"
@@ -63,7 +65,8 @@ export const KEYMAP: Record<
 	add: {
 		tab: "toggle-masks",
 		" ": "confirm-mask",
-		"ctrl+z": "clear-prompts",
+		"ctrl+z": "undo",
+		r: "clear-prompts",
 		w: "switch-to-select",
 		...sharedCommands,
 	},
@@ -72,6 +75,7 @@ export const KEYMAP: Record<
 		" ": "confirm-edit",
 		enter: "confirm-edit",
 		r: "reset-edit",
+		"ctrl+z": "undo",
 		w: "cancel-edit",
 		escape: "cancel-edit",
 	},

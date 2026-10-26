@@ -1,6 +1,6 @@
 import { useRef, useCallback } from "react";
 import type { RefObject } from "react";
-import type { Point } from "../types";
+import type { EditTool, Point } from "../types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -21,7 +21,9 @@ export type CanvasAction =
 			imgX: number;
 			imgY: number;
 	  }
-	| { type: "add-edit-vertex"; edgeIndex: number; imgX: number; imgY: number };
+	| { type: "add-edit-vertex"; edgeIndex: number; imgX: number; imgY: number }
+	// A vertex drag is starting (lets the canvas save an undo step)
+	| { type: "begin-edit-vertex-drag" };
 
 type Viewport = { scale: number; originX: number; originY: number };
 
@@ -139,6 +141,7 @@ function nearestEdge(
  *   - vertex tool: Left click/drag on a vertex → move it
  *                  Left click on an edge       → add a vertex
  *   - brush tool:  Left drag → paint additional regions
+ *   - eraser tool: Left drag → erase regions from the mask
  *
  * Scroll-to-zoom is handled separately in AnnotationCanvas via a native
  * wheel listener (needs passive:false), so it is not part of this hook.
@@ -146,7 +149,8 @@ function nearestEdge(
 export function useCanvasInteraction(
 	mode: "select" | "add" | "edit",
 	promptMode: "point" | "polygon" | "brush",
-	editTool: "vertex" | "brush",
+	editTool: EditTool,
+	/** Brush diameter in image pixels. */
 	brushSize: number,
 	editPointsRef: RefObject<Point[]>,
 	brushCursorRef: RefObject<{ x: number; y: number } | null>,
@@ -241,7 +245,7 @@ export function useCanvasInteraction(
 			// Edit mode: drag a vertex, click an edge to add a vertex, or paint
 			if (mode === "edit") {
 				if (!isInImageBounds(img.x, img.y)) return;
-				if (editTool === "brush") {
+				if (editTool === "brush" || editTool === "eraser") {
 					mouseStateRef.current = {
 						phase: "brushPainting",
 						lastX: img.x,
@@ -255,6 +259,7 @@ export function useCanvasInteraction(
 
 				const vertexIndex = hitTestVertex(pts, img.x, img.y, hitRadius);
 				if (vertexIndex >= 0) {
+					onAction({ type: "begin-edit-vertex-drag" });
 					mouseStateRef.current = { phase: "editDragging", vertexIndex };
 					if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
 					return;
@@ -304,7 +309,7 @@ export function useCanvasInteraction(
 			// tool is active (the actual stroke points are emitted below).
 			const brushCursorActive =
 				(mode === "add" && promptMode === "brush") ||
-				(mode === "edit" && editTool === "brush");
+				(mode === "edit" && editTool !== "vertex");
 			if (brushCursorActive) requestDraw();
 
 			const ms = mouseStateRef.current;

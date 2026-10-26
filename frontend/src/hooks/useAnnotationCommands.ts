@@ -12,7 +12,7 @@ import {
 	useProject,
 	useVisualizationSetting,
 } from "../store";
-import { rasterizeMask } from "../services";
+import { predictInstanceWithRegeneration, rasterizeMask } from "../services";
 import {
 	type AnnotationCommand,
 	decodeRLE,
@@ -248,6 +248,7 @@ function useCreateAnnotationCommands() {
 				points,
 				originalPoints: points,
 				brushStrokes: [],
+				undoStack: [],
 			},
 		});
 		annotationSessionDispatch({ type: "SET_ANNOTATION_MODE", payload: "edit" });
@@ -296,18 +297,38 @@ function useCreateAnnotationCommands() {
 
 	const handleConfirmEdit = useCallback(() => {
 		const editPolygon = annotationSessionState.editPolygon;
-		if (!editPolygon || editPolygon.points.length < 3) return;
+		if (!editPolygon) return;
+
+		// Nothing changed since the last save.
+		if (
+			editPolygon.points === editPolygon.originalPoints &&
+			editPolygon.brushStrokes.length === 0
+		)
+			return;
 
 		const data = projectState.dataList[annotationSessionState.currentDataIndex];
 		if (!data) return;
+		const annotation = data.annotations.find(
+			(ann) => ann.id === editPolygon.annotationId,
+		);
+		if (!annotation) return;
 
+		const toPolygons = (points: { x: number; y: number }[]) =>
+			points.length >= 3 ? [points.map((p) => [p.x, p.y])] : [];
+
+		// The saved mask is the base: only the area between the original and
+		// edited outlines changes, then the strokes apply. Holes, separate
+		// pieces and untouched detail of the mask are kept.
 		rasterizeMask(
 			{
 				size: [data.imageData.height, data.imageData.width],
-				polygons: [editPolygon.points.map((p) => [p.x, p.y])],
+				base: annotation.segmentation,
+				basePolygons: toPolygons(editPolygon.originalPoints),
+				polygons: toPolygons(editPolygon.points),
 				strokes: editPolygon.brushStrokes.map((s) => ({
 					points: s.points.map((p) => [p.x, p.y]),
 					width: s.width,
+					erase: s.erase ?? false,
 				})),
 			},
 			{
@@ -320,9 +341,17 @@ function useCreateAnnotationCommands() {
 							segmentation: response.mask,
 						},
 					});
+					// Stay in edit mode on the saved mask: strokes and undo
+					// history are cleared and the outline is re-extracted.
+					const [height, width] = response.mask.size;
+					const points = extractPolygonFromMask(
+						decodeRLE(response.mask),
+						width,
+						height,
+					);
 					annotationSessionDispatch({
-						type: "SET_ANNOTATION_MODE",
-						payload: "select",
+						type: "REBASE_EDIT_POLYGON",
+						payload: { annotationId: editPolygon.annotationId, points },
 					});
 				},
 				onError: (error) => {
@@ -346,14 +375,75 @@ function useCreateAnnotationCommands() {
 	}, [annotationSessionDispatch]);
 
 	const handleResetEdit = useCallback(() => {
-		const editPolygon = annotationSessionState.editPolygon;
-		if (!editPolygon) return;
-		annotationSessionDispatch({
-			type: "SET_EDIT_POLYGON_POINTS",
-			payload: editPolygon.originalPoints.map((p) => ({ ...p })),
-		});
-		annotationSessionDispatch({ type: "CLEAR_EDIT_BRUSH_STROKES" });
-	}, [annotationSessionState.editPolygon, annotationSessionDispatch]);
+		annotationSessionDispatch({ type: "RESET_EDIT_POLYGON" });
+	}, [annotationSessionDispatch]);
+
+	const handleUndo = useCallback(() => {
+		if (mode === "edit") {
+			annotationSessionDispatch({ type: "UNDO_EDIT" });
+			return;
+		}
+		if (mode !== "add") return;
+
+		if (annotationSessionState.promptMode === "polygon") {
+			annotationSessionDispatch({ type: "UNDO_POLYGON_VERTEX" });
+			return;
+		}
+		if (annotationSessionState.promptMode === "brush") {
+			annotationSessionDispatch({ type: "UNDO_BRUSH_STROKE" });
+			return;
+		}
+
+		// Point prompts: the reducer restores the mask from before the undone
+		// prompt. If that mask was never received, run SAM again on the
+		// remaining prompts.
+		const prompts = annotationSessionState.pointPrompts;
+		if (prompts.length === 0) return;
+		annotationSessionDispatch({ type: "UNDO_POINT_PROMPT" });
+
+		const remaining = prompts.slice(0, -1);
+		if (
+			remaining.length === 0 ||
+			annotationSessionState.pendingMaskHistory[remaining.length - 1]
+		)
+			return;
+
+		const sessionId = projectState.sessionId;
+		const data = projectState.dataList[annotationSessionState.currentDataIndex];
+		if (!sessionId || !data) return;
+		const stem = data.imageData.imageName.replace(/\.[^.]+$/, "");
+		predictInstanceWithRegeneration(
+			{ sessionId, stem, inputPrompts: remaining },
+			data.imageData.imageUrl,
+			{
+				onComplete: (response) => {
+					annotationSessionDispatch({
+						type: "SET_PENDING_MASK",
+						payload: {
+							segmentation: response.mask,
+							labelId: annotationSessionState.activateLabel?.id ?? -1,
+							id: -1,
+							encodedLogit: response.bestMaskLogit,
+						},
+						promptCount: remaining.length,
+					});
+				},
+				onError: (error) => {
+					console.error("SAM inference failed:", error);
+				},
+			},
+		);
+	}, [
+		mode,
+		annotationSessionState.promptMode,
+		annotationSessionState.pointPrompts,
+		annotationSessionState.pendingMaskHistory,
+		annotationSessionState.currentDataIndex,
+		annotationSessionState.activateLabel,
+		projectState.sessionId,
+		projectState.dataList,
+		annotationSessionDispatch,
+	]);
 
 	const handleToggleLabels = useCallback(() => {
 		if (mode === "select") {
@@ -434,6 +524,7 @@ function useCreateAnnotationCommands() {
 			"confirm-edit": handleConfirmEdit,
 			"cancel-edit": handleCancelEdit,
 			"reset-edit": handleResetEdit,
+			undo: handleUndo,
 			"toggle-labels": handleToggleLabels,
 			"select-label-0": () => handleSelectLabelByIndex(0),
 			"select-label-1": () => handleSelectLabelByIndex(1),
@@ -459,6 +550,7 @@ function useCreateAnnotationCommands() {
 			handleConfirmEdit,
 			handleCancelEdit,
 			handleResetEdit,
+			handleUndo,
 			handleToggleLabels,
 			handleSelectLabelByIndex,
 			handlePrevImage,

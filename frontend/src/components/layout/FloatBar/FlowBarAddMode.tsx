@@ -24,8 +24,15 @@ export default function AddModeBar({ children }: ModeBarProps) {
 			/>
 			<PromptModeToggle />
 			<ActionButton
-				name="Clear prompts"
+				name="Undo"
 				shortcut="Ctrl+Z"
+				icon="ico-undo icon"
+				onClick={() => execute.undo()}
+				iconOnly
+			/>
+			<ActionButton
+				name="Clear prompts"
+				shortcut="R"
 				icon="ico-rotate icon"
 				onClick={() => execute["clear-prompts"]()}
 				iconOnly

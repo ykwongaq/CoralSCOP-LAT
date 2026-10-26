@@ -1,0 +1,32 @@
+.slider {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-text-primary1);
+  white-space: nowrap;
+}
+
+.label {
+  line-height: 1.2;
+}
+
+.range {
+  width: 140px;
+  cursor: pointer;
+  accent-color: var(--surface-surface-primary1);
+}
+
+.value {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 48px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.pixels {
+  font-size: 11px;
+  opacity: 0.6;
+}

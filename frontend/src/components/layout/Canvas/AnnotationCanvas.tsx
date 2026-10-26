@@ -18,6 +18,8 @@ import {
 	updatePendingMaskLayer,
 	hitTestMask,
 	maskIntersectsRect,
+	brushPercentToPixels,
+	clampBrushPercent,
 } from "../../../utils";
 import {
 	useCanvasInteraction,
@@ -84,11 +86,28 @@ export default function AnnotationCanvas() {
 	);
 	editPointsRef.current = annotationSessionState.editPolygon?.points ?? [];
 
+	const editOriginalPointsRef = useRef<Point[]>(
+		annotationSessionState.editPolygon?.originalPoints ?? [],
+	);
+	editOriginalPointsRef.current =
+		annotationSessionState.editPolygon?.originalPoints ?? [];
+
 	const editToolRef = useRef(annotationSessionState.editTool);
 	editToolRef.current = annotationSessionState.editTool;
 
-	const brushSizeRef = useRef(annotationSessionState.brushSize);
-	brushSizeRef.current = annotationSessionState.brushSize;
+	// Brush size is stored as a % of the image's longer side; strokes and
+	// the cursor work in image pixels.
+	const brushSizePercent = annotationSessionState.brushSizePercent;
+	const brushSizePx = brushPercentToPixels(
+		brushSizePercent,
+		data?.imageData.width ?? imageSize?.width ?? 0,
+		data?.imageData.height ?? imageSize?.height ?? 0,
+	);
+	const brushSizeRef = useRef(brushSizePx);
+	brushSizeRef.current = brushSizePx;
+
+	const brushSizePercentRef = useRef(brushSizePercent);
+	brushSizePercentRef.current = brushSizePercent;
 
 	const brushStrokesRef = useRef(annotationSessionState.brushStrokes);
 	brushStrokesRef.current = annotationSessionState.brushStrokes;
@@ -100,6 +119,9 @@ export default function AnnotationCanvas() {
 		annotationSessionState.editPolygon?.brushStrokes ?? [];
 
 	const brushCursorRef = useRef<{ x: number; y: number } | null>(null);
+
+	// Screen-sized scratch canvas used to preview edit-mode erasing.
+	const editPreviewCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
 	const pendingAnnotationRef = useRef(annotationSessionState.pendingMask);
 	pendingAnnotationRef.current = annotationSessionState.pendingMask;
@@ -160,6 +182,119 @@ export default function AnnotationCanvas() {
 				ctx.lineWidth = w;
 				ctx.stroke();
 			}
+		};
+
+		const tracePath = (
+			target: CanvasRenderingContext2D,
+			points: Point[],
+			radius: number,
+		) => {
+			target.beginPath();
+			if (points.length === 1) {
+				target.arc(points[0].x, points[0].y, radius, 0, Math.PI * 2);
+				return;
+			}
+			target.moveTo(points[0].x, points[0].y);
+			for (let i = 1; i < points.length; i++) {
+				target.lineTo(points[i].x, points[i].y);
+			}
+		};
+
+		const toPolygonPath = (points: Point[]) => {
+			const path = new Path2D();
+			points.forEach((p, i) =>
+				i === 0 ? path.moveTo(p.x, p.y) : path.lineTo(p.x, p.y),
+			);
+			path.closePath();
+			return path;
+		};
+
+		// Edit-mode preview of the changes on top of the saved mask (which is
+		// drawn underneath as a normal annotation layer):
+		//   - outline moved outward / brush strokes -> blue (added)
+		//   - outline moved inward / eraser strokes -> red (removed)
+		// Strokes apply in order, matching how the backend saves them.
+		// Composited on a screen-sized scratch canvas so erasing does not
+		// punch through the image underneath.
+		const drawEditPreview = (
+			target: CanvasRenderingContext2D,
+			polygon: Point[],
+			originalPolygon: Point[],
+			strokes: BrushStroke[],
+		) => {
+			let off = editPreviewCanvasRef.current;
+			if (!off) {
+				off = document.createElement("canvas");
+				editPreviewCanvasRef.current = off;
+			}
+			if (off.width !== canvas.width || off.height !== canvas.height) {
+				off.width = canvas.width;
+				off.height = canvas.height;
+			}
+			const octx = off.getContext("2d");
+			if (!octx) return;
+
+			octx.setTransform(1, 0, 0, 1, 0, 0);
+			octx.clearRect(0, 0, off.width, off.height);
+			octx.setTransform(
+				scale,
+				0,
+				0,
+				scale,
+				-originX * scale,
+				-originY * scale,
+			);
+			octx.lineCap = "round";
+			octx.lineJoin = "round";
+
+			const KEEP = "rgb(20, 145, 255)";
+			const ERASED = "rgb(255, 51, 51)";
+
+			// Area between the original and edited outlines (even-odd fill of
+			// both = symmetric difference). Inside the new outline it was
+			// added; outside it was removed.
+			if (polygon !== originalPolygon) {
+				const diff = new Path2D();
+				if (originalPolygon.length >= 3)
+					diff.addPath(toPolygonPath(originalPolygon));
+				if (polygon.length >= 3) diff.addPath(toPolygonPath(polygon));
+				octx.fillStyle = ERASED;
+				octx.fill(diff, "evenodd");
+				if (polygon.length >= 3) {
+					octx.save();
+					octx.clip(toPolygonPath(polygon));
+					octx.fillStyle = KEEP;
+					octx.fill(diff, "evenodd");
+					octx.restore();
+				}
+			}
+
+			for (const stroke of strokes) {
+				if (stroke.points.length === 0) continue;
+				const color = stroke.erase ? ERASED : KEEP;
+				const passes: GlobalCompositeOperation[] = stroke.erase
+					? ["destination-out", "source-over"]
+					: ["source-over"];
+				for (const op of passes) {
+					octx.globalCompositeOperation = op;
+					tracePath(octx, stroke.points, stroke.width / 2);
+					if (stroke.points.length === 1) {
+						octx.fillStyle = color;
+						octx.fill();
+					} else {
+						octx.strokeStyle = color;
+						octx.lineWidth = stroke.width;
+						octx.stroke();
+					}
+				}
+			}
+			octx.globalCompositeOperation = "source-over";
+
+			target.save();
+			target.setTransform(1, 0, 0, 1, 0, 0);
+			target.globalAlpha = 0.45;
+			target.drawImage(off, 0, 0);
+			target.restore();
 		};
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -259,19 +394,14 @@ export default function AnnotationCanvas() {
 		// Editable polygon (edit mode)
 		if (currentMode === "edit") {
 			const pts = editPointsRef.current;
+			drawEditPreview(
+				ctx,
+				pts,
+				editOriginalPointsRef.current,
+				editBrushStrokesRef.current,
+			);
 			if (pts.length > 1) {
 				const start = pts[0];
-
-				if (pts.length >= 3) {
-					ctx.beginPath();
-					ctx.moveTo(start.x, start.y);
-					for (let i = 1; i < pts.length; i++) {
-						ctx.lineTo(pts[i].x, pts[i].y);
-					}
-					ctx.closePath();
-					ctx.fillStyle = "rgba(20, 145, 255, 0.25)";
-					ctx.fill();
-				}
 
 				ctx.beginPath();
 				ctx.moveTo(start.x, start.y);
@@ -305,15 +435,12 @@ export default function AnnotationCanvas() {
 			paintStrokes(brushStrokesRef.current);
 		}
 
-		// Brush strokes painted while editing
-		if (currentMode === "edit") {
-			paintStrokes(editBrushStrokesRef.current);
-		}
-
 		// Brush size cursor
 		const brushActive =
 			(currentMode === "add" && promptModeRef.current === "brush") ||
-			(currentMode === "edit" && editToolRef.current === "brush");
+			(currentMode === "edit" && editToolRef.current !== "vertex");
+		const erasing =
+			currentMode === "edit" && editToolRef.current === "eraser";
 		if (brushActive && brushCursorRef.current) {
 			const w = brushSizeRef.current;
 			ctx.beginPath();
@@ -324,7 +451,7 @@ export default function AnnotationCanvas() {
 				0,
 				Math.PI * 2,
 			);
-			ctx.strokeStyle = "#1491ff";
+			ctx.strokeStyle = erasing ? "#ff3333" : "#1491ff";
 			ctx.lineWidth = 1.5 / scale;
 			ctx.setLineDash([4 / scale, 4 / scale]);
 			ctx.stroke();
@@ -428,6 +555,7 @@ export default function AnnotationCanvas() {
 											id: -1,
 											encodedLogit: response.bestMaskLogit,
 										},
+										promptCount: allPrompts.length,
 									});
 								},
 								onError: (error) => {
@@ -456,7 +584,11 @@ export default function AnnotationCanvas() {
 					scheduleDraw();
 					break;
 				}
+				case "begin-edit-vertex-drag":
+					annotationSessionDispatch({ type: "CHECKPOINT_EDIT" });
+					break;
 				case "add-edit-vertex": {
+					annotationSessionDispatch({ type: "CHECKPOINT_EDIT" });
 					const next = editPointsRef.current.slice();
 					next.splice(action.edgeIndex + 1, 0, {
 						x: action.imgX,
@@ -473,6 +605,9 @@ export default function AnnotationCanvas() {
 					const stroke: BrushStroke = {
 						points: [{ x: action.imgX, y: action.imgY }],
 						width: brushSizeRef.current,
+						erase:
+							modeRef.current === "edit" &&
+							editToolRef.current === "eraser",
 					};
 					if (modeRef.current === "edit") {
 						annotationSessionDispatch({
@@ -529,7 +664,7 @@ export default function AnnotationCanvas() {
 		mode,
 		promptMode,
 		annotationSessionState.editTool,
-		annotationSessionState.brushSize,
+		brushSizePx,
 		editPointsRef,
 		brushCursorRef,
 		canvasRef,
@@ -636,7 +771,7 @@ export default function AnnotationCanvas() {
 	useEffect(() => {
 		const brushActive =
 			(mode === "add" && promptMode === "brush") ||
-			(mode === "edit" && annotationSessionState.editTool === "brush");
+			(mode === "edit" && annotationSessionState.editTool !== "vertex");
 		if (canvasRef.current) {
 			canvasRef.current.style.cursor = brushActive
 				? "none"
@@ -648,30 +783,49 @@ export default function AnnotationCanvas() {
 	}, [
 		visualizationSettingState,
 		annotationSessionState.pointPrompts,
-		annotationSessionState.brushSize,
+		brushSizePx,
 		annotationSessionState.editTool,
 		mode,
 		promptMode,
 		scheduleDraw,
 	]);
 
-	// Adjust brush size with the mouse wheel while a brush tool is active.
+	// Redraw when prompt/edit geometry changes from outside the canvas
+	// (undo, reset, save via keyboard or buttons). Canvas mouse actions
+	// already schedule their own draw; requestDraw coalesces to one per frame.
+	useEffect(() => {
+		scheduleDraw();
+	}, [
+		annotationSessionState.polygonPoints,
+		annotationSessionState.brushStrokes,
+		annotationSessionState.editPolygon,
+		scheduleDraw,
+	]);
+
+	// Adjust brush size with Ctrl+wheel while a brush tool is active.
 	// Capture-phase listener on the container runs before the canvas zoom
-	// wheel handler and stops propagation so painting mode scales the brush
-	// instead of zooming the image.
+	// wheel handler and stops propagation so Ctrl+wheel scales the brush
+	// instead of zooming the image. A plain wheel still zooms.
 	useEffect(() => {
 		const container = containerRef.current;
 		if (!container) return;
 		const onWheel = (e: WheelEvent) => {
+			// Plain wheel zooms (handled by the canvas); Ctrl+wheel resizes
+			// the brush while a brush tool is active.
+			if (!(e.ctrlKey || e.metaKey)) return;
 			const brushActive =
 				modeRef.current === "edit"
-					? editToolRef.current === "brush"
+					? editToolRef.current !== "vertex"
 					: modeRef.current === "add" && promptModeRef.current === "brush";
 			if (!brushActive) return;
 			e.preventDefault();
 			e.stopPropagation();
-			const delta = e.deltaY < 0 ? 2 : -2;
-			const next = Math.max(2, Math.min(200, brushSizeRef.current + delta));
+			// Finer steps for small brushes, coarser for large ones (in %).
+			const current = brushSizePercentRef.current;
+			const step = current < 2 ? 0.1 : 0.5;
+			const next = clampBrushPercent(
+				current + (e.deltaY < 0 ? step : -step),
+			);
 			annotationSessionDispatch({ type: "SET_BRUSH_SIZE", payload: next });
 		};
 		container.addEventListener("wheel", onWheel, {
@@ -696,7 +850,7 @@ export default function AnnotationCanvas() {
 					style={{
 						cursor:
 							(mode === "add" && promptMode === "brush") ||
-							(mode === "edit" && annotationSessionState.editTool === "brush")
+							(mode === "edit" && annotationSessionState.editTool !== "vertex")
 								? "none"
 								: mode === "add"
 									? "crosshair"

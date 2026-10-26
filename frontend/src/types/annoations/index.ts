@@ -1,8 +1,11 @@
 export { type Annotation } from "./Annotation";
-export { type default as AnnotationSessionState } from "./AnnotationSession";
+export {
+	type default as AnnotationSessionState,
+	type EditTool,
+} from "./AnnotationSession";
 export { type BrushStroke } from "./BrushStroke";
 export { type Data } from "./Data";
-export { type EditPolygon } from "./EditPolygon";
+export { type EditPolygon, type EditSnapshot } from "./EditPolygon";
 export { type Label, type LabelType } from "./Label";
 export { type Taxonomy, type TaxonomicRank, TAXONOMIC_RANKS } from "./Taxonomy";
 export { type PendingAnnotation } from "./PendingAnnotation";

@@ -247,6 +247,8 @@ export interface RasterizeStroke {
 	points: number[][];
 	/** Per-stroke width in image pixels; overrides strokeWidth. */
 	width?: number;
+	/** When true the stroke erases pixels instead of painting them. */
+	erase?: boolean;
 }
 
 export interface RasterizeMaskRequest {
@@ -258,6 +260,13 @@ export interface RasterizeMaskRequest {
 	strokes?: RasterizeStroke[];
 	/** Default brush stroke width in image pixels (optional). */
 	strokeWidth?: number;
+	/**
+	 * Existing mask to edit. With it, `polygons` are treated as an edit of
+	 * `basePolygons`: only the area between them changes, then strokes apply.
+	 */
+	base?: RLE;
+	/** Polygons as they were before editing (used with `base`). */
+	basePolygons?: number[][][];
 }
 
 export interface RasterizeMaskResponse {
@@ -281,6 +290,10 @@ export function rasterizeMask(
 	};
 	if (request.strokeWidth !== undefined) {
 		body.stroke_width = request.strokeWidth;
+	}
+	if (request.base) {
+		body.base = request.base;
+		body.base_polygons = request.basePolygons ?? [];
 	}
 
 	return apiClient.request<{ mask: RLE }>("/api/masks/rasterize", {

@@ -114,6 +114,7 @@ class BrushStroke(BaseModel):
 
     points: List[List[float]]  # [[x, y], ...]
     width: Optional[float] = None  # per-stroke width; overrides stroke_width
+    erase: bool = False  # True removes the stroke area from the mask
 
 
 class RasterizeMaskRequest(BaseModel):
@@ -123,6 +124,10 @@ class RasterizeMaskRequest(BaseModel):
     polygons: List[List[List[float]]] = []  # one or more polygons: [[x, y], ...]
     strokes: List[BrushStroke] = []  # one or more brush strokes
     stroke_width: Optional[float] = None  # default brush stroke width in image px
+    # Optional mask to edit. With it, `polygons` are an edit of `base_polygons`
+    # (only the difference between them changes the mask), then strokes apply.
+    base: Optional[RLE] = None
+    base_polygons: List[List[List[float]]] = []  # polygons before editing
 
 
 class RasterizeMaskResponse(BaseModel):

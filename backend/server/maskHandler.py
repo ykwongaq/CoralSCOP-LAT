@@ -35,11 +35,27 @@ def _decode_single_rle(rle: Dict) -> str:
     return base64.b64encode(mask.flatten().tobytes()).decode("utf-8")
 
 
+def _fill_polygons(
+    h: int, w: int, polygons: List[List[List[float]]]
+) -> np.ndarray:
+    """Rasterize the union of the given polygons into an (H, W) bool mask."""
+    canvas = Image.new("L", (w, h), 0)
+    draw = ImageDraw.Draw(canvas)
+    for polygon in polygons:
+        if len(polygon) < 3:
+            continue
+        pts = [(float(p[0]), float(p[1])) for p in polygon]
+        draw.polygon(pts, fill=255)
+    return np.asarray(canvas) > 0
+
+
 def _rasterize_geometry(
     size: List[int],
     polygons: List[List[List[float]]],
     strokes: List[Dict],
     stroke_width: Optional[float] = None,
+    base: Optional[Dict] = None,
+    base_polygons: Optional[List[List[List[float]]]] = None,
 ) -> np.ndarray:
     """
     Rasterize polygon and brush-stroke geometry into a binary mask.
@@ -47,25 +63,42 @@ def _rasterize_geometry(
     Args:
         size: [height, width] of the output mask in image pixel space.
         polygons: list of polygons, each a list of [x, y] vertices.
-        strokes: list of brush strokes, each {"points": [[x, y], ...], "width": optional}.
+        strokes: list of brush strokes, each
+            {"points": [[x, y], ...], "width": optional, "erase": optional}.
+            Strokes are applied in order; erase strokes clear pixels.
         stroke_width: default brush stroke width in image px (used when a
             stroke has no "width").
+        base: optional existing mask (COCO RLE) to edit. When given, the
+            polygons are treated as an edit of `base_polygons`: pixels inside
+            the new polygons but not the old ones are added, pixels inside the
+            old polygons but not the new ones are removed, and everything else
+            keeps its value from `base` (so holes, other pieces and fine
+            detail are preserved).
+        base_polygons: the polygons as they were before editing (used with
+            `base`).
 
     Returns:
-        (H, W) uint8 binary mask (0/1) with all geometry unioned.
+        (H, W) uint8 binary mask (0/1): the polygon result, then strokes
+        added or erased in order.
     """
     h, w = int(size[0]), int(size[1])
     if h <= 0 or w <= 0:
         raise ValueError(f"Invalid mask size: {size}")
 
-    canvas = Image.new("L", (w, h), 0)
-    draw = ImageDraw.Draw(canvas)
+    new_fill = _fill_polygons(h, w, polygons)
+    if base is not None:
+        mask = decode_mask(base).astype(bool)
+        if mask.shape != (h, w):
+            raise ValueError(
+                f"Base mask size {list(mask.shape)} does not match size {size}"
+            )
+        old_fill = _fill_polygons(h, w, base_polygons or [])
+        mask = (mask | (new_fill & ~old_fill)) & ~(old_fill & ~new_fill)
+    else:
+        mask = new_fill
 
-    for polygon in polygons:
-        if len(polygon) < 3:
-            continue
-        pts = [(float(p[0]), float(p[1])) for p in polygon]
-        draw.polygon(pts, fill=255)
+    canvas = Image.fromarray(mask.astype(np.uint8) * 255, mode="L")
+    draw = ImageDraw.Draw(canvas)
 
     if strokes:
         default_width = stroke_width if stroke_width is not None else 20
@@ -79,14 +112,21 @@ def _rasterize_geometry(
                 else default_width
             )
             width = max(1, int(round(w if w is not None else 20)))
+            # Erase strokes paint background (0); strokes apply in order, so
+            # a later add stroke can repaint an erased area and vice versa.
+            erase = isinstance(stroke, dict) and bool(stroke.get("erase"))
+            fill = 0 if erase else 255
             pts = [(float(p[0]), float(p[1])) for p in points]
+            r = width / 2.0
             if len(pts) == 1:
                 # A single tap: draw a filled disc of the stroke width.
                 x, y = pts[0]
-                r = width / 2.0
-                draw.ellipse([x - r, y - r, x + r, y + r], fill=255)
+                draw.ellipse([x - r, y - r, x + r, y + r], fill=fill)
             else:
-                draw.line(pts, fill=255, width=width, joint="curve")
+                draw.line(pts, fill=fill, width=width, joint="curve")
+                # Round end caps so strokes match the frontend preview.
+                for x, y in (pts[0], pts[-1]):
+                    draw.ellipse([x - r, y - r, x + r, y + r], fill=fill)
 
     return (np.asarray(canvas) > 0).astype(np.uint8)
 
@@ -130,10 +170,15 @@ class MaskHandler:
         polygons: List[List[List[float]]],
         strokes: List[Dict],
         stroke_width: Optional[float] = None,
+        base: Optional[Dict] = None,
+        base_polygons: Optional[List[List[List[float]]]] = None,
     ) -> Dict:
         """
         Rasterize polygon/brush geometry into a binary mask and encode it
         as an uncompressed COCO RLE dict (same format as /api/sam/predict/).
+        See _rasterize_geometry for how `base` / `base_polygons` are used.
         """
-        mask = _rasterize_geometry(size, polygons, strokes, stroke_width)
+        mask = _rasterize_geometry(
+            size, polygons, strokes, stroke_width, base, base_polygons
+        )
         return encode_masks(mask)

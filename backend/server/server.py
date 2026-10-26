@@ -260,20 +260,25 @@ class Server:
         polygons: List[List[List[float]]],
         strokes: List[Dict],
         stroke_width: Optional[float] = None,
+        base: Optional[Dict] = None,
+        base_polygons: Optional[List[List[List[float]]]] = None,
     ) -> Dict[str, Any]:
         """
         Rasterize polygon/brush geometry into a binary mask and return it
         as an uncompressed COCO RLE dict — the same mask format returned
-        by predict_inst.
+        by predict_inst. When `base` is given, the geometry edits that mask.
         """
         _logger.info(
-            "Rasterizing masks (size=%s, polygons=%d, strokes=%d, stroke_width=%s)",
+            "Rasterizing masks (size=%s, polygons=%d, strokes=%d, stroke_width=%s, base=%s)",
             size,
             len(polygons),
             len(strokes),
             stroke_width,
+            base is not None,
         )
-        return self.mask_handler.rasterize_masks(size, polygons, strokes, stroke_width)
+        return self.mask_handler.rasterize_masks(
+            size, polygons, strokes, stroke_width, base, base_polygons
+        )
 
     def predict_inst(
         self,

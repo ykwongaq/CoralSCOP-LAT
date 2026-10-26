@@ -266,9 +266,14 @@ async def rasterize_masks(request: RasterizeMaskRequest):
         {
             "size": [height, width],
             "polygons": [[[x, y], ...], ...],
-            "strokes":   [{"points": [[x, y], ...], "width": 20}, ...],
-            "stroke_width": 20
+            "strokes":   [{"points": [[x, y], ...], "width": 20, "erase": false}, ...],
+            "stroke_width": 20,
+            "base": {"size": [height, width], "counts": [...]},   # optional
+            "base_polygons": [[[x, y], ...], ...]                 # optional
         }
+
+    With "base", the polygons are applied as an edit of "base_polygons" on top
+    of the base mask (only the area between old and new outlines changes).
 
     Returns:
         {"mask": {"size": [height, width], "counts": [...]}}
@@ -283,6 +288,8 @@ async def rasterize_masks(request: RasterizeMaskRequest):
             request.polygons,
             [s.model_dump() for s in request.strokes],
             request.stroke_width,
+            request.base.model_dump() if request.base else None,
+            request.base_polygons,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
