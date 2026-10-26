@@ -11,6 +11,9 @@ interface LabelPickerButtonProps {
 	onToggle: () => void;
 	onSelectLabel: (label: Label) => void;
 	buttonChildren: React.ReactNode;
+	/** Accessible name, needed when buttonChildren is only an icon. */
+	buttonLabel?: string;
+	disabled?: boolean;
 }
 
 export default function LabelPickerButton({
@@ -19,6 +22,8 @@ export default function LabelPickerButton({
 	onToggle,
 	onSelectLabel,
 	buttonChildren,
+	buttonLabel,
+	disabled = false,
 }: LabelPickerButtonProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +47,7 @@ export default function LabelPickerButton({
 			className={`${styles.colorPickerPopup}${isOpen ? ` ${styles.colorPickerPopupOpen}` : ""}`}
 			id="category-selector"
 		>
-			{isOpen && (
+			{isOpen && !disabled && (
 				<div className={styles.colorPickerPop}>
 					<p className={styles.colorPickerLabel}>Label</p>
 					<div className={`${styles.colorPlateList} ${styles.colorPickerList}`}>
@@ -68,6 +73,9 @@ export default function LabelPickerButton({
 				id="assign-category-toggle-button"
 				className={`${styles.colorPickerBtn} float-bar__button`}
 				onClick={onToggle}
+				aria-label={buttonLabel}
+				aria-expanded={isOpen && !disabled}
+				disabled={disabled}
 			>
 				{buttonChildren}
 			</button>

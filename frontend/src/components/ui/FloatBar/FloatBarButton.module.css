@@ -27,3 +27,31 @@
 .floatBarButton.disabled {
   opacity: 0.6;
 }
+
+/* Icon-only variant: the label lives in a hover tooltip.
+   A fixed box keeps every icon the same height, whatever its glyph size. */
+.iconOnly {
+  width: 24px;
+  height: 24px;
+  justify-content: center;
+}
+
+.iconOnly :global(.icon) {
+  margin-right: 0;
+  top: 0;
+}
+
+.iconOnly svg,
+.floatBarButton svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.floatBarButton:not(.iconOnly) svg {
+  margin-right: 8px;
+}
+
+.floatBarButton:disabled {
+  cursor: not-allowed;
+}

@@ -1,0 +1,92 @@
+.tooltipWrapper {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+}
+
+/* Same palette as the sidebar tooltip, placed above the float bar. */
+.tooltip {
+	position: absolute;
+	bottom: calc(100% + 20px);
+	left: 50%;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px 12px;
+	white-space: nowrap;
+	line-height: 1.2;
+	font-size: 13px;
+	color: var(--text-text-primary1);
+	background-color: var(--surface-surface-primary3);
+	border: 1px solid var(--text-text-primary2);
+	border-radius: 6px;
+	box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.13);
+	z-index: 12;
+	pointer-events: none;
+	opacity: 0;
+	visibility: hidden;
+	transform: translate(-50%, 6px);
+	transition: 0.2s all;
+}
+
+/* Small arrow pointing down at the button. */
+.tooltip::after {
+	content: "";
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	width: 8px;
+	height: 8px;
+	background-color: inherit;
+	border-right: 1px solid var(--text-text-primary2);
+	border-bottom: 1px solid var(--text-text-primary2);
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.tooltipWrapper:hover .tooltip {
+	opacity: 1;
+	visibility: visible;
+	transform: translate(-50%, 0);
+}
+
+.tooltipRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.tooltipTitle {
+	font-weight: 600;
+}
+
+.tooltipKey {
+	min-width: 20px;
+	height: 20px;
+	padding: 0 5px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-family: inherit;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-text-primary2);
+	background-color: var(--surface-surface-primary5);
+	border: 1px solid var(--line-line-primary2);
+	border-bottom-width: 2px;
+	border-radius: 4px;
+}
+
+.tooltipHint {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	padding-top: 6px;
+	border-top: 1px solid var(--line-line-primary2);
+	font-size: 12px;
+	color: var(--text-text-primary2);
+}
+
+.tooltipHint :global(.ico-info) {
+	font-size: 14px;
+}

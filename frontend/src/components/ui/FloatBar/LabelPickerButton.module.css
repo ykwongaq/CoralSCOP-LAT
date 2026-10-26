@@ -1,5 +1,25 @@
 .colorPickerPopup {
   position: relative;
+  /* Flex (not block) so the button is centered without extra text-baseline space below it. */
+  display: flex;
+  align-items: center;
+}
+
+.colorPickerBtn {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-text-primary1);
+  cursor: pointer;
+}
+
+.colorPickerBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.colorPickerBtn svg {
+  width: 24px;
+  height: 24px;
 }
 
 .colorPickerBtn::after {

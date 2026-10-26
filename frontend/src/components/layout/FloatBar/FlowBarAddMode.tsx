@@ -24,19 +24,25 @@ export default function AddModeBar({ children }: ModeBarProps) {
 			/>
 			<PromptModeToggle />
 			<ActionButton
-				name=""
+				name="Clear prompts"
+				shortcut="Ctrl+Z"
 				icon="ico-rotate icon"
 				onClick={() => execute["clear-prompts"]()}
+				iconOnly
 			/>
 			<ActionButton
-				name=""
+				name="Confirm mask"
+				shortcut="Space"
 				icon="ico-tick icon"
 				onClick={() => execute["confirm-mask"]()}
+				iconOnly
 			/>
 			<ActionButton
-				name="Back"
-				icon="float-bar_button"
+				name="Back to select"
+				shortcut="W"
+				icon="ico-line-arrow-left icon"
 				onClick={() => execute["switch-to-select"]()}
+				iconOnly
 			/>
 			{children}
 		</FlowBar>

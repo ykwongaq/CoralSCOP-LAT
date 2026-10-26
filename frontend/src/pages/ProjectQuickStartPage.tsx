@@ -48,6 +48,7 @@ import {
 } from "../components/panel";
 
 import ActionButton from "../components/ui/FloatBar/FloatBarButton";
+import { RunModelIcon } from "../components/ui/FloatBar/icons";
 import { SideBar } from "../components/layout";
 
 function isProjectLoaded(state: ProjectState): boolean {
@@ -525,9 +526,10 @@ function ProjectQuickStartPageContent() {
 						<AnnotationPanel
 							selectModeChildren={
 								<ActionButton
-									name="Run Model"
-									icon=""
+									name="Run model"
+									icon={<RunModelIcon />}
 									onClick={handleRunModel}
+									iconOnly
 								/>
 							}
 						/>

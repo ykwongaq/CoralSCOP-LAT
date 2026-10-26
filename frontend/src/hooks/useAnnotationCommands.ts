@@ -43,6 +43,7 @@ function useCreateAnnotationCommands() {
 	}, [visualizationSettingState.showMasks, visualizationSettingDispatch]);
 
 	const handleRemove = useCallback(() => {
+		if (annotationSessionState.selectedAnnotations.length === 0) return;
 		projectDispatch({
 			type: "DELETE_ANNOTATIONS",
 			payload: {
@@ -287,9 +288,12 @@ function useCreateAnnotationCommands() {
 	}, [annotationSessionState.editPolygon, annotationSessionDispatch]);
 
 	const handleToggleLabels = useCallback(() => {
-		if (mode === "select") setIsLabelPanelOpen((prev) => !prev);
-		else setIsActivateLabelOpen((prev) => !prev);
-	}, [mode]);
+		if (mode === "select") {
+			// Assigning a label needs at least one selected mask.
+			if (annotationSessionState.selectedAnnotations.length === 0) return;
+			setIsLabelPanelOpen((prev) => !prev);
+		} else setIsActivateLabelOpen((prev) => !prev);
+	}, [mode, annotationSessionState.selectedAnnotations.length]);
 
 	const handleSelectLabelByIndex = useCallback(
 		(index: number) => {

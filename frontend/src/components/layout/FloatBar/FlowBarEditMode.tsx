@@ -17,19 +17,25 @@ export default function EditModeBar({ children }: ModeBarProps) {
 		<FlowBar hidden={mode !== "edit"}>
 			<EditToolToggle />
 			<ActionButton
-				name="Reset (R)"
+				name="Reset changes"
+				shortcut="R"
 				icon="ico-rotate icon"
 				onClick={() => execute["reset-edit"]()}
+				iconOnly
 			/>
 			<ActionButton
-				name=""
+				name="Save changes"
+				shortcut="Enter"
 				icon="ico-tick icon"
 				onClick={() => execute["confirm-edit"]()}
+				iconOnly
 			/>
 			<ActionButton
-				name="Cancel"
-				icon="float-bar_button"
+				name="Cancel editing"
+				shortcut="Esc"
+				icon="ico-cross icon"
 				onClick={() => execute["cancel-edit"]()}
+				iconOnly
 			/>
 			{children}
 		</FlowBar>
