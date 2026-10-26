@@ -10,7 +10,6 @@ import torch
 from PIL import Image
 
 from .models.CoralSCOPModel import CoralSCOPModel
-from .models.CoralTankModel import CoralTankModel
 from .models.SAM3Model import SAM3Model
 from .utils.logger import get_logger
 
@@ -24,13 +23,11 @@ class ProjectHandler:
         temp_folder: str,
         sam_model: SAM3Model,
         coralSCOP_model: CoralSCOPModel = None,
-        coralTank_model: CoralTankModel = None,
         embedding_store=None,
     ):
         self.temp_folder = temp_folder
         self.sam3_model = sam_model
         self.coralSCOP_model = coralSCOP_model
-        self.coralTank_model = coralTank_model
         self.embedding_store = embedding_store
 
     def clean_up(self, token: str) -> None:
@@ -68,58 +65,6 @@ class ProjectHandler:
         }
         return output_json
 
-    def run_coral_tank(self, image: Image.Image, config: Dict) -> Dict:
-        masks, class_list = self.coralTank_model.predict(image)
-        _logger.info(f"!!!! class_list: {class_list}")
-
-        min_area = config.get("min_area", 0.001)
-        image_area = image.width * image.height
-        min_area_pixels = int(min_area * image_area)
-
-        # Filter out masks that are smaller than the minimum area
-        filtered_masks = []
-        filtered_class_list = []
-        for mask, cls in zip(masks, class_list):
-            mask_area = mask["size"][0] * mask["size"][1]
-            if mask_area >= min_area_pixels:
-                filtered_masks.append(mask)
-                filtered_class_list.append(cls)
-
-        masks = filtered_masks
-        class_list = filtered_class_list
-
-        # Mask are the dictionary with keys "size" and "counts" for RLE
-        output_json = {
-            "image": {
-                "image_filename": "",
-                "image_width": image.width,
-                "image_height": image.height,
-                "id": 0,
-            },
-            "annotations": [
-                {
-                    "id": idx,
-                    "category_id": class_list[idx],
-                    "segmentation": mask,
-                    "area": mask["size"][0] * mask["size"][1],
-                    # Compute the bounding box
-                    "bbox": [
-                        0,
-                        0,
-                        mask["size"][1],
-                        mask["size"][0],
-                    ],  # [x, y, width, height]
-                    "image_id": 0,
-                }
-                for idx, mask in enumerate(masks)
-            ],
-            "categories": [
-                {"id": 0, "name": "coral", "sub-categories": []},
-                {"id": 1, "name": "coral_plus_base", "sub-categories": []},
-            ],
-        }
-        return output_json
-
     def create_project(
         self,
         token: str,
@@ -152,8 +97,6 @@ class ProjectHandler:
 
                 if config.get("model") == "CoralSCOP":
                     output_json = self.run_coral_scop(image, config)
-                elif config.get("model") == "CoralTank":
-                    output_json = self.run_coral_tank(image, config)
                 else:
                     output_json = {
                         "image": {
@@ -275,8 +218,6 @@ class ProjectHandler:
 
                 if config.get("model") == "CoralSCOP":
                     output_json = self.run_coral_scop(image, config)
-                elif config.get("model") == "CoralTank":
-                    output_json = self.run_coral_tank(image, config)
                 else:
                     output_json = {
                         "image": {

@@ -7,7 +7,7 @@ import { apiClient } from "./ApiClient";
 // ---------------------------------------------------------------------------
 
 export interface RunModelConfig {
-	model?: string | null; // "CoralSCOP" | "CoralTank"
+	model?: string | null; // "CoralSCOP"
 	min_area?: number;
 	min_confidence?: number;
 	max_overlap?: number;

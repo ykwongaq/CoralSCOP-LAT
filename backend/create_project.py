@@ -7,7 +7,6 @@ import uuid
 from PIL import Image
 from server.embeddingStore import EmbeddingStore
 from server.models.CoralSCOPModel import CoralSCOPModel
-from server.models.CoralTankModel import CoralTankModel
 from server.models.SAM3Model import SAM3Model
 from server.projectHandler import ProjectHandler
 from server.utils.path import resolve_path
@@ -40,14 +39,10 @@ def main(args):
         point_number=config["CoralSCOP"]["point_number"],
     )
 
-    coral_tank_path = resolve_path(config["coral_tank_model_path"])
-    coral_tank_model = CoralTankModel(coral_tank_path)
-
     project_handler = ProjectHandler(
         os.path.join(output_embedding_folder, "projects"),
         sam3,
         coralSCOP,
-        coral_tank_model,
         embedding_store,
     )
 
@@ -61,9 +56,6 @@ def main(args):
 
     if args.use_coralscop:
         project_config["model"] = "CoralSCOP"
-
-    if args.use_coral_tank:
-        project_config["model"] = "CoralTank"
 
     image_filenames = []
     images = []
@@ -114,11 +106,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--use_coralscop",
         help="Whether to use Coralscop for embedding generation",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--use_coral_tank",
-        help="Whether to use Coral Tank for embedding generation",
         action="store_true",
     )
     parser.add_argument(

@@ -197,7 +197,7 @@ class PredictInstResponse(BaseModel):
 class RunModelConfig(BaseModel):
     """Configuration for model inference."""
 
-    model: Optional[str] = None  # "CoralSCOP" | "CoralTank"
+    model: Optional[str] = None  # "CoralSCOP"
     min_area: Optional[float] = None
     min_confidence: Optional[float] = None
     max_overlap: Optional[float] = None

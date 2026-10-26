@@ -157,7 +157,7 @@ async def create_project(
     Accepts multipart/form-data:
       - images  : one or more image files
       - config  : JSON string  { min_area, min_confidence, max_overlap }
-      - model   : optional model identifier (CoralSCOP | CoralTank)
+      - model   : optional model identifier (CoralSCOP)
 
     Streams SSE lines:
       data: {"type":"progress","value":25,"message":"Processing img.jpg (1/4)"}
@@ -382,7 +382,7 @@ async def quick_start_project(
     Accepts multipart/form-data:
       - image    : one image file
       - config   : JSON string  { min_area, min_confidence, max_overlap }
-      - model    : optional model identifier (CoralSCOP | CoralTank)
+      - model    : optional model identifier (CoralSCOP)
       - projectId: optional sample image identifier (e.g., "sample" without extension)
 
     If projectId is provided (for sample images):
@@ -474,7 +474,7 @@ async def run_model(
     Accepts multipart/form-data:
       - image  : one image file
       - config : JSON string  { model, min_area, min_confidence, max_overlap }
-                 model can be "CoralSCOP" or "CoralTank"
+                 model can be "CoralSCOP"
 
     Returns:
         {

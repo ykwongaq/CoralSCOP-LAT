@@ -16,7 +16,6 @@ from PIL import Image
 from .embeddingStore import EmbeddingStore, _to_device
 from .maskHandler import MaskHandler
 from .models.CoralSCOPModel import CoralSCOPModel
-from .models.CoralTankModel import CoralTankModel
 from .models.SAM3Model import SAM3Model
 from .projectHandler import ProjectHandler
 from .utils.logger import get_logger
@@ -62,10 +61,6 @@ class Server:
             point_number=config["CoralSCOP"]["point_number"],
         )
 
-        _logger.info("Loading CoralTank model...")
-        coral_tank_path = resolve_path(config["coral_tank_model_path"])
-        coral_tank_model = CoralTankModel(coral_tank_path)
-
         self.mask_handler = MaskHandler()
         self.embedding_store = EmbeddingStore(base_dir=embeddings_dir)
 
@@ -73,7 +68,6 @@ class Server:
             os.path.join(self.temp_folder, "projects"),
             self.sam3,
             coralSCOP,
-            coral_tank_model,
             embedding_store=self.embedding_store,
         )
 
@@ -408,8 +402,6 @@ class Server:
     def run_model(self, image: Image.Image, config: Dict) -> Dict:
         if config.get("model") == "CoralSCOP":
             return self.project_handler.run_coral_scop(image, config)
-        elif config.get("model") == "CoralTank":
-            return self.project_handler.run_coral_tank(image, config)
         else:
             return {
                 "image": {

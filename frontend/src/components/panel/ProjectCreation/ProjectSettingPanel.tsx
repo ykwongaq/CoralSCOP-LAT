@@ -8,7 +8,6 @@ import {
 const MODEL_OPTIONS = [
 	{ label: "None", value: null },
 	{ label: "CoralSCOP", value: "CoralSCOP" },
-	{ label: "CoralTank", value: "CoralTank" },
 ];
 
 export const ProjectSettingPanelID = "project-creation-setting-panel";
