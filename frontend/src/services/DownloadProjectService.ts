@@ -1,4 +1,5 @@
 import { apiClient } from "./ApiClient";
+import triggerDownload from "../utils/download";
 import type { ApiRequestCallbacks, ApiRequestHandle } from "../types/api";
 
 export interface DownloadProjectRequest {
@@ -23,14 +24,10 @@ export function downloadProject(
       responseType: "blob",
       onError: callbacks.onError,
       onComplete: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.download = filename ? `${filename}.coral` : `project_${token}.coral`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
-        URL.revokeObjectURL(url);
+        triggerDownload(
+          blob,
+          filename ? `${filename}.coral` : `project_${token}.coral`,
+        );
 
         callbacks.onComplete?.({ success: true });
       },

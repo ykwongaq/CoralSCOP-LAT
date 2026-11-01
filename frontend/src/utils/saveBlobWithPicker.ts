@@ -1,3 +1,5 @@
+import triggerDownload from "./download";
+
 export interface SaveFilePickerOptions {
 	suggestedName?: string;
 	types?: Array<{
@@ -66,10 +68,5 @@ export async function saveBlobWithPicker(
 	}
 
 	// Fallback for browsers without File System Access API support.
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement("a");
-	a.href = url;
-	a.download = suggestedName;
-	a.click();
-	URL.revokeObjectURL(url);
+	triggerDownload(blob, suggestedName);
 }
